@@ -1,14 +1,23 @@
 package com.rental.chatop_back.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.rental.chatop_back.entity.User;
 
 /**
  * Data Transfer Object (DTO) for user information.
  */
 public class UserDTO {
+    @JsonProperty("email")
     private String email;
+
+    @JsonProperty("name")
     private String name;
+
+    @JsonProperty("password")
     private String password;
+
+    public UserDTO() {
+    }
 
     public UserDTO(Long id, String name, String email) {
     }

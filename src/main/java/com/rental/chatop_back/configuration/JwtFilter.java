@@ -14,25 +14,24 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Filter for handling JWT authentication.
+ * Filtre JWT appliqué à chaque requête pour authentifier les utilisateurs.
  */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
     private static final Logger logger = Logger.getLogger(JwtFilter.class.getName());
-    private final List<String> PUBLIC_ROUTES ;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    // Constructeur avec injection des dépendances
-    public JwtFilter(JwtService jwtService, UserDetailsService userDetailsService, SecurityConfig securityConfig) {
+    /**
+     * Constructeur avec injection des dépendances.
+     */
+    public JwtFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
-        this.PUBLIC_ROUTES = securityConfig.getPublicRoutes();
     }
 
     @Override
@@ -44,62 +43,42 @@ public class JwtFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         logger.info("Requête entrante : " + requestURI);
 
-        // Handle CORS preflight requests
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
-        // Vérification si la route est publique
-        if (PUBLIC_ROUTES.stream().anyMatch(requestURI::startsWith)) {
-            logger.info("Route publique détectée, filtrage JWT ignoré : " + requestURI);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Vérifie si la requête correspond à l'un des préfixes
-        if (requestURI.startsWith("/v3/api-docs") ||
-                requestURI.startsWith("/api/auth/email") ||
-                requestURI.startsWith("/favicon.ico") ||
-                requestURI.startsWith("/api/auth/register")) {
-            logger.info(requestURI + " est une route publique et ne nécessite pas d'en-tête Authorization.");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Extraction de l'en-tête Authorization
+        // Récupération de l'en-tête Authorization
         String authHeader = request.getHeader("Authorization");
+
+        // Si aucun token ou mauvais format, passer au filtre suivant (ex: authentification)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warning("Aucun ou mauvais format de l'en-tête Authorization.");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Erreur : Aucun token valide reçu.");
+            filterChain.doFilter(request, response);
             return;
         }
-        // Extraction du token (en supprimant "Bearer ")
+
+        // Extraction du token (on supprime "Bearer ")
         String token = authHeader.substring(7);
+        logger.info("Token reçu : " + token);
 
         try {
+            // Extraction du nom d'utilisateur depuis le token
             String username = jwtService.extractUsername(token);
-            logger.info("Nom d'utilisateur extrait du token : " + username);
-
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            logger.info("Utilisateur chargé : " + username);
 
-            jwtService.validateToken(token, userDetails); // Utilisation de la nouvelle méthode
+            // Validation du token
+            jwtService.validateToken(token, userDetails);
 
-            logger.info("Token validé avec succès pour l'utilisateur : " + username);
-
+            // Création de l'authentification et stockage dans le contexte de sécurité
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        } catch (RuntimeException e) { // Capture l'exception levée par validateToken()
+            logger.info("Utilisateur authentifié : " + username);
+
+        } catch (RuntimeException e) {
             logger.severe("Erreur lors de la validation du token : " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Erreur : " + e.getMessage());
             return;
         }
 
+        logger.info("JWT Filter terminé, passage au filtre suivant.");
         filterChain.doFilter(request, response);
     }
 }
