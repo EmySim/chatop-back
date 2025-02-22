@@ -46,26 +46,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Récupérer l'en-tête Authorization
         String authHeader = request.getHeader("Authorization");
+        logger.info("En-tête Authorization recu : " + authHeader);
 
         // Si aucun token ou mauvais format, passer au filtre suivant
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warning("Token absent ou format incorrect.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extraction du token
+        // Extraction du token (en supprimant "Bearer ")
         String token = authHeader.substring(7);
-        logger.info("Token reçu : " + token);
+        logger.info("Token extrait : " + token);
+
+        // Vérifier si le token est vide
+        if (token.isEmpty()) {
+            logger.warning("Token vide.");
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
             // Extraction du nom d'utilisateur depuis le token
             String username = jwtService.extractUsername(token);
+            logger.info("Nom d'utilisateur extrait : " + username);
 
             // Charger les détails de l'utilisateur
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            logger.info("Détails de l'utilisateur chargés pour : " + username);
 
             // Valider le token
             jwtService.validateToken(token, userDetails);
+            logger.info("Token validé avec succès.");
 
             // Créer une authentification basée sur les détails de l'utilisateur
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -73,11 +85,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Assigner l'authentification au contexte de sécurité
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
             logger.info("✅ Authentification réussie pour : " + username);
 
         } catch (RuntimeException e) {
-            logger.severe("❌ Erreur de validation du token : " + e.getMessage());
+            logger.severe("Erreur de validation du token : " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Erreur : " + e.getMessage());
             return;
