@@ -1,34 +1,29 @@
 package com.rental.controller;
 
-import com.rental.dto.AuthRequestDTO;
-import com.rental.dto.AuthResponseDTO;
-import com.rental.dto.UserDTO;
 import com.rental.service.JwtService;
 import com.rental.service.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
-/**
- * Controller for handling authentication-related requests.
- */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private static final Logger logger = Logger.getLogger(AuthController.class.getName());
 
-    private final AuthenticationManager authenticationManager; // Permet de gérer l'authentification des utilisateurs.
-    private final JwtService jwtService;                      // Service pour gérer les tokens JWT.
-    private final UserService userService;                    // Service pour la gestion des utilisateurs.
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final UserService userService;
 
-    // Injection des Beans nécessaires via le constructeur
+    // Constructeur avec injection des dépendances
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
@@ -36,58 +31,37 @@ public class AuthController {
     }
 
     /**
-     * Endpoint pour enregistrer un nouvel utilisateur.
+     * Endpoint pour gérer l'authentification des utilisateurs et générer un token JWT.
      *
-     * @param userDTO Les données du nouvel utilisateur à enregistrer.
-     * @return Un statut HTTP approprié.
-     */
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserDTO userDTO) {
-        logger.info("Tentative d'enregistrement d'un nouvel utilisateur : " + userDTO.getEmail());
-        // Appelle un service pour enregistrer l'utilisateur (à implémenter dans UserService)
-        userService.register(userDTO);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Utilisateur enregistré avec succès.");
-    }
-
-    /**
-     * Endpoint pour connecter un utilisateur.
-     *
-     * @param request Les informations d'identification (email, mot de passe).
-     * @return Un token JWT si l'authentification réussit.
+     * @param username Nom d'utilisateur envoyé dans le corps de la requête.
+     * @param password Mot de passe envoyé dans le corps de la requête.
+     * @return JSON contenant le token JWT.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequestDTO request) {
-        logger.info("Tentative de connexion pour : " + request.getEmail());
+    public ResponseEntity<Map<String, String>> login(@RequestParam String username, @RequestParam String password) {
+        logger.info("Tentative d'authentification pour l'utilisateur : " + username);
 
-        // Authentifie l'utilisateur
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        try {
+            // Authentification de l'utilisateur via AuthenticationManager
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
 
-        // Récupère les détails de l'utilisateur après authentification
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            // Si l'authentification réussit, récupérer les détails de l'utilisateur
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        // Génère un token JWT à partir des UserDetails
-        String token = jwtService.generateToken(userDetails);
+            // Générer un JWT valide avec JwtService
+            String token = jwtService.generateToken(userDetails);
 
+            // Structurer la réponse
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
 
-        logger.info("Utilisateur authentifié avec succès. Token généré.");
-        return ResponseEntity.ok(new AuthResponseDTO(token));
-    }
-
-    /**
-     * Endpoint pour obtenir les informations de l'utilisateur actuellement authentifié.
-     *
-     * @param authentication Les informations d'authentification actuelles.
-     * @return Les détails de l'utilisateur connecté.
-     */
-    @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
-        logger.info("Récupération des informations de l'utilisateur connecté.");
-        String email = authentication.getName();
-        UserDTO userDTO = userService.findUserDTOByEmail(email); // Utilise une méthode de conversion User -> UserDTO
-        return ResponseEntity.ok(userDTO);
-
+            logger.info("JWT généré avec succès pour l'utilisateur : " + username);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.warning("Échec de l'authentification pour l'utilisateur : " + username);
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+        }
     }
 }
