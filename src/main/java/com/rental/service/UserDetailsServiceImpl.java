@@ -12,17 +12,16 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
- * Service for loading user details for authentication.
+ * Classe implémentant UserDetailsService pour charger un utilisateur par son email.
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private static final Logger logger = Logger.getLogger(UserDetailsServiceImpl.class.getName());
-
     private final UserRepository userRepository;
 
     /**
-     * Constructor injection for UserRepository.
+     * Constructeur avec injection du repository.
      */
     public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -31,19 +30,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        logger.info("🔍 Searching for user with email: " + email);
+        logger.info("🔍 Recherche de l'utilisateur avec l'email : " + email);
 
         Optional<User> optionalUser = userRepository.findByEmail(email);
 
         if (optionalUser.isEmpty()) {
-            logger.warning("User not found with email: " + email);
-            throw new UsernameNotFoundException("User not found with email: " + email);
+            logger.warning("Utilisateur non trouvé avec l'email : " + email);
+            throw new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email);
         }
 
         User user = optionalUser.get();
-        logger.info("✅ User found: " + user.getEmail());
+        logger.info("✅ Utilisateur trouvé : " + user.getEmail());
 
-        // La classe `User` doit implémenter `UserDetails`
+        // La classe User doit implémenter UserDetails
         return user;
     }
 }

@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * Filtre JWT appliqué à chaque requête pour authentifier les utilisateurs.
+ * Filtre JWT appliqué pour valider les tokens sur chaque requête HTTP.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -28,11 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Constructeur avec injection des dépendances.
-     * @param jwtService Service JWT pour validation et extraction de données
-     * @param userDetailsService Service pour charger les détails de l'utilisateur
      */
-    public JwtAuthenticationFilter(com.rental.service.JwtService jwtService,
-                                   UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(com.rental.service.JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
@@ -43,58 +40,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
 
-        // Récupérer l'en-tête Authorization
-        String authHeader = request.getHeader("Authorization");
-        logger.info("En-tête Authorization recu : " + authHeader);
+        logger.info("Authorization Header: " + authHeader); // Vérification de l'en-tête
 
-        // Si aucun token ou mauvais format, passer au filtre suivant
+
+        // Vérifie si un header d'autorisation est présent
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warning("Token absent ou format incorrect.");
+            logger.info("Authorization header manquant ou mal formaté.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extraction du token (en supprimant "Bearer ")
-        String token = authHeader.substring(7);
-        logger.info("Token extrait : " + token);
+        // Extraction du token JWT
+        jwt = authHeader.substring(7);
+        userEmail = jwtService.extractUsername(jwt); // Extrait l'email depuis le token JWT
 
-        // Vérifier si le token est vide
-        if (token.isEmpty()) {
-            logger.warning("Token vide.");
-            filterChain.doFilter(request, response);
-            return;
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+            if (jwtService.validateToken(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                // Configure le contexte de sécurité
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                logger.info("JWT valide. L'utilisateur a été authentifié : " + userEmail);
+            } else {
+                logger.warning("Token JWT invalide ou expiré pour l'utilisateur : " + userEmail);
+            }
+        }else {
+            logger.info("Aucun utilisateur trouvé ou utilisateur déjà authentifié.");
         }
 
-        try {
-            // Extraction du nom d'utilisateur depuis le token
-            String username = jwtService.extractUsername(token);
-            logger.info("Nom d'utilisateur extrait : " + username);
 
-            // Charger les détails de l'utilisateur
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            logger.info("Détails de l'utilisateur chargés pour : " + username);
-
-            // Valider le token
-            jwtService.validateToken(token, userDetails);
-            logger.info("Token validé avec succès.");
-
-            // Créer une authentification basée sur les détails de l'utilisateur
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-
-            // Assigner l'authentification au contexte de sécurité
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            logger.info("✅ Authentification réussie pour : " + username);
-
-        } catch (RuntimeException e) {
-            logger.severe("Erreur de validation du token : " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Erreur : " + e.getMessage());
-            return;
-        }
-
-        logger.info("✔️ Passage au filtre suivant.");
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response);// Passe au filtre suivant
     }
 }
