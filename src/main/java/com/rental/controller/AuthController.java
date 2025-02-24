@@ -1,22 +1,29 @@
 package com.rental.controller;
 
-import com.rental.dto.AuthRequestDTO;
+import com.rental.dto.AuthLoginDTO;
+import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
+import com.rental.dto.UserDTO;
 import com.rental.service.AuthService;
+import com.rental.service.JwtService;
+import com.rental.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.logging.Logger;
 
 /**
- * Contrôleur pour gérer les opérations liées à l'authentification.
+ * Contrôleur pour la gestion de l'authentification et des utilisateurs.
+ * Permet l'inscription, la connexion, et la récupération des informations de l'utilisateur connecté.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -24,34 +31,96 @@ public class AuthController {
 
     private static final Logger logger = Logger.getLogger(AuthController.class.getName());
     private final AuthService authService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService,
+                          AuthenticationManager authenticationManager,
+                          JwtService jwtService,
+                          UserService userService) {
         this.authService = authService;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.userService = userService;
     }
 
     /**
-     * Endpoint pour enregistrer un nouvel utilisateur.
+     * Inscription d'un nouvel utilisateur.
      *
-     * @param authRequest Les informations d'inscription.
-     * @return Une réponse HTTP contenant un message de succès ou d'erreur.
+     * @param registerDTO Contient l'email, le mot de passe et le nom de l'utilisateur.
+     * @return Un token JWT en cas de succès ou un message d'erreur.
      */
-    @Operation(summary = "Enregistrer un nouvel utilisateur", description = "Inscrit un utilisateur avec email, mot de passe et nom.")
+    @Operation(summary = "Enregistrer un nouvel utilisateur", description = "Permet à un utilisateur de s'inscrire avec son email, nom et mot de passe.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Utilisateur enregistré avec succès."),
-            @ApiResponse(responseCode = "400", description = "Erreur de validation ou d'inscription.")
+            @ApiResponse(responseCode = "200", description = "Utilisateur enregistré avec succès, token JWT renvoyé."),
+            @ApiResponse(responseCode = "400", description = "Erreur dans les données d'inscription.")
     })
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody AuthRequestDTO authRequest) {
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody AuthRegisterDTO registerDTO) {
+        logger.info("Requête pour enregistrer un nouvel utilisateur : " + registerDTO.getEmail());
+        AuthResponseDTO response = authService.register(registerDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Connexion d'un utilisateur.
+     *
+     * @param loginDTO Contient l'email et le mot de passe.
+     * @return Un token JWT si l'authentification réussit.
+     */
+    @Operation(summary = "Connexion d'un utilisateur", description = "Permet à un utilisateur de se connecter et d'obtenir un token JWT.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Connexion réussie, token JWT renvoyé."),
+            @ApiResponse(responseCode = "401", description = "Échec de l'authentification.")
+    })
+
+    @PostMapping("/email")
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthLoginDTO loginDTO) {
+        logger.info("Requête de connexion reçue pour : " + loginDTO.getLogin());
+
         try {
-            logger.info("Requête reçue pour enregistrer un utilisateur : " + authRequest.getEmail());
-            AuthResponseDTO response = authService.register(authRequest);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            logger.warning("Erreur lors de l'inscription : " + e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+            // Authentifier l'utilisateur via le gestionnaire d'authentification
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDTO.getLogin(), loginDTO.getPassword()));
+
+            // Mettre à jour le contexte de sécurité avec les détails de l'utilisateur authentifié
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Générer un token JWT pour l'utilisateur authentifié
+            String jwtToken = jwtService.generateToken((UserDetails) authentication.getPrincipal());
+
+            logger.info("Connexion réussie pour : " + loginDTO.getLogin());
+            return ResponseEntity.ok(new AuthResponseDTO(jwtToken));
+
         } catch (Exception e) {
-            logger.severe("Erreur inattendue lors de l'inscription : " + e.getMessage());
-            return ResponseEntity.badRequest().body("Une erreur est survenue lors de l'inscription.");
+            logger.warning("Échec de l'authentification pour : " + loginDTO.getLogin());
+            return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));
         }
+    }
+
+
+    /**
+     * Récupère les informations de l'utilisateur actuellement authentifié.
+     *
+     * @return Les informations de l'utilisateur sous forme de DTO.
+     */
+    @Operation(summary = "Obtenir l'utilisateur connecté", description = "Renvoie les informations de l'utilisateur actuellement authentifié.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateur renvoyé avec succès."),
+            @ApiResponse(responseCode = "401", description = "Non autorisé.")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
+        logger.info("Requête pour récupérer l'utilisateur actuellement connecté.");
+
+        // Récupérer l'email de l'utilisateur à partir du contexte d'authentification
+        String email = authentication.getName();
+
+        // Utiliser la méthode findUserDTOByEmail pour récupérer les détails de l'utilisateur
+        UserDTO userDTO = userService.findUserDTOByEmail(email);
+
+        logger.info("Utilisateur actuellement connecté : " + email);
+        return ResponseEntity.ok(userDTO);
     }
 }

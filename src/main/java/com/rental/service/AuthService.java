@@ -1,13 +1,15 @@
 package com.rental.service;
 
-import com.rental.dto.AuthRequestDTO;
-import com.rental.dto.AuthResponseDTO;
-import com.rental.entity.User;
-import com.rental.repository.UserRepository;
+import java.util.logging.Logger;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Logger;
+import com.rental.dto.AuthRegisterDTO;
+import com.rental.dto.AuthResponseDTO;
+import com.rental.entity.Role;
+import com.rental.entity.User;
+import com.rental.repository.UserRepository;
 
 /**
  * Service pour gérer les opérations d'authentification et d'inscription.
@@ -27,28 +29,26 @@ public class AuthService {
     /**
      * Inscrit un nouvel utilisateur.
      *
-     * @param authRequestDTO Les informations d'inscription.
+     * @param registerDTO Les informations d'inscription.
      * @return Un objet AuthResponseDTO contenant un message de succès.
      */
-    public AuthResponseDTO register(AuthRequestDTO authRequestDTO) {
-        logger.info("Début de la méthode register pour : " + authRequestDTO.getEmail());
+    public AuthResponseDTO register(AuthRegisterDTO registerDTO) {
+        logger.info("Début de la méthode register pour : " + registerDTO.getEmail());
 
-        // Vérifiez si l'email existe déjà
-        if (userRepository.existsByEmail(authRequestDTO.getEmail())) {
+        if (userRepository.existsByEmail(registerDTO.getEmail())) {
             logger.warning("Échec de l'inscription : l'email existe déjà.");
             throw new IllegalArgumentException("L'email est déjà utilisé.");
         }
 
-        // Création de l'utilisateur
         User user = new User(
-                authRequestDTO.getEmail(),
-                authRequestDTO.getName(),
-                passwordEncoder.encode(authRequestDTO.getPassword())
+                registerDTO.getEmail(),
+                registerDTO.getName(),
+                passwordEncoder.encode(registerDTO.getPassword()),
+                Role.USER // Rôle par défaut
         );
 
-        // Enregistrement dans la base de données
         userRepository.save(user);
-        logger.info("Utilisateur enregistré avec succès : " + authRequestDTO.getEmail());
+        logger.info("Utilisateur enregistré avec succès : " + registerDTO.getEmail());
 
         return new AuthResponseDTO("Utilisateur enregistré avec succès.");
     }
