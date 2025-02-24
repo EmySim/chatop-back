@@ -6,9 +6,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Data Transfer Object (DTO) pour les requêtes d'authentification.
+ * DTO pour l'inscription d'un nouvel utilisateur.
  */
-public class AuthRequestDTO {
+public class AuthRegisterDTO {
 
     @Schema(description = "Adresse email de l'utilisateur", example = "user@example.com")
     @Email(message = "L'email doit être valide.")
@@ -24,11 +24,10 @@ public class AuthRequestDTO {
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;
 
-    // Constructeurs, Getters et Setters
-    public AuthRequestDTO() {
-    }
+    // Constructeurs, Getters & Setters
+    public AuthRegisterDTO() {}
 
-    public AuthRequestDTO(String email, String password, String name) {
+    public AuthRegisterDTO(String email, String password, String name, String role) {
         this.email = email;
         this.password = password;
         this.name = name;
@@ -38,11 +37,23 @@ public class AuthRequestDTO {
         return email;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getPassword() {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

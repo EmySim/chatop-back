@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 public class AuthResponseDTO {
 
-    @Schema(description = "Token JWT généré après authentification", example = "eyJhbGciOiJIUzI1...")
+    @Schema(description = "Token JWT généré après authentification")
     private final String token;
 
     public AuthResponseDTO(String token) {

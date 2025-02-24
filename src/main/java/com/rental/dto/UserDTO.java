@@ -64,7 +64,7 @@ public class UserDTO {
             this.id = user.getId();
             this.email = user.getEmail();
             this.name = user.getName();
-            this.password = user.getPassword();  // A n'utiliser que si nécessaire
+            this.password = user.getPassword();
             logger.debug("Création d'un DTO à partir de l'entité User : id={}, email={}, name={}", user.getId(), user.getEmail(), user.getName());
         } else {
             logger.warn("Tentative de création de DTO à partir d'un utilisateur null.");
