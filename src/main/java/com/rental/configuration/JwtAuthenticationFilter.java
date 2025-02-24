@@ -24,6 +24,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class.getName());
 
+    public static Logger getLogger() {
+        return logger;
+    }
+
     private final com.rental.service.JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
