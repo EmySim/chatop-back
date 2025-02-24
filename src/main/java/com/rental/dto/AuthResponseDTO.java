@@ -1,10 +1,14 @@
 package com.rental.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Data Transfer Object (DTO) for authentication responses.
  */
 public class AuthResponseDTO {
-    private String token;
+
+    @Schema(description = "Token JWT généré après authentification", example = "eyJhbGciOiJIUzI1...")
+    private final String token;
 
     public AuthResponseDTO(String token) {
         this.token = token;
@@ -12,9 +16,5 @@ public class AuthResponseDTO {
 
     public String getToken() {
         return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 }

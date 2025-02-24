@@ -3,91 +3,125 @@ package com.rental.controller;
 import com.rental.dto.AuthRequestDTO;
 import com.rental.dto.AuthResponseDTO;
 import com.rental.dto.UserDTO;
-import com.rental.service.JwtService;
-import com.rental.service.UserService;
-import org.springframework.http.HttpStatus;
+import com.rental.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Controller for handling authentication-related requests.
+ * Contrôleur pour gérer les opérations liées à l'authentification.
  */
+@Tag(name = "Auth", description = "Gestion de l'authentification et des utilisateurs")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private static final Logger logger = Logger.getLogger(AuthController.class.getName());
+    private final AuthService authService;
 
-    private final AuthenticationManager authenticationManager; // Permet de gérer l'authentification des utilisateurs.
-    private final JwtService jwtService;                      // Service pour gérer les tokens JWT.
-    private final UserService userService;                    // Service pour la gestion des utilisateurs.
-
-    // Injection des Beans nécessaires via le constructeur
-    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, UserService userService) {
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
-        this.userService = userService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     /**
-     * Endpoint pour enregistrer un nouvel utilisateur.
+     * Enregistre un nouvel utilisateur.
      *
-     * @param userDTO Les données du nouvel utilisateur à enregistrer.
-     * @return Un statut HTTP approprié.
+     * @param authRequest Informations d'inscription.
+     * @return Token JWT généré.
      */
+    @Operation(summary = "Enregistrer un nouvel utilisateur", description = "Inscrit un utilisateur avec email, mot de passe et nom.")
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserDTO userDTO) {
-        logger.info("Tentative d'enregistrement d'un nouvel utilisateur : " + userDTO.getEmail());
-        // Appelle un service pour enregistrer l'utilisateur (à implémenter dans UserService)
-        userService.register(userDTO);
+    public ResponseEntity<?> register(
+            @Valid @RequestBody(description = "Détails du nouvel utilisateur", required = true)
+            AuthRequestDTO authRequest) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Utilisateur enregistré avec succès.");
+        logger.info("Tentative d'enregistrement pour : " + authRequest.getEmail());
+
+        try {
+            AuthResponseDTO response = authService.register(authRequest);
+
+            logger.info("Enregistrement réussi pour : " + authRequest.getEmail());
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalStateException e) {
+            logger.warning("Erreur d'enregistrement pour : " + authRequest.getEmail() + " - " + e.getMessage());
+
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
     }
 
     /**
-     * Endpoint pour connecter un utilisateur.
+     * Authentifie un utilisateur et génère un JWT.
      *
-     * @param request Les informations d'identification (email, mot de passe).
-     * @return Un token JWT si l'authentification réussit.
+     * @param authRequest Informations de connexion.
+     * @return Token JWT.
      */
+    @Operation(summary = "Authentifier un utilisateur", description = "Connecte un utilisateur et génère un token JWT.")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequestDTO request) {
-        logger.info("Tentative de connexion pour : " + request.getEmail());
+    public ResponseEntity<?> login(
+            @Valid @RequestBody(description = "Détails de connexion", required = true)
+            AuthRequestDTO authRequest) {
 
-        // Authentifie l'utilisateur
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        logger.info("Tentative de connexion pour : " + authRequest.getEmail());
 
-        // Récupère les détails de l'utilisateur après authentification
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        try {
+            AuthResponseDTO response = authService.login(authRequest);
 
-        // Génère un token JWT à partir des UserDetails
-        String token = jwtService.generateToken(userDetails);
+            logger.info("Connexion réussie pour : " + authRequest.getEmail());
+            return ResponseEntity.ok(response);
 
+        } catch (UsernameNotFoundException | IllegalArgumentException e) {
+            logger.warning("Échec de la connexion pour : " + authRequest.getEmail() + " - " + e.getMessage());
 
-        logger.info("Utilisateur authentifié avec succès. Token généré.");
-        return ResponseEntity.ok(new AuthResponseDTO(token));
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Identifiants invalides.");
+            return ResponseEntity.status(401).body(errorResponse); // Unauthorized
+        }
     }
 
     /**
-     * Endpoint pour obtenir les informations de l'utilisateur actuellement authentifié.
+     * Récupère les informations de l'utilisateur connecté.
      *
-     * @param authentication Les informations d'authentification actuelles.
-     * @return Les détails de l'utilisateur connecté.
+     * @param authentication Contexte d'authentification.
+     * @return Profil de l'utilisateur.
      */
+    @Operation(
+            summary = "Obtenir le profil de l'utilisateur connecté",
+            description = "Retourne les détails de l'utilisateur connecté."
+    )
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
-        logger.info("Récupération des informations de l'utilisateur connecté.");
-        String email = authentication.getName();
-        UserDTO userDTO = userService.findUserDTOByEmail(email); // Utilise une méthode de conversion User -> UserDTO
-        return ResponseEntity.ok(userDTO);
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
 
+        if (authentication == null || authentication.getName() == null) {
+            logger.warning("Accès refusé : utilisateur non authentifié.");
+
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Accès refusé.");
+            return ResponseEntity.status(401).body(errorResponse); // Unauthorized
+        }
+
+        logger.info("Récupération des infos pour : " + authentication.getName());
+
+        try {
+            UserDTO userDTO = authService.getUserDetails(authentication.getName());
+            return ResponseEntity.ok(userDTO);
+
+        } catch (Exception e) {
+            logger.warning("Erreur lors de la récupération du profil pour : " + authentication.getName() + " - " + e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Erreur interne lors de la récupération du profil.");
+            return ResponseEntity.status(500).body(errorResponse); // Internal Server Error
+        }
     }
 }

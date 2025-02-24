@@ -65,7 +65,7 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // Utilisation de BCrypt pour l'encodage sécurisé des mots de passe
-    }
+    };
 
     /**
      * Définit le provider d'authentification utilisant le UserDetailsServiceImpl.
