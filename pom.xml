@@ -93,12 +93,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Hibernate Validator pour la validation des beans -->
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-        </dependency>
-
         <!-- SpringDoc : Générer des APIs Swagger -->
         <dependency>
             <groupId>org.springdoc</groupId>
