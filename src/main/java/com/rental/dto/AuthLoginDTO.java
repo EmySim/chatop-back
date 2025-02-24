@@ -14,7 +14,7 @@ public class AuthLoginDTO {
     @Schema(description = "Identifiant (adresse email) de l'utilisateur", example = "user@example.com")
     @Email(message = "L'identifiant doit être une adresse email valide.")
     @NotBlank(message = "L'identifiant est obligatoire.")
-    private String login;
+    private String email;
 
 
     @Schema(description = "Mot de passe de l'utilisateur", example = "P@ssw0rd")
@@ -25,19 +25,18 @@ public class AuthLoginDTO {
     // Constructeurs, Getters & Setters
     public AuthLoginDTO() {}
 
-    public AuthLoginDTO(String login, String password) {
-        this.login = login;
+    public AuthLoginDTO(String email, String password) {
+        this.email = email;
         this.password = password;
     }
 
-    public String getLogin() {
-        return login;
+    public String getEmail() {
+        return email;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public void setEmail(String email) {
+        this.email = email;
     }
-
 
     public String getPassword() {
         return password;
@@ -46,4 +45,5 @@ public class AuthLoginDTO {
     public void setPassword(String password) {
         this.password = password;
     }
+
 }

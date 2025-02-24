@@ -75,14 +75,16 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Échec de l'authentification.")
     })
 
-    @PostMapping("/email")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthLoginDTO loginDTO) {
-        logger.info("Requête de connexion reçue pour : " + loginDTO.getLogin());
+        logger.info("Requête de connexion reçue pour : " + loginDTO.
+                getEmail());
 
         try {
             // Authentifier l'utilisateur via le gestionnaire d'authentification
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDTO.getLogin(), loginDTO.getPassword()));
+            Authentication authentication =
+                    authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
 
             // Mettre à jour le contexte de sécurité avec les détails de l'utilisateur authentifié
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -90,11 +92,11 @@ public class AuthController {
             // Générer un token JWT pour l'utilisateur authentifié
             String jwtToken = jwtService.generateToken((UserDetails) authentication.getPrincipal());
 
-            logger.info("Connexion réussie pour : " + loginDTO.getLogin());
+            logger.info("Connexion réussie pour : " + loginDTO.getEmail());
             return ResponseEntity.ok(new AuthResponseDTO(jwtToken));
 
         } catch (Exception e) {
-            logger.warning("Échec de l'authentification pour : " + loginDTO.getLogin());
+            logger.warning("Échec de l'authentification pour : " + loginDTO.getEmail());
             return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));
         }
     }
@@ -114,12 +116,13 @@ public class AuthController {
     public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
         logger.info("Requête pour récupérer l'utilisateur actuellement connecté.");
 
-        // Récupérer l'email de l'utilisateur à partir du contexte d'authentification
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warning("Aucun utilisateur authentifié trouvé.");
+            return ResponseEntity.status(401).body(null); // Retourne une réponse non autorisée
+        }
+
         String email = authentication.getName();
-
-        // Utiliser la méthode findUserDTOByEmail pour récupérer les détails de l'utilisateur
         UserDTO userDTO = userService.findUserDTOByEmail(email);
-
         logger.info("Utilisateur actuellement connecté : " + email);
         return ResponseEntity.ok(userDTO);
     }

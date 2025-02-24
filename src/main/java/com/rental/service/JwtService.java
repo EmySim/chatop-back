@@ -1,9 +1,6 @@
 package com.rental.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -20,7 +17,6 @@ import java.util.logging.Logger;
 public class JwtService {
 
     private static final Logger logger = Logger.getLogger(JwtService.class.getName());
-
     private final Key secretKey;
 
     @Value("${JWT_EXPIRATION}")
@@ -29,11 +25,10 @@ public class JwtService {
     public JwtService(@Value("${JWT_SECRET}") String secretKeyBase64) {
         byte[] decodedKey = Base64.getDecoder().decode(secretKeyBase64);
         this.secretKey = new SecretKeySpec(decodedKey, SignatureAlgorithm.HS256.getJcaName());
-        logger.info("JwtService initialisé avec succès avec une clé décodée.");
+        logger.info("JwtService initialisé avec succès : clé décodée.");
     }
 
     public String generateToken(UserDetails userDetails) {
-        logger.info("Génération du token avec la clé : " + Base64.getEncoder().encodeToString(secretKey.getEncoded()));
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
@@ -43,46 +38,32 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
-        if (token == null || token.isEmpty()) {
-            logger.warning("Le token JWT est vide ou nul !");
-            return null;
-        }
         try {
             return extractClaim(token, Claims::getSubject);
-        } catch (MalformedJwtException e) {
-            logger.log(Level.SEVERE, "Erreur liée à un token JWT malformé : " + token, e);
-            return null;
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Erreur inattendue lors de l'extraction du username : " + token, ex);
-            return null;
+        } catch (JwtException e) {
+            logger.log(Level.SEVERE, "Erreur lors de l'extraction du subject JWT", e);
+            throw e;
         }
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        try {
-            final String username = extractUsername(token);
-            if (username == null) {
-                return false;
-            }
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur lors de la validation du token : " + token, e);
-            return false;
-        }
+        final String username = extractUsername(token);
+        return username != null
+                && username.equals(userDetails.getUsername())
+                && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
-    }
-
-    private boolean isTokenExpired(String token) {
-        Date expiration = extractExpiration(token);
-        return expiration == null || expiration.before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
     }
 
     private Claims extractAllClaims(String token) {
@@ -92,8 +73,8 @@ public class JwtService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        } catch (MalformedJwtException e) {
-            logger.log(Level.SEVERE, "Le token n'est pas correctement formé : " + token, e);
+        } catch (JwtException e) {
+            logger.log(Level.SEVERE, "Erreur lors de l'analyse du token JWT", e);
             throw e;
         }
     }

@@ -1,8 +1,5 @@
 package com.rental.configuration;
 
-import java.io.IOException;
-import java.util.logging.Logger;
-
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +13,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Filtre JWT appliqué pour valider les tokens sur chaque requête HTTP.
  */
@@ -23,11 +24,6 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class.getName());
-
-    public static Logger getLogger() {
-        return logger;
-    }
-
     private final com.rental.service.JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
@@ -49,38 +45,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        logger.info("Authorization Header: " + authHeader); // Vérification de l'en-tête
-
-
-        // Vérifie si un header d'autorisation est présent
+        // Vérification de l'en-tête Authorization
+        logger.info("Authorization Header : " + authHeader);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.info("Authorization header manquant ou mal formaté.");
+            logger.warning("Authorization header manquant ou mal formaté.");
             filterChain.doFilter(request, response);
             return;
         }
 
         // Extraction du token JWT
-        jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt); // Extrait l'email depuis le token JWT
+        jwt = authHeader.substring(7); // Supprime le préfixe "Bearer "
+        try {
+            userEmail = jwtService.extractUsername(jwt); // Extraire l'email depuis le token JWT
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de l'extraction de l'utilisateur du JWT", e);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        // Valide le token et configure la sécurité
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
             if (jwtService.validateToken(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                // Configure le contexte de sécurité
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                logger.info("JWT valide. L'utilisateur a été authentifié : " + userEmail);
+                logger.info("JWT valide pour l'utilisateur : " + userEmail);
             } else {
                 logger.warning("Token JWT invalide ou expiré pour l'utilisateur : " + userEmail);
             }
-        }else {
-            logger.info("Aucun utilisateur trouvé ou utilisateur déjà authentifié.");
         }
-
-
-        filterChain.doFilter(request, response);// Passe au filtre suivant
+        filterChain.doFilter(request, response); // Continue au filtre suivant
     }
 }
