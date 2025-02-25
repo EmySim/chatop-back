@@ -1,10 +1,10 @@
-
 package com.rental.controller;
 
 import com.rental.dto.AuthLoginDTO;
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
 import com.rental.dto.UserDTO;
+import com.rental.entity.User;
 import com.rental.service.AuthService;
 import com.rental.service.JwtService;
 import com.rental.service.UserService;
@@ -20,11 +20,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
  * Contrôleur pour la gestion de l'authentification et des utilisateurs.
- * Permet l'inscription, la connexion, et la récupération des informations de l'utilisateur connecté.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -48,49 +48,36 @@ public class AuthController {
 
     /**
      * Inscription d'un nouvel utilisateur.
-     *
-     * @param registerDTO Contient l'email, le mot de passe et le nom de l'utilisateur.
-     * @return Un token JWT en cas de succès ou un message d'erreur.
      */
-    @Operation(summary = "Enregistrer un nouvel utilisateur", description = "Permet à un utilisateur de s'inscrire avec son email, nom et mot de passe.")
+    @Operation(summary = "Enregistrer un nouvel utilisateur")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Utilisateur enregistré avec succès, token JWT renvoyé."),
-            @ApiResponse(responseCode = "400", description = "Erreur dans les données d'inscription.")
+            @ApiResponse(responseCode = "200", description = "Utilisateur enregistré avec succès"),
+            @ApiResponse(responseCode = "400", description = "Données d'inscription invalides")
     })
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody AuthRegisterDTO registerDTO) {
-        logger.info("Requête pour enregistrer un nouvel utilisateur : " + registerDTO.getEmail());
+        logger.info("Tentative d'inscription pour : " + registerDTO.getEmail());
         AuthResponseDTO response = authService.register(registerDTO);
         return ResponseEntity.ok(response);
     }
 
     /**
      * Connexion d'un utilisateur.
-     *
-     * @param loginDTO Contient l'email et le mot de passe.
-     * @return Un token JWT si l'authentification réussit.
      */
-    @Operation(summary = "Connexion d'un utilisateur", description = "Permet à un utilisateur de se connecter et d'obtenir un token JWT.")
+    @Operation(summary = "Connexion d'un utilisateur")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Connexion réussie, token JWT renvoyé."),
-            @ApiResponse(responseCode = "401", description = "Échec de l'authentification.")
+            @ApiResponse(responseCode = "200", description = "Connexion réussie"),
+            @ApiResponse(responseCode = "401", description = "Échec de l'authentification")
     })
-
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthLoginDTO loginDTO) {
-        logger.info("Requête de connexion reçue pour : " + loginDTO.
-                getEmail());
+        logger.info("Tentative de connexion pour : " + loginDTO.getEmail());
 
         try {
-            // Authentifier l'utilisateur via le gestionnaire d'authentification
-            Authentication authentication =
-                    authenticationManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
 
-            // Mettre à jour le contexte de sécurité avec les détails de l'utilisateur authentifié
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // Générer un token JWT pour l'utilisateur authentifié
             String jwtToken = jwtService.generateToken((UserDetails) authentication.getPrincipal());
 
             logger.info("Connexion réussie pour : " + loginDTO.getEmail());
@@ -104,39 +91,45 @@ public class AuthController {
 
     /**
      * Récupère les informations de l'utilisateur actuellement authentifié.
-     *
-     * @return Les informations de l'utilisateur sous forme de DTO.
      */
-    @Operation(summary = "Obtenir l'utilisateur connecté", description = "Renvoie les informations de l'utilisateur actuellement authentifié.")
+    @Operation(summary = "Obtenir l'utilisateur connecté")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Utilisateur renvoyé avec succès."),
-            @ApiResponse(responseCode = "401", description = "Non autorisé.")
+            @ApiResponse(responseCode = "200", description = "Utilisateur récupéré"),
+            @ApiResponse(responseCode = "401", description = "Non autorisé")
     })
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
-        logger.info("Requête pour récupérer l'utilisateur actuellement connecté.");
+        logger.info("Récupération de l'utilisateur authentifié...");
 
         if (authentication == null || !authentication.isAuthenticated()) {
             logger.warning("Aucun utilisateur authentifié trouvé.");
-            return ResponseEntity.status(401).body(null); // Retourne une réponse non autorisée
+            return ResponseEntity.status(401).build();
         }
 
-        String email = authentication.getName();
-        UserDTO userDTO = userService.findUserDTOByEmail(email);
-        logger.info("Utilisateur actuellement connecté : " + email);
+        String authenticatedEmail = authentication.getName();
+        UserDTO userDTO = userService.findUserDTOByEmail
+                (authenticatedEmail);
+
+        if (UserDTO.isEmpty()) {
+            logger.warning("Utilisateur introuvable pour l'email : " + authenticatedEmail);
+            return ResponseEntity.status(404).build();
+        }
+
+        User user = UserDTO.get();
+        userDTO = new UserDTO(user);
+
+        logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
+
         return ResponseEntity.ok(userDTO);
     }
 
     /**
      * Déconnexion de l'utilisateur.
-     *
-     * @param authentication L'authentification de l'utilisateur.
-     * @return Un message de succès ou d'erreur.
      */
-    @Operation(summary = "Déconnexion de l'utilisateur", description = "Permet à un utilisateur de se déconnecter en invalidant son token JWT.")
+    @Operation(summary = "Déconnexion de l'utilisateur")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Déconnexion réussie."),
-            @ApiResponse(responseCode = "401", description = "Non autorisé.")
+            @ApiResponse(responseCode = "200", description = "Déconnexion réussie"),
+            @ApiResponse(responseCode = "401", description = "Non autorisé")
     })
     @PostMapping("/logout")
     public ResponseEntity<AuthResponseDTO> logout(Authentication authentication) {
@@ -150,6 +143,7 @@ public class AuthController {
         String email = authentication.getName();
         jwtService.invalidateToken(email);
         SecurityContextHolder.clearContext();
+
         logger.info("Déconnexion réussie pour : " + email);
         return ResponseEntity.ok(new AuthResponseDTO("Déconnexion réussie"));
     }
