@@ -100,27 +100,27 @@ public class AuthController {
     public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
         logger.info("Récupération de l'utilisateur authentifié...");
 
+        // Vérifie si l'utilisateur est authentifié
         if (authentication == null || !authentication.isAuthenticated()) {
             logger.warning("Aucun utilisateur authentifié trouvé.");
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).build(); // Renvoie 401 si non authentifié
         }
 
         String authenticatedEmail = authentication.getName();
         UserDTO userDTO = userService.findUserDTOByEmail(authenticatedEmail);
 
-        if (userDTO == null || userDTO.isEmpty()) {
-            logger.warning("Utilisateur introuvable pour l'email : " + authenticatedEmail);
-            return ResponseEntity.status(404).build();
+        // Vérifie si l'utilisateur est trouvé et le logge
+        if (userDTO != null && !userDTO.isEmpty()) {
+            logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
+        } else {
+            logger.warning("Aucun utilisateur trouvé pour l'email : " + authenticatedEmail);
+            userDTO = new UserDTO(); // Crée un UserDTO vide
         }
 
-        // Correction : appel de toEntity() sur l'instance userDTO
-        User user = userDTO.toEntity();
-        userDTO = new UserDTO(user);
-
-        logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
-
-        return ResponseEntity.ok(userDTO);
+        return ResponseEntity.ok(userDTO); // Renvoie 200 avec les informations de l'utilisateur (ou UserDTO vide)
     }
+
+
 
     /**
      * Déconnexion de l'utilisateur.
