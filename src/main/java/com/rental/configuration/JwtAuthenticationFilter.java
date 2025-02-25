@@ -63,6 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Check if the token is invalidated
+        if (jwtService.isTokenInvalidated(jwt)) {
+            logger.warning("Token JWT invalidé détecté : " + jwt);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Valide le token et configure la sécurité
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);

@@ -87,7 +87,7 @@ public class JwtService {
         logger.info("Token JWT invalidé : " + token);
     }
 
-    private boolean isTokenInvalidated(String token) {
+    public boolean isTokenInvalidated(String token) {
         return invalidatedTokens.getOrDefault(token, false);
     }
 }

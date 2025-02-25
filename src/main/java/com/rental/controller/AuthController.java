@@ -4,7 +4,6 @@ import com.rental.dto.AuthLoginDTO;
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
 import com.rental.dto.UserDTO;
-import com.rental.entity.User;
 import com.rental.service.AuthService;
 import com.rental.service.JwtService;
 import com.rental.service.UserService;
@@ -111,7 +110,7 @@ public class AuthController {
 
         // Vérifie si l'utilisateur est trouvé et le logge
         if (userDTO != null && !userDTO.isEmpty()) {
-            logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
+            logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail() + ", CreatedAt = " + userDTO.getCreatedAt() + ", UpdatedAt = " + userDTO.getUpdatedAt());
         } else {
             logger.warning("Aucun utilisateur trouvé pour l'email : " + authenticatedEmail);
             userDTO = new UserDTO(); // Crée un UserDTO vide

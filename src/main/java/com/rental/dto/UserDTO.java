@@ -111,7 +111,9 @@ public class UserDTO {
         boolean isEmptyData = (id == null || id == 0L)
                 && (email == null || email.isEmpty())
                 && (name == null || name.isEmpty())
-                && (role == null);
+                && (role == null)
+                && (createdAt == null)
+                && (updatedAt == null);
 
         logger.info("Vérification si UserDTO est vide : " + isEmptyData);
         return isEmptyData;
