@@ -20,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -107,15 +106,15 @@ public class AuthController {
         }
 
         String authenticatedEmail = authentication.getName();
-        UserDTO userDTO = userService.findUserDTOByEmail
-                (authenticatedEmail);
+        UserDTO userDTO = userService.findUserDTOByEmail(authenticatedEmail);
 
-        if (UserDTO.isEmpty()) {
+        if (userDTO == null || userDTO.isEmpty()) {
             logger.warning("Utilisateur introuvable pour l'email : " + authenticatedEmail);
             return ResponseEntity.status(404).build();
         }
 
-        User user = UserDTO.get();
+        // Correction : appel de toEntity() sur l'instance userDTO
+        User user = userDTO.toEntity();
         userDTO = new UserDTO(user);
 
         logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
