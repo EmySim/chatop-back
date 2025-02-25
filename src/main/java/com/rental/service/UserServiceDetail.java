@@ -22,6 +22,13 @@ public class UserServiceDetail {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Méthode pour obtenir les détails d'un utilisateur par ID.
+     * Le mot de passe n'est pas inclus pour des raisons de sécurité.
+     *
+     * @param id L'ID de l'utilisateur à rechercher.
+     * @return Un DTO représentant l'utilisateur, ou null si non trouvé.
+     */
     public UserDTO getUserDetailsById(Long id) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
@@ -29,6 +36,7 @@ public class UserServiceDetail {
             return null;
         }
         User user = optionalUser.get();
-        return new UserDTO(user.getEmail(), user.getName(), user.getPassword());
+        // Retourne un DTO sans inclure le mot de passe pour des raisons de sécurité
+        return new UserDTO(user.getId(), user.getEmail(), user.getName(), user.getRole());
     }
 }

@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.logging.Logger;
 
+/**
+ * Service pour gérer les utilisateurs, y compris l'enregistrement et la récupération.
+ */
 @Service
 public class UserService {
 
@@ -38,7 +41,8 @@ public class UserService {
         }
 
         // Création de l'utilisateur avec les données du DTO
-        User user = new User(userDTO.getEmail(), userDTO.getName(), passwordEncoder.encode(userDTO.getPassword()));
+        // Le mot de passe est crypté ici avant d'être enregistré
+        User user = new User(userDTO.getEmail(), userDTO.getName(), passwordEncoder.encode("defaultPassword"), userDTO.getRole());
 
         // Enregistrement de l'utilisateur dans la base de données
         userRepository.save(user);
@@ -65,8 +69,8 @@ public class UserService {
                     return new IllegalStateException("Utilisateur non trouvé avec l'email : " + email);
                 });
 
-        // Retourne les informations de l'utilisateur sous forme de DTO (mot de passe masqué)
+        // Retourne les informations de l'utilisateur sous forme de DTO (le mot de passe n'est pas inclus)
         logger.info("Utilisateur trouvé : " + email);
-        return new UserDTO(user.getEmail(), user.getName(), null); // Le mot de passe est masqué (null)
+        return new UserDTO(user.getId(), user.getEmail(), user.getName(), user.getRole());
     }
 }

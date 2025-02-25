@@ -11,6 +11,9 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
  * Entity class representing a user in the system.
@@ -18,6 +21,8 @@ import java.util.Collections;
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
+
+    private static final Logger logger = Logger.getLogger(User.class.getName());
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,14 +38,14 @@ public class User implements UserDetails {
     private String name;
 
     @NotNull
-    @Size(min = 8)
+    @Size(min = 6)
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
@@ -54,12 +59,6 @@ public class User implements UserDetails {
 
     /**
      * Constructor for creating a user with a specific role.
-     * This is a full parameterized constructor.
-     *
-     * @param email    The user's email (must be unique and valid).
-     * @param name     The user's name (maximum 100 characters).
-     * @param password The user's hashed password.
-     * @param role     The role assigned to the user.
      */
     public User(String email, String name, String password, Role role) {
         this.email = email;
@@ -69,85 +68,70 @@ public class User implements UserDetails {
     }
 
     /**
-     * Constructor for creating a user without explicitly specifying a role.
-     * The role will default to `USER`.
-     *
-     * @param email    The user's email (must be unique and valid).
-     * @param name     The user's name (maximum 100 characters).
-     * @param password The user's hashed password.
+     * Constructor with default role (USER).
      */
     public User(String email, String name, String password) {
-        this.email = email;
-        this.name = name;
-        this.password = password;
-
-        // Assign default role if none is specified
-        this.role = Role.USER; // Assuming `USER` is the default role
+        this(email, name, password, Role.USER);
     }
 
     // Auto-setting timestamps for database persistence
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+        logger.info("User created at: " + createdAt);
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+        logger.info("User updated at: " + updatedAt);
     }
 
     // Getters and Setters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getEmail() { return email; }
+
     public void setEmail(String email) { this.email = email; }
 
     public String getName() { return name; }
+
     public void setName(String name) { this.name = name; }
 
     @Override
     public String getPassword() { return password; }
+
     public void setPassword(String password) { this.password = password; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     public Role getRole() { return role; }
+
     public void setRole(Role role) { this.role = role; }
 
     // Implementing `UserDetails` methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Maps the user's role to a `GrantedAuthority` (e.g., "ROLE_USER")
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
 
     @Override
     public String getUsername() {
-        return this.email; // Username is the email in this system.
+        return this.email;
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true; // Account expiration not implemented.
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true; // Locking accounts not implemented.
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true; // Credential expiration not implemented.
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true; // User is always enabled in this implementation.
-    }
+    public boolean isEnabled() { return true; }
 }
