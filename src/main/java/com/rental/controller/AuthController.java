@@ -57,6 +57,7 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody AuthRegisterDTO registerDTO) {
         logger.info("Tentative d'inscription pour : " + registerDTO.getEmail());
         AuthResponseDTO response = authService.register(registerDTO);
+        logger.info("Inscription réussie pour : " + registerDTO.getEmail());
         return ResponseEntity.ok(response);
     }
 
@@ -75,7 +76,6 @@ public class AuthController {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwtToken = jwtService.generateToken((UserDetails) authentication.getPrincipal());
 
@@ -83,7 +83,7 @@ public class AuthController {
             return ResponseEntity.ok(new AuthResponseDTO(jwtToken));
 
         } catch (Exception e) {
-            logger.warning("Échec de l'authentification pour : " + loginDTO.getEmail());
+            logger.warning("Échec de l'authentification pour : " + loginDTO.getEmail() + " - Erreur : " + e.getMessage());
             return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));
         }
     }
@@ -100,7 +100,6 @@ public class AuthController {
     public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
         logger.info("Récupération de l'utilisateur authentifié...");
 
-        // Vérifie si l'utilisateur est authentifié
         if (authentication == null || !authentication.isAuthenticated()) {
             logger.warning("Aucun utilisateur authentifié trouvé.");
             return ResponseEntity.status(401).build(); // Renvoie 401 si non authentifié
@@ -109,18 +108,14 @@ public class AuthController {
         String authenticatedEmail = authentication.getName();
         UserDTO userDTO = userService.findUserDTOByEmail(authenticatedEmail);
 
-        // Vérifie si l'utilisateur est trouvé et le logge
-        if (userDTO != null && !userDTO.isEmpty()) {
-            logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail() + ", CreatedAt = " + userDTO.getCreatedAt() + ", UpdatedAt = " + userDTO.getUpdatedAt());
+        if (userDTO != null) {
+            logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
+            return ResponseEntity.ok(userDTO);
         } else {
             logger.warning("Aucun utilisateur trouvé pour l'email : " + authenticatedEmail);
-            userDTO = new UserDTO(); // Crée un UserDTO vide
+            return ResponseEntity.notFound().build(); // Renvoie 404 si utilisateur non trouvé
         }
-
-        return ResponseEntity.ok(userDTO); // Renvoie 200 avec les informations de l'utilisateur (ou UserDTO vide)
     }
-
-
 
     /**
      * Déconnexion de l'utilisateur.

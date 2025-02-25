@@ -64,7 +64,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -77,17 +77,17 @@ public class JwtService {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (JwtException e) {
-            logger.log(Level.SEVERE, "Erreur lors de l'analyse du token JWT", e);
+            logger.log(Level.SEVERE, "Erreur lors de l'extraction des claims JWT", e);
             throw e;
         }
     }
 
     public void invalidateToken(String token) {
         invalidatedTokens.put(token, true);
-        logger.info("Token JWT invalidé : " + token);
+        logger.info("Token invalidé : " + token);
     }
 
     public boolean isTokenInvalidated(String token) {
-        return invalidatedTokens.getOrDefault(token, false);
+        return invalidatedTokens.containsKey(token);
     }
 }
