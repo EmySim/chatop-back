@@ -10,6 +10,7 @@ import com.rental.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -130,7 +131,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Non autorisé")
     })
     @PostMapping("/logout")
-    public ResponseEntity<AuthResponseDTO> logout(Authentication authentication) {
+    public ResponseEntity<AuthResponseDTO> logout(HttpServletRequest request, Authentication authentication) {
         logger.info("Requête de déconnexion reçue.");
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -138,11 +139,17 @@ public class AuthController {
             return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
         }
 
-        String email = authentication.getName();
-        jwtService.invalidateToken(email);
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warning("Authorization header manquant ou mal formaté.");
+            return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
+        }
+
+        String token = authHeader.substring(7); // Supprime le préfixe "Bearer "
+        jwtService.invalidateToken(token);
         SecurityContextHolder.clearContext();
 
-        logger.info("Déconnexion réussie pour : " + email);
+        logger.info("Déconnexion réussie pour le token : " + token);
         return ResponseEntity.ok(new AuthResponseDTO("Déconnexion réussie"));
     }
 }
