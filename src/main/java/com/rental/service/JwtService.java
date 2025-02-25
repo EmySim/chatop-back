@@ -12,12 +12,14 @@ import java.util.Date;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class JwtService {
 
     private static final Logger logger = Logger.getLogger(JwtService.class.getName());
     private final Key secretKey;
+    private final ConcurrentHashMap<String, Boolean> invalidatedTokens = new ConcurrentHashMap<>();
 
     @Value("${JWT_EXPIRATION}")
     private long jwtExpiration;
@@ -50,7 +52,8 @@ public class JwtService {
         final String username = extractUsername(token);
         return username != null
                 && username.equals(userDetails.getUsername())
-                && !isTokenExpired(token);
+                && !isTokenExpired(token)
+                && !isTokenInvalidated(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -77,5 +80,14 @@ public class JwtService {
             logger.log(Level.SEVERE, "Erreur lors de l'analyse du token JWT", e);
             throw e;
         }
+    }
+
+    public void invalidateToken(String token) {
+        invalidatedTokens.put(token, true);
+        logger.info("Token JWT invalidé : " + token);
+    }
+
+    private boolean isTokenInvalidated(String token) {
+        return invalidatedTokens.getOrDefault(token, false);
     }
 }

@@ -53,6 +53,11 @@ public class SecurityConfig {
                         ).permitAll() // Routes publiques
                         .anyRequest().permitAll() // Authentification requise pour les autres routes
                 )
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Ajout du filtre JWT
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // Pas de session
 

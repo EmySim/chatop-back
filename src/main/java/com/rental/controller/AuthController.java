@@ -1,3 +1,4 @@
+
 package com.rental.controller;
 
 import com.rental.dto.AuthLoginDTO;
@@ -84,7 +85,7 @@ public class AuthController {
             // Authentifier l'utilisateur via le gestionnaire d'authentification
             Authentication authentication =
                     authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
+                            new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
 
             // Mettre à jour le contexte de sécurité avec les détails de l'utilisateur authentifié
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -100,7 +101,6 @@ public class AuthController {
             return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));
         }
     }
-
 
     /**
      * Récupère les informations de l'utilisateur actuellement authentifié.
@@ -125,5 +125,32 @@ public class AuthController {
         UserDTO userDTO = userService.findUserDTOByEmail(email);
         logger.info("Utilisateur actuellement connecté : " + email);
         return ResponseEntity.ok(userDTO);
+    }
+
+    /**
+     * Déconnexion de l'utilisateur.
+     *
+     * @param authentication L'authentification de l'utilisateur.
+     * @return Un message de succès ou d'erreur.
+     */
+    @Operation(summary = "Déconnexion de l'utilisateur", description = "Permet à un utilisateur de se déconnecter en invalidant son token JWT.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Déconnexion réussie."),
+            @ApiResponse(responseCode = "401", description = "Non autorisé.")
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponseDTO> logout(Authentication authentication) {
+        logger.info("Requête de déconnexion reçue.");
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warning("Aucun utilisateur authentifié trouvé.");
+            return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
+        }
+
+        String email = authentication.getName();
+        jwtService.invalidateToken(email);
+        SecurityContextHolder.clearContext();
+        logger.info("Déconnexion réussie pour : " + email);
+        return ResponseEntity.ok(new AuthResponseDTO("Déconnexion réussie"));
     }
 }
