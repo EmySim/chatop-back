@@ -71,6 +71,8 @@ public class UserService {
 
         // Retourne les informations de l'utilisateur sous forme de DTO (le mot de passe n'est pas inclus)
         logger.info("Utilisateur trouvé : " + email);
-        return new UserDTO(user.getId(), user.getEmail(), user.getName(), user.getRole());
+        logger.info("Created at: " + user.getCreatedAt());
+        logger.info("Last update: " + user.getUpdatedAt());
+        return new UserDTO(user.getId(), user.getEmail(), user.getName(), user.getRole(), user.getCreatedAt(), user.getUpdatedAt());
     }
 }

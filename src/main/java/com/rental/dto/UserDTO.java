@@ -84,8 +84,8 @@ public class UserDTO {
             this.updatedAt = user.getUpdatedAt();
 
             logger.log(Level.FINE, String.format(
-                    "Création d'un DTO à partir de l'entité User : id=%d, email=%s",
-                    user.getId(), user.getEmail()
+                    "Création d'un DTO à partir de l'entité User : id=%d, email=%s, createdAt=%s, updatedAt=%s",
+                    user.getId(), user.getEmail(), user.getCreatedAt(), user.getUpdatedAt()
             ));
         } else {
             logger.warning("Tentative de création de DTO à partir d'un utilisateur null.");
