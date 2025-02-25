@@ -11,12 +11,10 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
- * Entity class representing a user in the system.
+ * Entité représentant un utilisateur dans le système.
  */
 @Entity
 @Table(name = "users")
@@ -53,12 +51,12 @@ public class User implements UserDetails {
     private Role role;
 
     /**
-     * Default constructor (required by Hibernate).
+     * Constructeur par défaut (nécessaire pour Hibernate).
      */
     public User() {}
 
     /**
-     * Constructor for creating a user with a specific role.
+     * Constructeur pour créer un utilisateur avec un rôle spécifique.
      */
     public User(String email, String name, String password, Role role) {
         this.email = email;
@@ -68,27 +66,27 @@ public class User implements UserDetails {
     }
 
     /**
-     * Constructor with default role (USER).
+     * Constructeur avec rôle par défaut (USER).
      */
     public User(String email, String name, String password) {
         this(email, name, password, Role.USER);
     }
 
-    // Auto-setting timestamps for database persistence
+    // Auto-setting des timestamps pour la persistance en base de données
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
-        logger.info("User created at: " + createdAt);
+        this.createdAt = LocalDateTime.now(); // Initialise la date de création à la date actuelle
+        this.updatedAt = LocalDateTime.now(); // Initialise également la date de mise à jour
+        logger.info("Utilisateur créé à : " + createdAt);
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-        logger.info("User updated at: " + updatedAt);
+        logger.info("Utilisateur mis à jour à : " + updatedAt);
     }
 
-    // Getters and Setters
+    // Getters et Setters
     public Long getId() { return id; }
 
     public String getEmail() { return email; }
@@ -112,7 +110,7 @@ public class User implements UserDetails {
 
     public void setRole(Role role) { this.role = role; }
 
-    // Implementing `UserDetails` methods
+    // Implémentation des méthodes `UserDetails`
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));

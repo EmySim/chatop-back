@@ -5,6 +5,7 @@ import com.rental.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.time.LocalDateTime;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
 @Tag(name = "UserDTO", description = "Data Transfer Object pour les informations d'utilisateur")
 public class UserDTO {
 
-    private static final Logger logger = Logger.getLogger(UserDTO.class.getName()); // Logger pour les logs
+    private static final Logger logger = Logger.getLogger(UserDTO.class.getName());
 
     @Schema(description = "Identifiant unique de l'utilisateur")
     private Long id;
@@ -30,6 +31,12 @@ public class UserDTO {
     @Schema(description = "Rôle de l'utilisateur")
     private Role role;
 
+    @Schema(description = "Date de création de l'utilisateur")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "Date de la dernière mise à jour de l'utilisateur")
+    private LocalDateTime updatedAt;
+
     /**
      * Constructeur par défaut (nécessaire pour la sérialisation).
      */
@@ -40,16 +47,28 @@ public class UserDTO {
     /**
      * Constructeur principal pour création de DTO.
      */
-    public UserDTO(Long id, String email, String name, Role role) {
+    public UserDTO(Long id, String email, String name, Role role, LocalDateTime createdAt, LocalDateTime updatedAt)
+    {
         this.id = id;
         this.email = email;
         this.name = name;
         this.role = role;
-
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         logger.log(Level.FINE, String.format(
                 "Création d'un DTO utilisateur avec id=%d, email=%s, name=%s",
                 id, email, name
         ));
+    }
+
+    /**
+     * Nouveau constructeur avec seulement quatre paramètres.
+     */
+    public UserDTO(Long id, String email, String name, Role role) { // Correction ajoutée ici
+        this.id = id;
+        this.email = email;
+        this.name = name;
+        this.role = role;
     }
 
     /**
@@ -61,6 +80,8 @@ public class UserDTO {
             this.email = user.getEmail();
             this.name = user.getName();
             this.role = user.getRole();
+            this.createdAt = user.getCreatedAt();
+            this.updatedAt = user.getUpdatedAt();
 
             logger.log(Level.FINE, String.format(
                     "Création d'un DTO à partir de l'entité User : id=%d, email=%s",
@@ -98,4 +119,10 @@ public class UserDTO {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
