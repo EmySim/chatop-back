@@ -141,7 +141,7 @@ public class AuthController {
         }
 
         String token = authHeader.substring(7); // Supprime le préfixe "Bearer "
-        jwtService.invalidateToken(token);
+        jwtService.invalidateToken(token); // Ajout de l'invalidation
         SecurityContextHolder.clearContext();
 
         logger.info("Déconnexion réussie pour le token : " + token);
