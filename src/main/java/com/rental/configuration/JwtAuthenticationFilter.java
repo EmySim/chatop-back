@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        logger.info("Début du processus de filtrage.");
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
@@ -84,5 +85,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response); // Continue au filtre suivant
+        logger.info("Fin du processus de filtrage.");
     }
 }

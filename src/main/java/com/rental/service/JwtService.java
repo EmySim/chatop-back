@@ -125,6 +125,8 @@ public class JwtService {
      * Vérifie si un token a été invalidé.
      */
     public boolean isTokenInvalidated(String token) {
-        return invalidatedTokens.contains(token);
+        boolean isInvalidated = invalidatedTokens.contains(token);
+        logger.info("Vérification de l'invalidation du token : " + token + " - Résultat : " + isInvalidated); // P703a
+        return isInvalidated;
     }
 }
