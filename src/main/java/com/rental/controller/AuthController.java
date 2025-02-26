@@ -129,23 +129,36 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> logout(HttpServletRequest request, Authentication authentication) {
         logger.info("Requête de déconnexion reçue.");
 
+        // Vérifie si l'utilisateur est authentifié
         if (authentication == null || !authentication.isAuthenticated()) {
             logger.warning("Aucun utilisateur authentifié trouvé.");
             return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
         }
 
+        // Récupère le token JWT du header "Authorization"
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.warning("Authorization header manquant ou mal formaté.");
             return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
         }
 
-        String token = authHeader.substring(7); // Supprime le préfixe "Bearer "
-        jwtService.invalidateToken(token); // Ajout de l'invalidation
-        logger.info("Token invalidé : " + token);
-        SecurityContextHolder.clearContext();
+        // Extrait le token en supprimant le préfixe "Bearer "
+        String token = authHeader.substring(7);
+        try {
+            // Invalidation du token (método d'ajout à une liste noire, par exemple via Redis)
+            jwtService.invalidateToken(token);
+            logger.info("Token invalidé : " + token);
 
-        logger.info("Déconnexion réussie pour le token : " + token);
-        return ResponseEntity.ok(new AuthResponseDTO("Déconnexion réussie"));
+            // Efface le contexte de sécurité
+            SecurityContextHolder.clearContext();
+            logger.info("Déconnexion réussie pour le token : " + token);
+
+            // Réponse de succès
+            return ResponseEntity.ok(new AuthResponseDTO("Déconnexion réussie"));
+        } catch (Exception e) {
+            logger.severe("Erreur lors de l'invalidation du token: " + e.getMessage());
+            return ResponseEntity.status(500).body(new AuthResponseDTO("Erreur serveur"));
+        }
     }
 }
+
