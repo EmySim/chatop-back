@@ -47,7 +47,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         // Vérification de l'en-tête Authorization
-        logger.info("Authorization Header : " + authHeader);
+        if (authHeader == null) {
+            logger.warning("Authorization header est NULL !");
+        } else {
+            logger.info("Authorization Header : " + authHeader);
+        }
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.warning("Authorization header manquant ou mal formaté.");
             filterChain.doFilter(request, response);
@@ -76,6 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
             if (jwtService.validateToken(jwt, userDetails)) {
+                logger.info("✅ Token valide pour l'utilisateur : " + userEmail);
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
