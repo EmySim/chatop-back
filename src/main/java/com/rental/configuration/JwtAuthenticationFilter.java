@@ -17,9 +17,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Filtre JWT appliqué pour valider les tokens sur chaque requête HTTP.
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -27,9 +24,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final com.rental.service.JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    /**
-     * Constructeur avec injection des dépendances.
-     */
     public JwtAuthenticationFilter(com.rental.service.JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
@@ -41,56 +35,74 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        logger.info("Début du processus de filtrage.");
+        logger.info("Début du filtrage JWT.");
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
 
-        // Vérification de l'en-tête Authorization
-        if (authHeader == null) {
-            logger.warning("Authorization header est NULL !");
-        } else {
-            logger.info("Authorization Header : " + authHeader);
-        }
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warning("Authorization header manquant ou mal formaté.");
+            logger.info("Aucun token Bearer trouvé dans l'en-tête Authorization.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extraction du token JWT
-        jwt = authHeader.substring(7); // Supprime le préfixe "Bearer "
+        jwt = authHeader.substring(7); // Récupérer ce qui suit "Bearer ".
+
+        // Vérifiez si le token contient exactement deux points (.)
+        if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
+            logger.warning("Le token JWT est mal formé : "+jwt);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Invalid JWT token format.");
+            return;
+        }
+
+        // Vérifiez que le JWT semble être en Base64URL.
+        if (!isBase64UrlEncoded(jwt)) {
+            logger.warning("Le token ne semble pas être encodé en Base64URL : " + jwt);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Invalid JWT encoding.");
+            return;
+        }
+
+
+        logger.info("Token JWT trouvé, extraction du nom d'utilisateur.");
+
+
         try {
-            userEmail = jwtService.extractUsername(jwt); // Extraire l'email depuis le token JWT
+            userEmail = jwtService.extractUsername(jwt);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Erreur lors de l'extraction de l'utilisateur du JWT", e);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Check if the token is invalidated
         if (jwtService.isTokenInvalidated(jwt)) {
-            logger.warning("Token JWT invalidé détecté : " + jwt);
+            logger.warning("Token invalidé détecté pour l'utilisateur : " + userEmail);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Valide le token et configure la sécurité
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            logger.info("Authentification non présente dans le contexte pour l'utilisateur : " + userEmail);
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
             if (jwtService.validateToken(jwt, userDetails)) {
-                logger.info("✅ Token valide pour l'utilisateur : " + userEmail);
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                logger.info("JWT valide pour l'utilisateur : " + userEmail);
+                logger.info("Token validé pour l'utilisateur : " + userEmail);
             } else {
-                logger.warning("Token JWT invalide ou expiré pour l'utilisateur : " + userEmail);
+                logger.warning("Token invalide pour l'utilisateur : " + userEmail);
             }
         }
-        filterChain.doFilter(request, response); // Continue au filtre suivant
-        logger.info("Fin du processus de filtrage.");
+        filterChain.doFilter(request, response);
+        logger.info("Fin du filtrage JWT.");
+    }
+
+    /**
+     * Vérifie si une chaîne est encodée en Base64URL et ne contient que des caractères valides.
+     */
+    private boolean isBase64UrlEncoded(String jwt) {
+        return jwt.matches("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
     }
 }

@@ -1,5 +1,19 @@
 package com.rental.controller;
 
+import java.util.logging.Logger;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.rental.dto.AuthLoginDTO;
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
@@ -7,20 +21,12 @@ import com.rental.dto.UserDTO;
 import com.rental.service.AuthService;
 import com.rental.service.JwtService;
 import com.rental.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.logging.Logger;
 
 /**
  * Contrôleur pour la gestion de l'authentification et des utilisateurs.
@@ -50,7 +56,7 @@ public class AuthController {
      */
     @Operation(summary = "Enregistrer un nouvel utilisateur")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Utilisateur enregistré avec succès"),
+            @ApiResponse(responseCode = "200", description = "\t(⊙＿⊙')Utilisateur enregistré avec succès"),
             @ApiResponse(responseCode = "400", description = "Données d'inscription invalides")
     })
     @PostMapping("/register")
@@ -76,6 +82,7 @@ public class AuthController {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwtToken = jwtService.generateToken((UserDetails) authentication.getPrincipal());
 

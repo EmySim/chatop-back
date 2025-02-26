@@ -48,8 +48,8 @@ public class AuthService {
         );
 
         userRepository.save(user);
-        logger.info("Utilisateur enregistré avec succès : " + registerDTO.getEmail());
+        logger.info("(ಥ﹏ಥ)Utilisateur enregistré avec succès : " + registerDTO.getEmail());
 
-        return new AuthResponseDTO("Utilisateur enregistré avec succès.");
+        return new AuthResponseDTO("(ÒДÓױ)Utilisateur enregistré avec succès.");
     }
 }

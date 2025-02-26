@@ -1,13 +1,14 @@
 package com.rental.service;
 
-import com.rental.dto.UserDTO;
-import com.rental.entity.User;
-import com.rental.repository.UserRepository;
+import java.util.logging.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Logger;
+import com.rental.dto.UserDTO;
+import com.rental.entity.User;
+import com.rental.repository.UserRepository;
 
 /**
  * Service pour gérer les utilisateurs, y compris l'enregistrement et la récupération.
@@ -47,7 +48,7 @@ public class UserService {
         // Enregistrement de l'utilisateur dans la base de données
         userRepository.save(user);
 
-        logger.info("Utilisateur enregistré avec succès : " + userDTO.getEmail());
+        logger.info("(̿▀̿‿ ̿▀̿ ̿)Utilisateur enregistré avec succès : " + userDTO.getEmail());
     }
 
     /**
