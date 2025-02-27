@@ -1,15 +1,17 @@
 package com.rental.service;
 
-import java.util.logging.Logger;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
 import com.rental.entity.Role;
 import com.rental.entity.User;
 import com.rental.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.logging.Logger;
 
 @Service
 public class AuthService {
@@ -17,45 +19,66 @@ public class AuthService {
     private static final Logger logger = Logger.getLogger(AuthService.class.getName());
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService; // Ajout de la déclaration du champ jwtService
+    private final JwtService jwtService;
 
-    // Injection de JwtService dans le constructeur
+    /**
+     * Constructeur de AuthService.
+     * @param userRepository Le repository des utilisateurs.
+     * @param passwordEncoder L'encodeur de mot de passe pour la sécurité.
+     * @param jwtService Le service pour la génération de tokens JWT.
+     */
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService; // Initialisation du champ jwtService
+        this.jwtService = jwtService;
     }
 
     /**
-     * Inscrit un nouvel utilisateur.
-     *
-     * @param registerDTO Les informations d'inscription.
-     * @return Un objet AuthResponseDTO contenant un message de succès.
+     * Inscription d'un nouvel utilisateur et génération d'un token JWT.
+     * @param registerDTO Données de l'utilisateur à inscrire.
+     * @return AuthResponseDTO contenant le token JWT.
      */
+    @Operation(summary = "Inscription d'un utilisateur", description = "Permet d'inscrire un nouvel utilisateur et génère un JWT.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateur inscrit avec succès"),
+            @ApiResponse(responseCode = "400", description = "Erreur lors de l'inscription (email déjà utilisé ou mot de passe invalide)")
+    })
     public AuthResponseDTO register(AuthRegisterDTO registerDTO) {
-        logger.info("Début de la méthode register pour : " + registerDTO.getEmail());
+        logger.info("Tentative d'inscription pour l'utilisateur : " + registerDTO.getEmail());
 
+        // Vérifie si l'email existe déjà dans la base de données
         if (userRepository.existsByEmail(registerDTO.getEmail())) {
-            logger.warning("Échec de l'inscription : l'email existe déjà.");
+            logger.warning("L'email " + registerDTO.getEmail() + " est déjà utilisé.");
             throw new IllegalArgumentException("L'email est déjà utilisé.");
         }
 
-        // Crée un nouvel utilisateur avec le rôle par défaut
-        User user = new User(
-                registerDTO.getEmail(),
-                registerDTO.getName(),
-                passwordEncoder.encode(registerDTO.getPassword()),
-                Role.USER
-        );
+        // Crée un utilisateur avec le rôle par défaut
+        User user = createUser(registerDTO.getEmail(), registerDTO.getName(), registerDTO.getPassword(), Role.USER);
 
-        // Sauvegarde l'utilisateur en base
-        userRepository.save(user);
-        logger.info("Utilisateur mis en base avec succès : " + registerDTO.getEmail());
+        // Génère un token JWT pour l'utilisateur
+        String jwtToken = jwtService.generateToken(user.getEmail());
 
-        // Génère un token JWT à partir du service JwtService
-        String jwtToken = jwtService.generateToken(user); // Appel de la méthode generateToken du JwtService
+        logger.info("Utilisateur inscrit avec succès : " + registerDTO.getEmail());
 
-        // Renvoie un DTO avec le token JWT valide
+        // Retourne la réponse avec le JWT généré
         return new AuthResponseDTO(jwtToken);
+    }
+
+    /**
+     * Méthode privée utilisée pour créer un utilisateur dans la base de données.
+     * @param email L'email de l'utilisateur.
+     * @param name Le nom de l'utilisateur.
+     * @param password Le mot de passe de l'utilisateur.
+     * @param role Le rôle de l'utilisateur.
+     * @return L'utilisateur créé.
+     */
+    private User createUser(String email, String name, String password, Role role) {
+        logger.info("Création de l'utilisateur : " + email);
+
+        // Crée un utilisateur avec un mot de passe crypté
+        User user = new User(email, name, passwordEncoder.encode(password), role);
+
+        // Sauvegarde l'utilisateur en base de données
+        return userRepository.save(user);
     }
 }

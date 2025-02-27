@@ -122,6 +122,10 @@ public class UserDTO {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
+    public String getPassword() {
+        return password; // Vous pouvez décider si vous souhaitez exposer ou non ce mot de passe
+    }
+
     @Override
     public String toString() {
         return "UserDTO{" +

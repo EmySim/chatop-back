@@ -84,7 +84,8 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwtToken = jwtService.generateToken((UserDetails) authentication.getPrincipal());
+            String jwtToken = jwtService.generateToken(((UserDetails) authentication.getPrincipal()).getUsername());
+
 
             logger.info("Connexion réussie pour : " + loginDTO.getEmail());
             return ResponseEntity.ok(new AuthResponseDTO(jwtToken));
