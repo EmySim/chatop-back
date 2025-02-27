@@ -31,7 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         logger.info("Authentification : Chargement de l'utilisateur via l'email : " + email);
 
-        UserDTO userDTO = userService.findUserByEmail(email); // Utilisation du service au lieu du repo
+        User user = userService.findUserByEmail(email); // Utilisation du service au lieu du repo
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),

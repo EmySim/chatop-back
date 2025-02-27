@@ -114,7 +114,7 @@ public class AuthController {
         }
 
         String authenticatedEmail = authentication.getName();
-        UserDTO userDTO = userService.findUserDTOByEmail(authenticatedEmail);
+        UserDTO userDTO = new UserDTO(userService.findUserByEmail(authenticatedEmail));
 
         if (userDTO != null) {
             logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
@@ -169,4 +169,3 @@ public class AuthController {
         }
     }
 }
-

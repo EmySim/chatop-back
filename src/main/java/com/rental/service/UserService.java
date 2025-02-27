@@ -31,47 +31,23 @@ public class UserService {
     }
 
     /**
-     * Inscription d'un utilisateur sans génération de JWT.
-     * @param userDTO Données de l'utilisateur à inscrire.
-     * @return UserDTO représentant l'utilisateur inscrit.
-     */
-    @Operation(summary = "Inscription d'un utilisateur", description = "Permet d'inscrire un utilisateur sans générer de JWT.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Utilisateur inscrit avec succès"),
-            @ApiResponse(responseCode = "400", description = "Erreur lors de l'inscription (email déjà utilisé ou mot de passe invalide)")
-    })
-    public UserDTO register(UserDTO userDTO) {
-        logger.info("Tentative d'inscription pour l'utilisateur : " + userDTO.getEmail());
-
-        // Crée l'utilisateur et le sauvegarde en base de données
-        User user = createUser(userDTO.getEmail(), userDTO.getName(), userDTO.getPassword(), userDTO.getRole());
-
-        logger.info("Utilisateur inscrit avec succès : " + userDTO.getEmail());
-
-        // Retourne le DTO de l'utilisateur inscrit
-        return UserMapper.toDTO(user);
-    }
-
-    /**
      * Recherche d'un utilisateur par son email.
      * @param email L'email de l'utilisateur à rechercher.
-     * @return UserDTO représentant l'utilisateur trouvé.
+     * @return User représentant l'utilisateur trouvé.
      */
     @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
             @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
     })
-    public UserDTO findUserByEmail(String email) {
+    public User findUserByEmail(String email) {
         logger.info("Recherche d'un utilisateur avec l'email : " + email);
 
-        User user = userRepository.findByEmail(email)
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warning("Utilisateur non trouvé avec l'email : " + email);
                     return new IllegalStateException("Utilisateur non trouvé avec cet email : " + email);
                 });
-
-        return UserMapper.toDTO(user);
     }
 
     /**
@@ -97,14 +73,14 @@ public class UserService {
     }
 
     /**
-     * Méthode privée utilisée pour créer un utilisateur dans la base de données.
+     * Méthode utilisée pour créer un utilisateur dans la base de données.
      * @param email L'email de l'utilisateur.
      * @param name Le nom de l'utilisateur.
      * @param password Le mot de passe de l'utilisateur.
      * @param role Le rôle de l'utilisateur.
      * @return L'utilisateur créé.
      */
-    private User createUser(String email, String name, String password, Role role) {
+    public User createUser(String email, String name, String password, Role role) {
         logger.info("Création de l'utilisateur : " + email);
 
         // Crée un utilisateur avec un mot de passe crypté
