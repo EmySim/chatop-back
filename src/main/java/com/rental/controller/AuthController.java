@@ -25,7 +25,6 @@ import com.rental.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 /**
@@ -56,7 +55,7 @@ public class AuthController {
      */
     @Operation(summary = "Enregistrer un nouvel utilisateur")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Utilisateur enrollé avec succès"),
+            @ApiResponse(responseCode = "200", description = "Utilisateur inscrit avec succès"),
             @ApiResponse(responseCode = "400", description = "Données d'inscription invalides")
     })
     @PostMapping("/register")
@@ -83,9 +82,11 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
 
+            // On définit l'authentification dans le contexte de sécurité
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwtToken = jwtService.generateToken(((UserDetails) authentication.getPrincipal()).getUsername());
 
+            // Générez un token JWT pour l'utilisateur
+            String jwtToken = jwtService.generateToken(((UserDetails) authentication.getPrincipal()).getUsername());
 
             logger.info("Connexion réussie pour : " + loginDTO.getEmail());
             return ResponseEntity.ok(new AuthResponseDTO(jwtToken));
@@ -118,49 +119,5 @@ public class AuthController {
 
         logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
         return ResponseEntity.ok(userDTO);
-    }
-
-    /**
-     * Déconnexion de l'utilisateur.
-     */
-    @Operation(summary = "Déconnexion de l'utilisateur")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Déconnexion réussie"),
-            @ApiResponse(responseCode = "401", description = "Non autorisé")
-    })
-    @PostMapping("/logout")
-    public ResponseEntity<AuthResponseDTO> logout(HttpServletRequest request, Authentication authentication) {
-        logger.info("Requête de déconnexion reçue.");
-
-        // Vérifie si l'utilisateur est authentifié
-        if (authentication == null || !authentication.isAuthenticated()) {
-            logger.warning("Aucun utilisateur authentifié trouvé.");
-            return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
-        }
-
-        // Récupère le token JWT du header "Authorization"
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warning("Authorization header manquant ou mal formaté.");
-            return ResponseEntity.status(401).body(new AuthResponseDTO("Non autorisé"));
-        }
-
-        // Extrait le token en supprimant le préfixe "Bearer "
-        String token = authHeader.substring(7);
-        try {
-            // Invalidation du token (método d'ajout à une liste noire, par exemple via Redis)
-            jwtService.invalidateToken(token);
-            logger.info("Token invalidé : " + token);
-
-            // Efface le contexte de sécurité
-            SecurityContextHolder.clearContext();
-            logger.info("Déconnexion réussie pour le token : " + token);
-
-            // Réponse de succès
-            return ResponseEntity.ok(new AuthResponseDTO("Déconnexion réussie"));
-        } catch (Exception e) {
-            logger.severe("Erreur lors de l'invalidation du token: " + e.getMessage());
-            return ResponseEntity.status(500).body(new AuthResponseDTO("Erreur serveur"));
-        }
     }
 }

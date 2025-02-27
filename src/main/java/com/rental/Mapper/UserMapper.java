@@ -1,4 +1,4 @@
-package com.rental.Mapper;
+package com.rental.mapper;
 
 import com.rental.dto.UserDTO;
 import com.rental.entity.User;

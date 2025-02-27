@@ -4,9 +4,10 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.rental.security.UserDetailsLoader;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,11 +23,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class.getName());
     private final com.rental.service.JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UserDetailsLoader userDetailsLoader;
 
-    public JwtAuthenticationFilter(com.rental.service.JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(com.rental.service.JwtService jwtService, UserDetailsLoader userDetailsLoader) {
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.userDetailsLoader = userDetailsLoader;
     }
 
     @Override
@@ -93,7 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             logger.info("Authentification non présente dans le contexte pour l'utilisateur : " + userEmail);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
 
             if (jwtService.validateToken(jwt, userEmail)) {  // Correction ici : retirer le point-virgule après cette ligne.
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

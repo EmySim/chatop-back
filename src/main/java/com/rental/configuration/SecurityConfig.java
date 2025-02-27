@@ -51,7 +51,6 @@ public class SecurityConfig {
      * - Définit les autorisations des endpoints.
      * - Ajoute un filtre d'authentification JWT.
      * - Configure une politique de session stateless.
-     * - Gère la déconnexion avec suppression du token.
      *
      * @param http Configuration HTTP de Spring Security.
      * @return Le filtre de sécurité configuré.
@@ -61,22 +60,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Désactivation de la protection CSRF (inutilisée avec JWT)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout") // Endpoint de déconnexion
-                        .invalidateHttpSession(true) // Invalidation de la session
-                        .deleteCookies("JSESSIONID") // Suppression du cookie de session
-                        .addLogoutHandler((request, response, authentication) -> {
-                            // Extraction du token depuis le header Authorization
-                            String authHeader = request.getHeader("Authorization");
-                            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                                String token = authHeader.substring(7);
-                                jwtService.invalidateToken(token); // Invalidation du token
-                                logger.info("Token JWT invalidé lors de la déconnexion : " + token);
-                            }
-                        })
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Autorisation publique pour register/login et Swagger
+                        .anyRequest().authenticated() // Toute autre requête nécessite d'être authentifié
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT => pas de session côté serveur
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Ajout du filtre d'authentification JWT
