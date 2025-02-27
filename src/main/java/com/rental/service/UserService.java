@@ -1,17 +1,20 @@
 package com.rental.service;
 
+import java.util.logging.Logger;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.rental.dto.UserDTO;
-import com.rental.entity.User;
 import com.rental.entity.Role;
+import com.rental.entity.User;
+import com.rental.mapper.UserMapper;
 import com.rental.repository.UserRepository;
-import com.rental.Mapper.UserMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.util.logging.Logger;
 
 @Service
 public class UserService {
@@ -38,7 +41,7 @@ public class UserService {
     @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
-            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
     public User findUserByEmail(String email) {
         logger.info("Recherche d'un utilisateur avec l'email : " + email);
@@ -58,7 +61,7 @@ public class UserService {
     @Operation(summary = "Recherche d'un utilisateur par ID", description = "Permet de rechercher un utilisateur par son ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
-            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
     public UserDTO findUserById(Long id) {
         logger.info("Recherche d'un utilisateur avec l'ID : " + id);
@@ -73,20 +76,27 @@ public class UserService {
     }
 
     /**
-     * Méthode utilisée pour créer un utilisateur dans la base de données.
+     * Création d'un nouvel utilisateur avec mot de passe crypté.
      * @param email L'email de l'utilisateur.
      * @param name Le nom de l'utilisateur.
      * @param password Le mot de passe de l'utilisateur.
      * @param role Le rôle de l'utilisateur.
      * @return L'utilisateur créé.
      */
+    @Operation(summary = "Création d'un utilisateur", description = "Créer un nouvel utilisateur avec un rôle et un mot de passe sécurisé.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Utilisateur créé avec succès"),
+            @ApiResponse(responseCode = "400", description = "Erreur lors de la création de l'utilisateur")
+    })
+    @Transactional
     public User createUser(String email, String name, String password, Role role) {
         logger.info("Création de l'utilisateur : " + email);
 
-        // Crée un utilisateur avec un mot de passe crypté
-        User user = new User(email, name, passwordEncoder.encode(password), role);
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalStateException("Cet email est déjà utilisé.");
+        }
 
-        // Sauvegarde l'utilisateur en base de données
+        User user = new User(email, name, passwordEncoder.encode(password), role);
         return userRepository.save(user);
     }
 }
