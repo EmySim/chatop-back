@@ -116,13 +116,8 @@ public class AuthController {
         String authenticatedEmail = authentication.getName();
         UserDTO userDTO = new UserDTO(userService.findUserByEmail(authenticatedEmail));
 
-        if (userDTO != null) {
-            logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
-            return ResponseEntity.ok(userDTO);
-        } else {
-            logger.warning("Aucun utilisateur trouvé pour l'email : " + authenticatedEmail);
-            return ResponseEntity.notFound().build(); // Renvoie 404 si utilisateur non trouvé
-        }
+        logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
+        return ResponseEntity.ok(userDTO);
     }
 
     /**

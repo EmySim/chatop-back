@@ -1,15 +1,23 @@
 package com.rental.service;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.security.Key;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.logging.Logger;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 /**
  * Service pour gérer les tokens JWT : génération, extraction, validation et invalidation.
@@ -31,7 +39,6 @@ public class JwtService {
             logger.severe("❌ La clé secrète JWT est manquante !");
             throw new IllegalArgumentException("La clé secrète JWT doit être définie.");
         }
-        byte[] decodedKey = Base64.getDecoder().decode(secretKeyBase64); // Décodage après validation
         this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyBase64));
         logger.info("✅ Clé secrète JWT configurée avec succès.");
     }
