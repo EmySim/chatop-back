@@ -1,15 +1,15 @@
 package com.rental.service;
 
 import com.rental.entity.User;
-import com.rental.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.ArrayList;
 
 /**
  * Classe implémentant UserDetailsService pour charger un utilisateur par son email.

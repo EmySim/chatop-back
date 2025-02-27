@@ -105,12 +105,12 @@ public class JwtService {
      * Vérifie si un token est valide.
      *
      * @param token Le token JWT.
-     * @param username Nom d'utilisateur (devrait correspondre au "subject").
+     * @param userEmail email de l'utilisateur.
      * @return true si le token est valide, sinon false.
      */
-    public boolean validateToken(String token, String username) {
+    public boolean validateToken(String token, String userEmail) {
         String extractedUsername = extractUsername(token); // Récupère le subject
-        return extractedUsername.equals(username) && !isTokenExpired(token) && !isTokenInvalidated(token);
+        return extractedUsername.equals(userEmail) && !isTokenExpired(token) && !isTokenInvalidated(token);
     }
 
     /**
