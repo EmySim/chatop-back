@@ -27,11 +27,11 @@ public class JwtService {
 
 
     public JwtService(@Value("${JWT_SECRET}") String secretKeyBase64) {
-        byte[] decodedKey = Base64.getDecoder().decode(secretKeyBase64);
         if (secretKeyBase64 == null || secretKeyBase64.isEmpty()) {
             logger.severe("❌ La clé secrète JWT est manquante !");
             throw new IllegalArgumentException("La clé secrète JWT doit être définie.");
         }
+        byte[] decodedKey = Base64.getDecoder().decode(secretKeyBase64); // Décodage après validation
         this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyBase64));
         logger.info("✅ Clé secrète JWT configurée avec succès.");
     }

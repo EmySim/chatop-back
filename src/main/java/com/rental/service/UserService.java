@@ -1,14 +1,14 @@
 package com.rental.service;
 
-import java.util.logging.Logger;
-
+import com.rental.dto.UserDTO;
+import com.rental.entity.User;
+import com.rental.repository.UserRepository;
+import com.rental.Mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.rental.dto.UserDTO;
-import com.rental.entity.User;
-import com.rental.repository.UserRepository;
+import java.util.logging.Logger;
 
 /**
  * Service pour gérer les utilisateurs, y compris l'enregistrement et la récupération.
@@ -27,18 +27,23 @@ public class UserService {
     }
 
     /**
-     * Enregistre un nouvel utilisateur.
+     * Inscrit un nouvel utilisateur en base.
      *
-     * @param userDTO Les données de l'utilisateur.
-     * @return L'utilisateur enregistré sous forme de DTO.
+     * @param userDTO Données du nouvel utilisateur.
+     * @return DTO de l'utilisateur inscrit.
      */
     public UserDTO register(UserDTO userDTO) {
-        logger.info("Début de l'enregistrement de l'utilisateur : " + userDTO.getEmail());
+        logger.info("Tentative d'enregistrement pour : " + userDTO.getEmail());
 
-        // Vérifie l'unicité de l'email
+        // Vérifie la disponibilité de l'email
         if (userRepository.existsByEmail(userDTO.getEmail())) {
-            logger.warning("Échec de l'enregistrement : email déjà utilisé - " + userDTO.getEmail());
-            throw new IllegalStateException("Cet email est déjà utilisé !");
+            logger.warning("Échec : cet email est déjà enregistré !");
+            throw new IllegalStateException("L'email est déjà utilisé.");
+        }
+
+        // Vérification du mot de passe
+        if (userDTO.getPassword() == null || userDTO.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Le mot de passe ne peut pas être vide !");
         }
 
         // Création de l'entité utilisateur
@@ -49,11 +54,12 @@ public class UserService {
                 userDTO.getRole()
         );
 
-        // Sauvegarde dans la base de données
+        // Sauvegarde de l'utilisateur en base
         user = userRepository.save(user);
-
         logger.info("Utilisateur enregistré avec succès : " + userDTO.getEmail());
-        return toUserDTO(user); // Conversion en DTO
+
+        return UserMapper.toDTO(user); // Convertit en DTO
+
     }
 
 
@@ -72,7 +78,7 @@ public class UserService {
                     return new IllegalStateException("Utilisateur non trouvé avec cet email : " + email);
                 });
 
-        return toUserDTO(user); // Conversion en DTO
+        return UserMapper.toDTO(user);
     }
 
     /**
@@ -90,21 +96,6 @@ public class UserService {
                     return new IllegalStateException("Utilisateur non trouvé avec cet ID : " + id);
                 });
 
-        return toUserDTO(user); // Conversion en DTO
+        return UserMapper.toDTO(user);
     }
-    /**
-     * Conversion d'une entité User en DTO.
-     */
-    private UserDTO toUserDTO(User user) {
-        return new UserDTO(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getRole(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-    }
-
-
 }
