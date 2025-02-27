@@ -27,53 +27,84 @@ public class UserService {
     }
 
     /**
-     * Méthode pour enregistrer un nouvel utilisateur.
-     * Cette méthode vérifie si l'email est déjà utilisé, puis crée un nouvel utilisateur.
+     * Enregistre un nouvel utilisateur.
      *
-     * @param userDTO Contient les données nécessaires pour créer un utilisateur.
+     * @param userDTO Les données de l'utilisateur.
+     * @return L'utilisateur enregistré sous forme de DTO.
      */
-    public void register(UserDTO userDTO) {
+    public UserDTO register(UserDTO userDTO) {
         logger.info("Début de l'enregistrement de l'utilisateur : " + userDTO.getEmail());
 
-        // Vérifie si un utilisateur existe déjà avec cet email
+        // Vérifie l'unicité de l'email
         if (userRepository.existsByEmail(userDTO.getEmail())) {
             logger.warning("Échec de l'enregistrement : email déjà utilisé - " + userDTO.getEmail());
             throw new IllegalStateException("Cet email est déjà utilisé !");
         }
 
-        // Création de l'utilisateur avec les données du DTO
-        // Le mot de passe est crypté ici avant d'être enregistré
-        User user = new User(userDTO.getEmail(), userDTO.getName(), passwordEncoder.encode("defaultPassword"), userDTO.getRole());
+        // Création de l'entité utilisateur
+        User user = new User(
+                userDTO.getEmail(),
+                userDTO.getName(),
+                passwordEncoder.encode("defaultPassword"), // Remplacez par un mot de passe configurable ou généré
+                userDTO.getRole()
+        );
 
-        // Enregistrement de l'utilisateur dans la base de données
-        userRepository.save(user);
+        // Sauvegarde dans la base de données
+        user = userRepository.save(user);
 
-        logger.info("Utilisateur crypté avec succès : " + userDTO.getEmail());
+        logger.info("Utilisateur enregistré avec succès : " + userDTO.getEmail());
+        return toUserDTO(user); // Conversion en DTO
+    }
+
+
+    /**
+     * Recherche un utilisateur par email.
+     *
+     * @param email Adresse email.
+     * @return Les informations de l'utilisateur sous forme de DTO.
+     */
+    public UserDTO findUserByEmail(String email) {
+        logger.info("Recherche d'un utilisateur avec l'email : " + email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
+                    return new IllegalStateException("Utilisateur non trouvé avec cet email : " + email);
+                });
+
+        return toUserDTO(user); // Conversion en DTO
     }
 
     /**
-     * Recherche un utilisateur par email et convertit en UserDTO.
-     * Cette méthode permet de récupérer les informations d'un utilisateur sans exposer le mot de passe.
+     * Recherche un utilisateur par ID.
      *
-     * @param email L'adresse email de l'utilisateur à rechercher.
-     * @return DTO contenant les informations de l'utilisateur (email et nom).
-     * @throws IllegalStateException Si l'utilisateur n'est pas trouvé avec cet email.
+     * @param id Identifiant utilisateur.
+     * @return Les informations de l'utilisateur sous forme de DTO.
      */
-    public UserDTO findUserDTOByEmail(String email) {
-        logger.info("Recherche d'un utilisateur avec l'email : " + email);
+    public UserDTO findUserById(Long id) {
+        logger.info("Recherche d'un utilisateur avec l'ID : " + id);
 
-        // Recherche de l'utilisateur dans la base de données
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    // Si l'utilisateur n'est pas trouvé, on génère une exception
-                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
-                    return new IllegalStateException("Utilisateur non trouvé avec l'email : " + email);
+                    logger.warning("Utilisateur non trouvé avec l'ID : " + id);
+                    return new IllegalStateException("Utilisateur non trouvé avec cet ID : " + id);
                 });
 
-        // Retourne les informations de l'utilisateur sous forme de DTO (le mot de passe n'est pas inclus)
-        logger.info("Utilisateur trouvé : " + email);
-        logger.info("Created at: " + user.getCreatedAt());
-        logger.info("Last update: " + user.getUpdatedAt());
-        return new UserDTO(user.getId(), user.getEmail(), user.getName(), user.getRole(), user.getCreatedAt(), user.getUpdatedAt());
+        return toUserDTO(user); // Conversion en DTO
     }
+    /**
+     * Conversion d'une entité User en DTO.
+     */
+    private UserDTO toUserDTO(User user) {
+        return new UserDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+    }
+
+
 }
