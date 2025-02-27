@@ -1,9 +1,10 @@
 package com.rental.controller;
 
 import com.rental.dto.UserDTO;
-import com.rental.service.UserServiceDetail;
+import com.rental.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,23 +21,30 @@ import java.util.logging.Logger;
 public class UserController {
 
     private static final Logger logger = Logger.getLogger(UserController.class.getName());
-    private final UserServiceDetail userServiceDetail;
+    private final UserService userService;
 
-    public UserController(UserServiceDetail userServiceDetail) {
-        this.userServiceDetail = userServiceDetail;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @Operation(summary = "Récupérer les informations d'un utilisateur par ID via Bearer Token", description = "Retourne les informations d'un utilisateur spécifique via son ID avec un Token Bearer requis")
+    /**
+     * Récupère un utilisateur par ID.
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserDetails(
-            @Parameter(description = "ID de l'utilisateur à récupérer") @PathVariable Long id) {
-        logger.info("Récupération des détails pour l'utilisateur ID : " + id);
-        UserDTO userDTO = userServiceDetail.getUserDetailsById(id);
-        if (userDTO == null) {
-            logger.warning("Utilisateur non trouvé pour ID : " + id);
+    @Operation(summary = "Récupérer un utilisateur par ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Utilisateur récupéré avec succès"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé"),
+    })
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
+        logger.info("Requête pour récupérer un utilisateur par ID : " + id);
+        try {
+            UserDTO userDTO = userService.findUserById(id);
+            return ResponseEntity.ok(userDTO);
+        } catch (IllegalStateException e) {
+            logger.warning("Utilisateur non trouvé : " + id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-        logger.info("Utilisateur récupéré avec succès : " + id);
-        return ResponseEntity.ok(userDTO);
     }
+
 }

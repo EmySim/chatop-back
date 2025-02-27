@@ -1,13 +1,14 @@
 package com.rental.dto;
 
-import com.rental.entity.Role;
-import com.rental.entity.User;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.rental.entity.Role;
+import com.rental.entity.User;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Data Transfer Object (DTO) pour les informations utilisateur.
@@ -39,6 +40,10 @@ public class UserDTO {
     @Schema(description = "Date de la dernière mise à jour de l'utilisateur")
     private LocalDateTime updatedAt;
 
+    // Ajout du champ password si nécessaire
+    @Schema(description = "Mot de passe de l'utilisateur (non exposé)")
+    private String password;
+
     /**
      * Constructeur par défaut (nécessaire pour la sérialisation).
      */
@@ -63,10 +68,7 @@ public class UserDTO {
      * Nouveau constructeur avec moins de champs.
      */
     public UserDTO(Long id, String email, String name, Role role) {
-        this.id = id;
-        this.email = email;
-        this.name = name;
-        this.role = role;
+        this(id, email, name, role, null, null);
         logger.info("UserDTO partiellement créé : " + this.toString());
     }
 
@@ -99,51 +101,6 @@ public class UserDTO {
         user.setName(this.name);
         user.setRole(this.role);
         return user;
-    }
-
-    /**
-     * Vérifie si cet UserDTO est vide.
-     * Un UserDTO est considéré comme vide si l'ID, l'email, le nom et le rôle ne sont pas définis.
-     *
-     * @return true si le DTO est vide, false sinon.
-     */
-    public boolean isEmpty() {
-        boolean isEmptyData = (id == null || id == 0L)
-                && (email == null || email.isEmpty())
-                && (name == null || name.isEmpty())
-                && (role == null)
-                && (createdAt == null)
-                && (updatedAt == null);
-
-        logger.info("Vérification si UserDTO est vide : " + isEmptyData);
-        return isEmptyData;
-    }
-
-    /**
-     * Récupère la valeur d'un champ par son nom.
-     *
-     * @param fieldName Le nom du champ à récupérer.
-     * @return La valeur du champ si elle existe, sinon une exception IllegalArgumentException.
-     */
-    public Object get(String fieldName) {
-        switch (fieldName) {
-            case "id":
-                return id;
-            case "email":
-                return email;
-            case "name":
-                return name;
-            case "role":
-                return role;
-            case "createdAt":
-                return createdAt;
-            case "updatedAt":
-                return updatedAt;
-            default:
-                String error = "Champ invalide demandé dans UserDTO : " + fieldName;
-                logger.warning(error);
-                throw new IllegalArgumentException(error);
-        }
     }
 
     // Getters et Setters
