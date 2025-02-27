@@ -48,7 +48,7 @@ public class UserService {
         // Enregistrement de l'utilisateur dans la base de données
         userRepository.save(user);
 
-        logger.info("(̿▀̿‿ ̿▀̿ ̿)Utilisateur enregistré avec succès : " + userDTO.getEmail());
+        logger.info("Utilisateur crypté avec succès : " + userDTO.getEmail());
     }
 
     /**

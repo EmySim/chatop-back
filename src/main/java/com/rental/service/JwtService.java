@@ -1,6 +1,8 @@
 package com.rental.service;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,7 @@ public class JwtService {
     public JwtService(@Value("${JWT_SECRET}") String secretKeyBase64) {
         byte[] decodedKey = Base64.getDecoder().decode(secretKeyBase64);
         this.secretKey = new SecretKeySpec(decodedKey, SignatureAlgorithm.HS256.getJcaName());
-        logger.info("JwtService initialisé avec succès : clé décodée.");
+        logger.info("JwtService initialisé avec succès : clé décodée." + secretKey);
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -42,23 +44,32 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
+        if (token == null || token.isEmpty()) {
+            logger.warning("Le token JWT est vide ou nul !");
+            return null;
+        }
         try {
             return extractClaim(token, Claims::getSubject);
-        } catch (JwtException e) {
-            logger.log(Level.SEVERE, "Erreur lors de l'extraction du subject JWT", e);
+        } catch (MalformedJwtException e) {
+            logger.log(Level.SEVERE, "Erreur liée à un token JWT malformé : " + token, e);
+            return null;
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Erreur inattendue lors de l'extraction du username : " + token, ex);
             return null;
         }
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        logger.info("Début de la validation du token pour l'utilisateur: " + userDetails.getUsername());
-        final String username = extractUsername(token);
-        boolean isValid = username != null
-                && username.equals(userDetails.getUsername())
-                && !isTokenExpired(token)
-                && !isTokenInvalidated(token);
-        logger.info("Validation du token terminée, résultat: " + isValid);
-        return isValid;
+        try {
+            final String username = extractUsername(token);
+            if (username == null) {
+                return false;
+            }
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la validation du token : " + token, e);
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {
@@ -70,19 +81,18 @@ public class JwtService {
         }
     }
 
-
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
     }
 
     private boolean isTokenWellFormed(String token) {
         // Vérifie si le token suit la syntaxe JWT à 3 parties séparées par "."
         return token != null && token.split("\\.").length == 3;
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {

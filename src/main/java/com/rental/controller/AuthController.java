@@ -56,7 +56,7 @@ public class AuthController {
      */
     @Operation(summary = "Enregistrer un nouvel utilisateur")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "\t(⊙＿⊙')Utilisateur enregistré avec succès"),
+            @ApiResponse(responseCode = "200", description = "Utilisateur enrollé avec succès"),
             @ApiResponse(responseCode = "400", description = "Données d'inscription invalides")
     })
     @PostMapping("/register")

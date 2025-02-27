@@ -11,19 +11,19 @@ import com.rental.entity.Role;
 import com.rental.entity.User;
 import com.rental.repository.UserRepository;
 
-/**
- * Service pour gérer les opérations d'authentification et d'inscription.
- */
 @Service
 public class AuthService {
 
     private static final Logger logger = Logger.getLogger(AuthService.class.getName());
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService; // Ajout de la déclaration du champ jwtService
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    // Injection de JwtService dans le constructeur
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService; // Initialisation du champ jwtService
     }
 
     /**
@@ -40,16 +40,22 @@ public class AuthService {
             throw new IllegalArgumentException("L'email est déjà utilisé.");
         }
 
+        // Crée un nouvel utilisateur avec le rôle par défaut
         User user = new User(
                 registerDTO.getEmail(),
                 registerDTO.getName(),
                 passwordEncoder.encode(registerDTO.getPassword()),
-                Role.USER // Rôle par défaut
+                Role.USER
         );
 
+        // Sauvegarde l'utilisateur en base
         userRepository.save(user);
-        logger.info("(ಥ﹏ಥ)Utilisateur enregistré avec succès : " + registerDTO.getEmail());
+        logger.info("Utilisateur mis en base avec succès : " + registerDTO.getEmail());
 
-        return new AuthResponseDTO("(ÒДÓױ)Utilisateur enregistré avec succès.");
+        // Génère un token JWT à partir du service JwtService
+        String jwtToken = jwtService.generateToken(user); // Appel de la méthode generateToken du JwtService
+
+        // Renvoie un DTO avec le token JWT valide
+        return new AuthResponseDTO(jwtToken);
     }
 }

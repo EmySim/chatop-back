@@ -38,6 +38,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         logger.info("Début du filtrage JWT.");
 
         final String authHeader = request.getHeader("Authorization");
+// Ajouter un log pour vérifier l'en-tête Authorization
+        if (authHeader == null) {
+            logger.warning("L'en-tête Authorization est manquant.");
+        } else {
+            logger.info("En-tête Authorization trouvé : " + authHeader);
+        }
+
         final String jwt;
         final String userEmail;
 
@@ -47,7 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Extraire le JWT de l'en-tête
         jwt = authHeader.substring(7); // Récupérer ce qui suit "Bearer ".
+        logger.info("Token JWT extrait : " + jwt);
 
         // Vérifiez si le token contient exactement deux points (.)
         if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
@@ -68,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         logger.info("Token JWT trouvé, extraction du nom d'utilisateur.");
 
-
+// Étape 2 : Extraire les informations après validation
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (Exception e) {
