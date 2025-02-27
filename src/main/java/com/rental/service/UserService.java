@@ -2,8 +2,12 @@ package com.rental.service;
 
 import com.rental.dto.UserDTO;
 import com.rental.entity.User;
+import com.rental.entity.Role;
 import com.rental.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.rental.Mapper.UserMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,57 +20,73 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
+    /**
+     * Constructeur de UserService.
+     * @param userRepository Le repository des utilisateurs.
+     * @param passwordEncoder L'encodeur de mot de passe pour la sécurité.
+     */
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * Méthode pour enregistrer un nouvel utilisateur.
-     * Cette méthode vérifie si l'email est déjà utilisé, puis crée un nouvel utilisateur.
-     *
-     * @param userDTO Contient les données nécessaires pour créer un utilisateur.
+     * Recherche d'un utilisateur par son email.
+     * @param email L'email de l'utilisateur à rechercher.
+     * @return User représentant l'utilisateur trouvé.
      */
-    public void register(UserDTO userDTO) {
-        logger.info("Début de l'enregistrement de l'utilisateur : " + userDTO.getEmail());
+    @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
+            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
+    })
+    public User findUserByEmail(String email) {
+        logger.info("Recherche d'un utilisateur avec l'email : " + email);
 
-        // Vérifie si un utilisateur existe déjà avec cet email
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            logger.warning("Échec de l'enregistrement : email déjà utilisé - " + userDTO.getEmail());
-            throw new IllegalStateException("Cet email est déjà utilisé !");
-        }
-
-        // Création de l'utilisateur avec les données du DTO
-        User user = new User(userDTO.getEmail(), userDTO.getName(), passwordEncoder.encode(userDTO.getPassword()));
-
-        // Enregistrement de l'utilisateur dans la base de données
-        userRepository.save(user);
-
-        logger.info("Utilisateur enregistré avec succès : " + userDTO.getEmail());
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
+                    return new IllegalStateException("Utilisateur non trouvé avec cet email : " + email);
+                });
     }
 
     /**
-     * Recherche un utilisateur par email et convertit en UserDTO.
-     * Cette méthode permet de récupérer les informations d'un utilisateur sans exposer le mot de passe.
-     *
-     * @param email L'adresse email de l'utilisateur à rechercher.
-     * @return DTO contenant les informations de l'utilisateur (email et nom).
-     * @throws IllegalStateException Si l'utilisateur n'est pas trouvé avec cet email.
+     * Recherche d'un utilisateur par son ID.
+     * @param id L'ID de l'utilisateur à rechercher.
+     * @return UserDTO représentant l'utilisateur trouvé.
      */
-    public UserDTO findUserDTOByEmail(String email) {
-        logger.info("Recherche d'un utilisateur avec l'email : " + email);
+    @Operation(summary = "Recherche d'un utilisateur par ID", description = "Permet de rechercher un utilisateur par son ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
+            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
+    })
+    public UserDTO findUserById(Long id) {
+        logger.info("Recherche d'un utilisateur avec l'ID : " + id);
 
-        // Recherche de l'utilisateur dans la base de données
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> {
-                    // Si l'utilisateur n'est pas trouvé, on génère une exception
-                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
-                    return new IllegalStateException("Utilisateur non trouvé avec l'email : " + email);
+                    logger.warning("Utilisateur non trouvé avec l'ID : " + id);
+                    return new IllegalStateException("Utilisateur non trouvé avec cet ID : " + id);
                 });
 
-        // Retourne les informations de l'utilisateur sous forme de DTO (mot de passe masqué)
-        logger.info("Utilisateur trouvé : " + email);
-        return new UserDTO(user.getEmail(), user.getName(), null); // Le mot de passe est masqué (null)
+        return UserMapper.toDTO(user);
+    }
+
+    /**
+     * Méthode utilisée pour créer un utilisateur dans la base de données.
+     * @param email L'email de l'utilisateur.
+     * @param name Le nom de l'utilisateur.
+     * @param password Le mot de passe de l'utilisateur.
+     * @param role Le rôle de l'utilisateur.
+     * @return L'utilisateur créé.
+     */
+    public User createUser(String email, String name, String password, Role role) {
+        logger.info("Création de l'utilisateur : " + email);
+
+        // Crée un utilisateur avec un mot de passe crypté
+        User user = new User(email, name, passwordEncoder.encode(password), role);
+
+        // Sauvegarde l'utilisateur en base de données
+        return userRepository.save(user);
     }
 }

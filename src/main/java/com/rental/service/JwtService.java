@@ -1,100 +1,162 @@
 package com.rental.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
+/**
+ * Service pour gérer les tokens JWT : génération, extraction, validation et invalidation.
+ */
 @Service
 public class JwtService {
 
     private static final Logger logger = Logger.getLogger(JwtService.class.getName());
+    private final Key signingKey; // Clé secrète pour signer les tokens
+    private final Set<String> invalidatedTokens = Collections.newSetFromMap(new ConcurrentHashMap<>()); // Liste noire temporaire des tokens
 
-    private final Key secretKey;
 
     @Value("${JWT_EXPIRATION}")
-    private long jwtExpiration;
+    private long jwtExpirationTime; // Durée de validité en millisecondes
+
 
     public JwtService(@Value("${JWT_SECRET}") String secretKeyBase64) {
-        byte[] decodedKey = Base64.getDecoder().decode(secretKeyBase64);
-        this.secretKey = new SecretKeySpec(decodedKey, SignatureAlgorithm.HS256.getJcaName());
-        logger.info("JwtService initialisé avec succès avec une clé décodée.");
+        if (secretKeyBase64 == null || secretKeyBase64.isEmpty()) {
+            logger.severe("❌ La clé secrète JWT est manquante !");
+            throw new IllegalArgumentException("La clé secrète JWT doit être définie.");
+        }
+        this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyBase64));
+        logger.info("✅ Clé secrète JWT configurée avec succès.");
     }
 
-    public String generateToken(UserDetails userDetails) {
-        logger.info("Génération du token avec la clé : " + Base64.getEncoder().encodeToString(secretKey.getEncoded()));
+    /**
+     * Génère un token JWT pour un utilisateur à partir de son username (email).
+     *
+     * @param subject Le sujet (e-mail ou identifiant utilisateur).
+     * @param additionalClaims Données supplémentaires (facultatif).
+     * @return Un token JWT signé.
+     */
+    public String generateToken(String subject, Map<String, Object> additionalClaims) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setClaims(additionalClaims)
+                .setSubject(subject) // Défini le "subject" (e.g., email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationTime))
+                .signWith(signingKey, SignatureAlgorithm.HS256) // Signature avec la clé secrète
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        if (token == null || token.isEmpty()) {
-            logger.warning("Le token JWT est vide ou nul !");
-            return null;
-        }
-        try {
-            return extractClaim(token, Claims::getSubject);
-        } catch (MalformedJwtException e) {
-            logger.log(Level.SEVERE, "Erreur liée à un token JWT malformé : " + token, e);
-            return null;
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Erreur inattendue lors de l'extraction du username : " + token, ex);
-            return null;
-        }
+    /**
+     * Génère un token JWT uniquement avec le sujet.
+     *
+     * @param subject (e.g., email ou ID utilisateur).
+     * @return Un token JWT signé.
+     */
+    public String generateToken(String subject) {
+        return generateToken(subject, new HashMap<>()); // Pas de données supplémentaires
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-        try {
-            final String username = extractUsername(token);
-            if (username == null) {
-                return false;
-            }
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur lors de la validation du token : " + token, e);
-            return false;
-        }
-    }
-
+    /**
+     * Extrait une valeur spécifique ("claim") d'un token.
+     *
+     * @param token Le token JWT.
+     * @param claimsResolver Une fonction pour extraire la donnée.
+     * @param <T> Le type de la valeur extraite.
+     * @return La donnée extraite des claims.
+     */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private boolean isTokenExpired(String token) {
-        Date expiration = extractExpiration(token);
-        return expiration == null || expiration.before(new Date());
+    /**
+     * Récupère le sujet (email) contenu dans le token.
+     *
+     * @param token Token JWT.
+     * @return Le sujet du token.
+     */
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject); // Utilise getSubject directement
     }
 
+    /**
+     * Extrait toutes les données (claims) contenues dans un JWT.
+     *
+     * @param token Token JWT.
+     * @return Les claims extraites.
+     */
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+
+    /**
+     * Vérifie si un token est valide.
+     *
+     * @param token Le token JWT.
+     * @param userEmail email de l'utilisateur.
+     * @return true si le token est valide, sinon false.
+     */
+    public boolean validateToken(String token, String userEmail) {
+        String extractedUsername = extractUsername(token); // Récupère le subject
+        return extractedUsername.equals(userEmail) && !isTokenExpired(token) && !isTokenInvalidated(token);
+    }
+
+    /**
+     * Vérifie si un token a dépassé sa date d'expiration.
+     *
+     * @param token Token JWT.
+     * @return true si expiré, sinon false.
+     */
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    /**
+     * Extrait la date d'expiration du token.
+     *
+     * @param token Token JWT.
+     * @return La date d'expiration.
+     */
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Claims extractAllClaims(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (MalformedJwtException e) {
-            logger.log(Level.SEVERE, "Le token n'est pas correctement formé : " + token, e);
-            throw e;
-        }
+    /**
+     * Ajoute un token à la liste des tokens révoqués pour qu'il soit invalidé.
+     *
+     * @param token Token JWT.
+     */
+    public void invalidateToken(String token) {
+        invalidatedTokens.add(token);
+        logger.info("⚠️ Token ajouté à la liste noire : " + token);
+    }
+
+    /**
+     * Vérifie si un token a été invalidé (liste noire).
+     *
+     * @param token Token JWT.
+     * @return true si le token est révoqué.
+     */
+    public boolean isTokenInvalidated(String token) {
+        return invalidatedTokens.contains(token);
     }
 }

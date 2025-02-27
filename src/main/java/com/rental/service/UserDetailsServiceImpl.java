@@ -1,15 +1,15 @@
 package com.rental.service;
 
 import com.rental.entity.User;
-import com.rental.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.ArrayList;
 
 /**
  * Classe implémentant UserDetailsService pour charger un utilisateur par son email.
@@ -18,31 +18,25 @@ import java.util.logging.Logger;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private static final Logger logger = Logger.getLogger(UserDetailsServiceImpl.class.getName());
-    private final UserRepository userRepository;
+    private final UserService userService; // Utilise UserService au lieu de UserRepository.
 
-    /**
-     * Constructeur avec injection du repository.
-     */
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+
+    @Autowired
+    public UserDetailsServiceImpl(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        logger.info("🔍 Recherche de l'utilisateur avec l'email : " + email);
+        logger.info("Authentification : Chargement de l'utilisateur via l'email : " + email);
 
-        Optional<User> optionalUser = userRepository.findByEmail(email);
+        User user = userService.findUserByEmail(email); // Utilisation du service au lieu du repo
 
-        if (optionalUser.isEmpty()) {
-            logger.warning("Utilisateur non trouvé avec l'email : " + email);
-            throw new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email);
-        }
-
-        User user = optionalUser.get();
-        logger.info("✅ Utilisateur trouvé : " + user.getEmail());
-
-        // La classe User doit implémenter UserDetails
-        return user;
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                new ArrayList<>() // Liste des rôles ou permissions
+        );
     }
 }
