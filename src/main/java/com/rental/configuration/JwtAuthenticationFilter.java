@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/*import com.rental.security.UserDetailsLoader;*/
 import com.rental.service.JwtService;
 
 import jakarta.servlet.FilterChain;

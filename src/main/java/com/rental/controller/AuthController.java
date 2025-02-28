@@ -101,7 +101,9 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Non autorisé")
     })
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(@RequestParam String email) {
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = ((UserDetails) authentication.getPrincipal()).getUsername();
         logger.info("Récupération de l'utilisateur connecté : " + email);
         UserDTO userDTO = userService.getUserByEmail(email);
         return ResponseEntity.ok(userDTO);

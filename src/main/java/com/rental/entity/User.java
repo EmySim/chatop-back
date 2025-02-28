@@ -161,7 +161,7 @@ public class User {
         String roleString = user.getRole() != null ? user.getRole().name() : null;
 
         // Retourne un UserDTO avec tous les champs nécessaires, y compris le rôle
-        return new UserDTO(
+        UserDTO userDTO = new UserDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
@@ -169,5 +169,7 @@ public class User {
                 user.getLastUpdated(),
                 roleString
         );
+        userDTO.setPassword(user.getPassword());
+        return userDTO;
     }
 }

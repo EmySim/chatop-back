@@ -18,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.rental.security.UserDetailsLoader;
 import com.rental.service.JwtService;
-import com.rental.configuration.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity

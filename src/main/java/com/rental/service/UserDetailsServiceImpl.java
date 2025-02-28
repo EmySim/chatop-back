@@ -1,17 +1,14 @@
 package com.rental.service;
 
-import com.rental.entity.User;
 import com.rental.dto.UserDTO;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.logging.Logger;
-import java.util.ArrayList;
 
 /**
  * Classe implémentant UserDetailsService pour charger un utilisateur par son email.
@@ -64,16 +61,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         throw new UsernameNotFoundException(USER_NOT_FOUND_MESSAGE + email);
     }
 
-    /**
-     * Construire un UserDetails à partir d'un utilisateur.
-     * @param user L'entité utilisateur contenant les détails.
-     * @return UserDetails compatible avec Spring Security.
-     */
-    private UserDetails buildUserDetails(User user) {
-        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPassword())
-                .authorities(new ArrayList<>()) // Ajoutez les rôles ici si nécessaire
-                .build();
-    }
 
 }

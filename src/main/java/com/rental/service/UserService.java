@@ -114,6 +114,7 @@ public class UserService {
         userDTO.setRole(user.getRole().name());
         userDTO.setCreatedAt(user.getCreatedAt());
         userDTO.setLastUpdated(user.getLastUpdated());
+        userDTO.setPassword(user.getPassword());
 
         return userDTO;
     }
