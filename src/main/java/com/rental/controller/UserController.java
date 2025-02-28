@@ -36,17 +36,26 @@ public class UserController {
     @Operation(summary = "Récupérer un utilisateur par ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Utilisateur récupéré avec succès"),
-            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé"),
+            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
     })
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        logger.info("Requête pour récupérer un utilisateur par ID : " + id);
+        if (id == null || id <= 0) {
+            logger.warning("Requête avec un ID utilisateur invalide : " + id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);  // Invalid ID -> Bad Request
+        }
+
+        logger.info("Requête pour récupérer un utilisateur avec l'ID : " + id);
+
         try {
             UserDTO userDTO = userService.findUserById(id);
-            return ResponseEntity.ok(userDTO);
-        } catch (IllegalStateException e) {
-            logger.warning("Utilisateur non trouvé : " + id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            if (userDTO == null) {
+                logger.warning("Utilisateur non trouvé : " + id);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Unauthorized if user is not found
+            }
+            return ResponseEntity.ok(userDTO);  // Return user if found -> 200 OK
+        } catch (Exception e) {
+            logger.warning("Erreur lors de la récupération de l'utilisateur avec l'ID : " + id + " | Exception : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Unauthorized in case of error (authentication issue)
         }
     }
-
 }

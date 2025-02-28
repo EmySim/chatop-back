@@ -4,10 +4,12 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.rental.security.UserDetailsLoader;
+/*import com.rental.security.UserDetailsLoader;*/
+import com.rental.service.JwtService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,12 +24,19 @@ import java.util.logging.Logger;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class.getName());
-    private final com.rental.service.JwtService jwtService;
-    private final UserDetailsLoader userDetailsLoader;
 
-    public JwtAuthenticationFilter(com.rental.service.JwtService jwtService, UserDetailsLoader userDetailsLoader) {
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+    /**
+     * Constructeur avec injection des dépendances.
+     *
+     * @param jwtService Service de gestion des tokens JWT.
+     * @param userDetailsService Service de récupération des détails utilisateurs.
+     */
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
-        this.userDetailsLoader = userDetailsLoader;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -66,15 +75,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().write("Invalid JWT token format.");
             return;
         }
-
-        // Vérifiez que le JWT semble être en Base64URL.
-        if (!isBase64UrlEncoded(jwt)) {
-            logger.warning("Le token ne semble pas être encodé en Base64URL : " + jwt);
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Invalid JWT encoding.");
-            return;
-        }
-
         logger.info("Token JWT trouvé, extraction du nom d'utilisateur.");
 
         // Étape 2 : Extraire les informations après validation
@@ -86,15 +86,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (jwtService.isTokenInvalidated(jwt)) {
-            logger.warning("Token invalidé détecté pour l'utilisateur : " + userEmail);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             logger.info("Authentification non présente dans le contexte pour l'utilisateur : " + userEmail);
-            UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
             if (jwtService.validateToken(jwt, userEmail)) {  // Correction ici : retirer le point-virgule après cette ligne.
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -108,10 +102,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         logger.info("Fin du filtrage JWT.");
     }
 
-    /**
-     * Vérifie si une chaîne est encodée en Base64URL et ne contient que des caractères valides.
-     */
-    private boolean isBase64UrlEncoded(String jwt) {
-        return jwt.matches("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
-    }
 }

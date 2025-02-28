@@ -1,17 +1,19 @@
 package com.rental.service;
 
+import java.util.logging.Logger;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
 import com.rental.entity.Role;
 import com.rental.entity.User;
 import com.rental.repository.UserRepository;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.util.logging.Logger;
 
 @Service
 public class AuthService {
@@ -22,13 +24,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserService userService;
 
-    /**
-     * Constructeur de AuthService.
-     * @param userRepository Le repository des utilisateurs.
-     * @param passwordEncoder L'encodeur de mot de passe pour la sécurité.
-     * @param jwtService Le service pour la génération de tokens JWT.
-     * @param userService Le service pour la gestion des utilisateurs.
-     */
+    // Constructeur avec toutes les dépendances nécessaires
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, UserService userService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -36,11 +32,7 @@ public class AuthService {
         this.userService = userService;
     }
 
-    /**
-     * Inscription d'un nouvel utilisateur et génération d'un token JWT.
-     * @param registerDTO Données de l'utilisateur à inscrire.
-     * @return AuthResponseDTO contenant le token JWT.
-     */
+    // Méthode d'inscription d'un utilisateur
     @Operation(summary = "Inscription d'un utilisateur", description = "Permet d'inscrire un nouvel utilisateur et génère un JWT.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur inscrit avec succès"),

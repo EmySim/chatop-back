@@ -1,140 +1,113 @@
 package com.rental.dto;
 
 import java.time.LocalDateTime;
-import java.util.logging.Logger;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rental.entity.Role;
-import com.rental.entity.User;
-
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
- * Data Transfer Object (DTO) pour les informations utilisateur.
- * Ce DTO est utilisé pour transférer les données d'un utilisateur
- * entre les couches de l'application.
+ * DTO représentant un utilisateur pour l'exposition via API.
+ * Cette classe permet de transférer les informations de l'utilisateur entre les couches de l'application.
  */
-@Tag(name = "UserDTO", description = "Data Transfer Object pour les informations d'utilisateur")
+@Schema(description = "Représentation d'un utilisateur")
 public class UserDTO {
 
-    private static final Logger logger = Logger.getLogger(UserDTO.class.getName());
-
-    @Schema(description = "Identifiant unique de l'utilisateur")
+    @Schema(description = "Identifiant unique de l'utilisateur", example = "1")
     private Long id;
 
-    @Schema(description = "Adresse email de l'utilisateur")
-    private String email;
-
-    @Schema(description = "Nom de l'utilisateur")
+    @Schema(description = "Nom de l'utilisateur", example = "John Doe")
     private String name;
 
-    @Schema(description = "Rôle de l'utilisateur")
-    private Role role;
+    @Schema(description = "Email de l'utilisateur", example = "john.doe@example.com")
+    private String email;
 
-    @JsonProperty("created_at")
-    @Schema(description = "Date de création de l'utilisateur")
+    @Schema(description = "Date de création du compte", example = "2025-02-28T14:23:45")
     private LocalDateTime createdAt;
 
-    @JsonProperty("updated_at")
-    @Schema(description = "Date de la dernière mise à jour de l'utilisateur")
-    private LocalDateTime updatedAt;
+    @Schema(description = "Dernière mise à jour du compte", example = "2025-02-28T14:23:45")
+    private LocalDateTime lastUpdated;
 
-    // Ajout du champ password si nécessaire
-    @Schema(description = "Mot de passe de l'utilisateur (non exposé)")
-    private String password;
+    @Schema(description = "Rôle de l'utilisateur", example = "ADMIN")
+    private String role; // Déclaration de la propriété "role"
 
-    /**
-     * Constructeur par défaut (nécessaire pour la sérialisation).
-     */
-    public UserDTO() {
-        // logger.fine("Création d'un DTO utilisateur (constructeur par défaut).");
-    }
+    // Constructeur par défaut nécessaire pour la désérialisation des données depuis JSON
+    public UserDTO() {}
 
     /**
-     * Constructeur principal pour création de DTO.
+     * Constructeur avec tous les paramètres nécessaires pour initialiser l'objet.
+     * @param id L'ID de l'utilisateur
+     * @param name Le nom de l'utilisateur
+     * @param email L'email de l'utilisateur
+     * @param createdAt La date de création de l'utilisateur
+     * @param lastUpdated La date de la dernière mise à jour de l'utilisateur
+     * @param role Le rôle de l'utilisateur
      */
-    public UserDTO(Long id, String email, String name, Role role, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public UserDTO(Long id, String name, String email, LocalDateTime createdAt, LocalDateTime lastUpdated, String role) {
         this.id = id;
-        this.email = email;
         this.name = name;
-        this.role = role;
+        this.email = email;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        logger.info("UserDTO créé : " + this.toString());
+        this.lastUpdated = lastUpdated;
+        this.role = role; // Initialisation du rôle
     }
 
-    /**
-     * Nouveau constructeur avec moins de champs.
-     */
-    public UserDTO(Long id, String email, String name, Role role) {
-        this(id, email, name, role, null, null);
-        logger.info("UserDTO partiellement créé : " + this.toString());
+    // Getters et Setters avec annotations Swagger pour la documentation automatique
+
+    public Long getId() {
+        return id;
     }
 
-    /**
-     * Constructeur à partir d'un objet User (conversion entité -> DTO).
-     */
-    public UserDTO(User user) {
-        if (user != null) {
-            this.id = user.getId();
-            this.email = user.getEmail();
-            this.name = user.getName();
-            this.role = user.getRole();
-            this.createdAt = user.getCreatedAt();
-            this.updatedAt = user.getUpdatedAt();
-
-            logger.info("UserDTO créé à partir d'un utilisateur : " + this.toString());
-        }
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    /**
-     * Méthode pour convertir ce DTO en une entité User.
-     * (⚠️ Note : l'ID n'est pas réutilisé ici, attention en cas de mise à jour.)
-     *
-     * @return Un objet User basé sur ce DTO.
-     */
-    public User toEntity() {
-        logger.info("Conversion de UserDTO en User entity : " + this.toString());
-        User user = new User();
-        user.setEmail(this.email);
-        user.setName(this.name);
-        user.setRole(this.role);
-        return user;
+    public String getName() {
+        return name;
     }
 
-    // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public String getRole() {
+        return role; // Retourne la valeur du rôle
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setRole(String role) {
+        this.role = role; // Définit la valeur du rôle
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public String getPassword() {
-        return password; // Vous pouvez décider si vous souhaitez exposer ou non ce mot de passe
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     @Override
     public String toString() {
         return "UserDTO{" +
                 "id=" + id +
-                ", email='" + email + '\'' +
                 ", name='" + name + '\'' +
-                ", role=" + role +
+                ", email='" + email + '\'' +
                 ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
+                ", lastUpdated=" + lastUpdated +
+                ", role='" + role + '\'' + // Ajout du rôle dans le toString
                 '}';
     }
 }

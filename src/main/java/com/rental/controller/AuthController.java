@@ -107,17 +107,25 @@ public class AuthController {
     })
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
-        logger.info("Récupération de l'utilisateur authentifié...");
-
+        // Vérifiez si l'utilisateur est authentifié
         if (authentication == null || !authentication.isAuthenticated()) {
-            logger.warning("Aucun utilisateur authentifié trouvé.");
-            return ResponseEntity.status(401).build(); // Renvoie 401 si non authentifié
+            logger.warning("Tentative d'accès sans authentification valide.");
+            return ResponseEntity.status(401).build(); // Non autorisé
         }
 
+        // Récupérez l'email de l'utilisateur authentifié
         String authenticatedEmail = authentication.getName();
-        UserDTO userDTO = new UserDTO(userService.findUserByEmail(authenticatedEmail));
 
-        logger.info("Utilisateur connecté récupéré : ID = " + userDTO.getId() + ", Email = " + userDTO.getEmail());
+        if (authenticatedEmail == null || authenticatedEmail.isEmpty()) {
+            logger.severe("Adresse e-mail authentifiée non valide.");
+            throw new IllegalArgumentException("L'email de l'utilisateur authentifié ne doit pas être nul ou vide.");
+        }
+
+        // Récupérez l'utilisateur et convertissez-le en DTO via userService
+        UserDTO userDTO = userService.findUserByEmail(authenticatedEmail).toUserDTO();
+
+        // Retournez les informations de l'utilisateur connecté
+        logger.info("Utilisateur connecté récupéré avec succès : " + authenticatedEmail);
         return ResponseEntity.ok(userDTO);
     }
 }

@@ -1,16 +1,16 @@
 package com.rental.entity;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import java.time.LocalDateTime;
+
+import com.rental.dto.UserDTO;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
+
 import java.util.logging.Logger;
 
 /**
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  */
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
+public class User {
 
     private static final Logger logger = Logger.getLogger(User.class.getName());
 
@@ -26,25 +26,28 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Email
-    @NotNull
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Size(max = 100)
+    @NotNull(message = "Le nom ne peut pas être nul")
+    @Size(min = 2, max = 50, message = "Le nom doit avoir entre 2 et 50 caractères")
     @Column(nullable = false)
     private String name;
 
-    @NotNull
-    @Size(min = 6)
+    @NotNull(message = "L'email ne peut pas être nul")
+    @Email(message = "Veuillez fournir une adresse email valide")
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @NotNull(message = "Le mot de passe ne peut pas être nul")
+    @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères")
     @Column(nullable = false)
     private String password;
 
+    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime lastUpdated;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -76,60 +79,95 @@ public class User implements UserDetails {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now(); // Initialise la date de création à la date actuelle
-        this.updatedAt = LocalDateTime.now(); // Initialise également la date de mise à jour
+        this.lastUpdated = LocalDateTime.now(); // Initialise également la date de mise à jour
         logger.info("Utilisateur créé à : " + createdAt);
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-        logger.info("Utilisateur mis à jour à : " + updatedAt);
+        this.lastUpdated = LocalDateTime.now();
+        logger.info("Utilisateur mis à jour à : " + lastUpdated);
     }
 
     // Getters et Setters
-    public Long getId() { return id; }
-
-    public String getEmail() { return email; }
-
-    public void setEmail(String email) { this.email = email; }
-
-    public String getName() { return name; }
-
-    public void setName(String name) { this.name = name; }
-
-    @Override
-    public String getPassword() { return password; }
-
-    public void setPassword(String password) { this.password = password; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    public Role getRole() { return role; }
-
-    public void setRole(Role role) { this.role = role; }
-
-    // Implémentation des méthodes `UserDetails`
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    public Long getId() {
+        return id;
     }
 
-    @Override
-    public String getUsername() {
-        return this.email;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    @Override
-    public boolean isAccountNonExpired() { return true; }
+    public String getName() {
+        return name;
+    }
 
-    @Override
-    public boolean isAccountNonLocked() { return true; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public String getEmail() {
+        return email;
+    }
 
-    @Override
-    public boolean isEnabled() { return true; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    /**
+     * Méthode statique pour transformer un objet User en UserDTO.
+     * @param user L'utilisateur à transformer.
+     * @return Un objet UserDTO.
+     * @throws IllegalArgumentException si l'utilisateur est null
+     */
+    public static UserDTO toUserDTO(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("L'utilisateur ne peut pas être null");
+        }
+
+        // Conversion du rôle Enum en String (gérer le cas où role est null)
+        String roleString = user.getRole() != null ? user.getRole().name() : null;
+
+        // Retourne un UserDTO avec tous les champs nécessaires, y compris le rôle
+        return new UserDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getCreatedAt(),
+                user.getLastUpdated(),
+                roleString
+        );
+    }
 }
