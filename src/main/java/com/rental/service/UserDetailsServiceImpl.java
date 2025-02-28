@@ -1,7 +1,6 @@
 package com.rental.service;
 
 import com.rental.entity.User;
-import com.rental.service.UserService;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -54,8 +53,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
     }
 
-
-
     /**
      * Gère le cas où un utilisateur n'est pas trouvé.
      * @param email L'email de l'utilisateur.
@@ -65,6 +62,4 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         logger.warning(USER_NOT_FOUND_MESSAGE + email);
         throw new UsernameNotFoundException(USER_NOT_FOUND_MESSAGE + email);
     }
-
-
 }
