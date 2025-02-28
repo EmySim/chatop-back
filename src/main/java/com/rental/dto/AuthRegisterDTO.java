@@ -27,7 +27,7 @@ public class AuthRegisterDTO {
     // Constructeurs, Getters & Setters
     public AuthRegisterDTO() {}
 
-    public AuthRegisterDTO(String email, String password, String name, String role) {
+    public AuthRegisterDTO(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;

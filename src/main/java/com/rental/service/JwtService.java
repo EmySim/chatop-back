@@ -20,7 +20,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 /**
- * Service pour gérer les tokens JWT : génération, extraction, validation et invalidation.
+ * Service pour gérer les tokens JWT : génération, extraction et validation.
  */
 @Service
 public class JwtService {
@@ -29,11 +29,13 @@ public class JwtService {
     private final Key signingKey; // Clé secrète pour signer les tokens
     private final Set<String> invalidatedTokens = Collections.newSetFromMap(new ConcurrentHashMap<>()); // Liste noire temporaire des tokens
 
-
     @Value("${JWT_EXPIRATION}")
     private long jwtExpirationTime; // Durée de validité en millisecondes
 
-
+    /**
+     * Constructeur de JwtService, initialise la clé de signature à partir de la clé secrète.
+     * @param secretKeyBase64 Clé secrète encodée en base64 pour signer les tokens.
+     */
     public JwtService(@Value("${JWT_SECRET}") String secretKeyBase64) {
         if (secretKeyBase64 == null || secretKeyBase64.isEmpty()) {
             logger.severe("❌ La clé secrète JWT est manquante !");
@@ -107,7 +109,6 @@ public class JwtService {
                 .getBody();
     }
 
-
     /**
      * Vérifie si un token est valide.
      *
@@ -138,16 +139,6 @@ public class JwtService {
      */
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
-    }
-
-    /**
-     * Ajoute un token à la liste des tokens révoqués pour qu'il soit invalidé.
-     *
-     * @param token Token JWT.
-     */
-    public void invalidateToken(String token) {
-        invalidatedTokens.add(token);
-        logger.info("⚠️ Token ajouté à la liste noire : " + token);
     }
 
     /**

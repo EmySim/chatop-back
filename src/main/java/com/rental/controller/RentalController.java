@@ -1,5 +1,6 @@
 package com.rental.controller;
 
+import com.rental.dto.RentalDTO;
 import com.rental.entity.Rental;
 import com.rental.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +35,13 @@ public class RentalController {
      * @return ResponseEntity with the list of rentals.
      */
     @GetMapping
-    public ResponseEntity<List<Rental>> getAllRentals() {
+    public ResponseEntity<List<RentalDTO>> getAllRentals() {
         logger.info("Début de la méthode getAllRentals");
 
         try {
-            List<Rental> rentals = rentalService.getAllRentals();
+            List<RentalDTO> rentalDTOs = rentalService.getAllRentalDTOs();
             logger.info("Fin de la méthode getAllRentals");
-            return ResponseEntity.ok(rentals);
+            return ResponseEntity.ok(rentalDTOs);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Erreur lors de la récupération des locations", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);  // Ajoute un message d'erreur ici si tu veux plus de détails
