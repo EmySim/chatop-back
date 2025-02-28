@@ -4,10 +4,10 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.rental.security.UserDetailsLoader;
 import com.rental.service.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -25,17 +25,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class.getName());
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UserDetailsLoader userDetailsLoader;
 
     /**
      * Constructeur avec injection des dépendances.
      *
      * @param jwtService Service de gestion des tokens JWT.
-     * @param userDetailsService Service de récupération des détails utilisateurs.
+     * @param userDetailsLoader Service de récupération des détails utilisateurs.
      */
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsLoader userDetailsLoader) {
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.userDetailsLoader = userDetailsLoader;
     }
 
     @Override
@@ -79,7 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             logger.info("Authentification non présente dans le contexte pour l'utilisateur : " + userEmail);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
 
             if (jwtService.validateToken(jwt, userEmail)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -92,5 +92,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         logger.info("Fin du filtrage JWT.");
     }
-
 }
