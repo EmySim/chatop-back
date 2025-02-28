@@ -118,24 +118,33 @@ public class User {
         return password;
     }
 
+    /**
+     * Définit le mot de passe avec validation.
+     * @param password Mot de passe brut fourni.
+     */
     public void setPassword(String password) {
-        this.password = password;
+        if (password == null || password.length() < 6) {
+            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
+        }
+
+        // Simuler un encodage de mot de passe (vous devrez injecter un Encoder réel comme BCryptPasswordEncoder)
+        this.password = encodePassword(password);
+        logger.info("Mot de passe défini pour l'utilisateur.");
     }
+
+
+    private String encodePassword(String password) {
+        // Logiciel d'encodage à remplacer par un encodeur réel
+        return "hashed_" + password; // Ceci est uniquement pour illustrer
+    }
+
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public LocalDateTime getLastUpdated() {
         return lastUpdated;
-    }
-
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
     }
 
     public Role getRole() {
@@ -157,19 +166,15 @@ public class User {
             throw new IllegalArgumentException("L'utilisateur ne peut pas être null");
         }
 
-        // Conversion du rôle Enum en String (gérer le cas où role est null)
-        String roleString = user.getRole() != null ? user.getRole().name() : null;
-
         // Retourne un UserDTO avec tous les champs nécessaires, y compris le rôle
-        UserDTO userDTO = new UserDTO(
+        return new UserDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getCreatedAt(),
                 user.getLastUpdated(),
-                roleString
+                user.getRole().name()
         );
-        userDTO.setPassword(user.getPassword());
-        return userDTO;
+
     }
 }

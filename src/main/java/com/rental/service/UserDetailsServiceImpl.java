@@ -1,6 +1,7 @@
 package com.rental.service;
 
-import com.rental.dto.UserDTO;
+import com.rental.entity.User;
+import com.rental.service.UserService;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,16 +34,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         try {
             logger.info("Chargement de l'utilisateur pour l'email : " + email);
 
-            // Appel du service pour récupérer l'utilisateur sous forme de DTO
-            UserDTO userDTO = userService.getUserByEmail(email);
+            // Appel du service pour récupérer l'utilisateur (par entité)
+            User user = userService.getEntityUserByEmail(email);
+            if (user == null) {
+                handleUserNotFound(email);
+            }
 
-            logger.info("Utilisateur trouvé : " + userDTO.getEmail());
+            logger.info("Utilisateur trouvé : " );
 
-            // Transforme le UserDTO en UserDetails pour Spring Security
+            // Transforme l'utilisateur en UserDetails pour Spring Security
             return org.springframework.security.core.userdetails.User.builder()
-                    .username(userDTO.getEmail())
-                    .password(userDTO.getPassword()) // Assurez-vous que UserDTO contient le mot de passe.
-                    .roles(userDTO.getRole())       // Assurez-vous que UserDTO contient le rôle sous forme de chaîne.
+                    .username(user.getEmail())
+                    .password(user.getPassword()) // Mot de passe encodé depuis l'entité
+                    .roles(user.getRole().toString()) // Assumez que Role est une énumération ou une chaîne
                     .build();
         } catch (IllegalArgumentException ex) {
             logger.warning("Utilisateur introuvable pour l'email : " + email);
@@ -51,7 +55,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
 
-/**
+
+    /**
      * Gère le cas où un utilisateur n'est pas trouvé.
      * @param email L'email de l'utilisateur.
      * @throws UsernameNotFoundException Exception avec message prédéfini.

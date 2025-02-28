@@ -53,10 +53,20 @@ public class UserService {
     }
 
     /**
-     * Recherche d'un utilisateur par son email.
-     * @param email L'email de l'utilisateur à rechercher.
-     * @return UserDTO représentant l'utilisateur trouvé.
+     * Récupère un utilisateur complet (entité) via son email.
+     * @param email L'email de l'utilisateur.
+     * @return L'objet User (entité).
      */
+    public User getEntityUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + email));
+    }
+
+        /**
+         * Recherche d'un utilisateur par son email.
+         * @param email L'email de l'utilisateur à rechercher.
+         * @return UserDTO représentant l'utilisateur trouvé.
+         */
     @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
@@ -74,8 +84,8 @@ public class UserService {
 
         logger.info("Utilisateur trouvé : " + user.getEmail());
 
-        // Transformer l'utilisateur trouvé en DTO avant de le retourner.
         return convertToDTO(user);
+
     }
 
     /**
@@ -114,7 +124,6 @@ public class UserService {
         userDTO.setRole(user.getRole().name());
         userDTO.setCreatedAt(user.getCreatedAt());
         userDTO.setLastUpdated(user.getLastUpdated());
-        userDTO.setPassword(user.getPassword());
 
         return userDTO;
     }

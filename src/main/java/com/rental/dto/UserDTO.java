@@ -32,9 +32,6 @@ public class UserDTO {
     @Schema(description = "Rôle de l'utilisateur", example = "ADMIN")
     private String role;
 
-    @Schema(description = "Mot de passe de l'utilisateur (non exposé)")
-    private String password;
-
     // Constructeur par défaut nécessaire pour la désérialisation des données depuis JSON
     public UserDTO() {}
 
@@ -106,11 +103,7 @@ public class UserDTO {
         this.lastUpdated = lastUpdated;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
+@Override
     public String toString() {
         return "UserDTO{" +
                 "id=" + id +
@@ -119,7 +112,6 @@ public class UserDTO {
                 ", createdAt=" + createdAt +
                 ", lastUpdated=" + lastUpdated +
                 ", role='" + role + '\'' +
-                ",password='" + password + '\'' +
                 '}';
     }
 }

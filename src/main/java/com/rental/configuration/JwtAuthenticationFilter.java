@@ -67,14 +67,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7); // Récupérer ce qui suit "Bearer ".
         logger.info("Token JWT extrait : " + jwt);
 
-        // Vérifiez si le token contient exactement deux points (.).
-        if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
-            logger.warning("Le token JWT est mal formé : "+jwt);
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Invalid JWT token format.");
-            return;
-        }
-        logger.info("Token JWT trouvé, extraction du nom d'utilisateur.");
 
         // Étape 2 : Extraire les informations après validation
         try {
@@ -89,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             logger.info("Authentification non présente dans le contexte pour l'utilisateur : " + userEmail);
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-            if (jwtService.validateToken(jwt, userEmail)) {  // Correction ici : retirer le point-virgule après cette ligne.
+            if (jwtService.validateToken(jwt, userEmail)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 logger.info("Token validé pour l'utilisateur : " + userEmail);
