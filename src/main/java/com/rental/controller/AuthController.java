@@ -1,18 +1,12 @@
 package com.rental.controller;
 
-import java.util.logging.Logger;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.rental.dto.AuthLoginDTO;
 import com.rental.dto.AuthRegisterDTO;
@@ -26,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.util.logging.Logger;
 
 /**
  * Contrôleur pour la gestion de l'authentification et des utilisateurs.
@@ -106,26 +101,10 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Non autorisé")
     })
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(Authentication authentication) {
-        // Vérifiez si l'utilisateur est authentifié
-        if (authentication == null || !authentication.isAuthenticated()) {
-            logger.warning("Tentative d'accès sans authentification valide.");
-            return ResponseEntity.status(401).build(); // Non autorisé
-        }
-
-        // Récupérez l'email de l'utilisateur authentifié
-        String authenticatedEmail = authentication.getName();
-
-        if (authenticatedEmail == null || authenticatedEmail.isEmpty()) {
-            logger.severe("Adresse e-mail authentifiée non valide.");
-            throw new IllegalArgumentException("L'email de l'utilisateur authentifié ne doit pas être nul ou vide.");
-        }
-
-        // Récupérez l'utilisateur et convertissez-le en DTO via userService
-        UserDTO userDTO = userService.findUserByEmail(authenticatedEmail).toUserDTO();
-
-        // Retournez les informations de l'utilisateur connecté
-        logger.info("Utilisateur connecté récupéré avec succès : " + authenticatedEmail);
+    public ResponseEntity<UserDTO> getCurrentUser(@RequestParam String email) {
+        logger.info("Récupération de l'utilisateur connecté : " + email);
+        UserDTO userDTO = userService.getUserByEmail(email);
         return ResponseEntity.ok(userDTO);
     }
+
 }

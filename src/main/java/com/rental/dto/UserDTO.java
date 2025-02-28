@@ -1,6 +1,8 @@
 package com.rental.dto;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -19,14 +21,19 @@ public class UserDTO {
     @Schema(description = "Email de l'utilisateur", example = "john.doe@example.com")
     private String email;
 
+    @JsonProperty("created_at")
     @Schema(description = "Date de création du compte", example = "2025-02-28T14:23:45")
     private LocalDateTime createdAt;
 
+    @JsonProperty("updated_at")
     @Schema(description = "Dernière mise à jour du compte", example = "2025-02-28T14:23:45")
     private LocalDateTime lastUpdated;
 
     @Schema(description = "Rôle de l'utilisateur", example = "ADMIN")
-    private String role; // Déclaration de la propriété "role"
+    private String role;
+
+    @Schema(description = "Mot de passe de l'utilisateur (non exposé)")
+    private String password;
 
     // Constructeur par défaut nécessaire pour la désérialisation des données depuis JSON
     public UserDTO() {}
@@ -99,6 +106,10 @@ public class UserDTO {
         this.lastUpdated = lastUpdated;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     @Override
     public String toString() {
         return "UserDTO{" +
@@ -107,7 +118,8 @@ public class UserDTO {
                 ", email='" + email + '\'' +
                 ", createdAt=" + createdAt +
                 ", lastUpdated=" + lastUpdated +
-                ", role='" + role + '\'' + // Ajout du rôle dans le toString
+                ", role='" + role + '\'' +
+                ",password='" + password + '\'' +
                 '}';
     }
 }

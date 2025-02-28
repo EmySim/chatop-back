@@ -28,26 +28,52 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.userService = userService;
     }
 
+    private static final String USER_NOT_FOUND_MESSAGE = "Utilisateur non trouvé avec l'email : ";
+    private static final String USER_LOADING_MESSAGE = "Authentification : Chargement de l'utilisateur via l'email : ";
+
     @Override
-    @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        logger.info("Authentification : Chargement de l'utilisateur via l'email : " + email);
+        try {
+            logger.info("Chargement de l'utilisateur pour l'email : " + email);
 
-        // Recherche de l'utilisateur par email
-        UserDTO userDTO = userService.findUserDTOByEmail(email);
+            // Appel du service pour récupérer l'utilisateur sous forme de DTO
+            UserDTO userDTO = userService.getUserByEmail(email);
 
-        if (userDTO == null) {
-            logger.warning("Utilisateur non trouvé pour l'email : " + email);
-            throw new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email);
+            logger.info("Utilisateur trouvé : " + userDTO.getEmail());
+
+            // Transforme le UserDTO en UserDetails pour Spring Security
+            return org.springframework.security.core.userdetails.User.builder()
+                    .username(userDTO.getEmail())
+                    .password(userDTO.getPassword()) // Assurez-vous que UserDTO contient le mot de passe.
+                    .roles(userDTO.getRole())       // Assurez-vous que UserDTO contient le rôle sous forme de chaîne.
+                    .build();
+        } catch (IllegalArgumentException ex) {
+            logger.warning("Utilisateur introuvable pour l'email : " + email);
+            throw new UsernameNotFoundException("Utilisateur non trouvé : " + email);
         }
-
-        // Conversion duUserDTO en User (pour récupérer le mot de passe de l'entité User)
-        User user = userService.findUserByEmail(email);
-
-        return new org.springframework.security.core.userdetails.User(
-                userDTO.getEmail(),
-                user.getPassword(), // Utilisation du mot de passe de l'entité User
-                new ArrayList<>()
-        );
     }
+
+
+/**
+     * Gère le cas où un utilisateur n'est pas trouvé.
+     * @param email L'email de l'utilisateur.
+     * @throws UsernameNotFoundException Exception avec message prédéfini.
+     */
+    private void handleUserNotFound(String email) throws UsernameNotFoundException {
+        logger.warning(USER_NOT_FOUND_MESSAGE + email);
+        throw new UsernameNotFoundException(USER_NOT_FOUND_MESSAGE + email);
+    }
+
+    /**
+     * Construire un UserDetails à partir d'un utilisateur.
+     * @param user L'entité utilisateur contenant les détails.
+     * @return UserDetails compatible avec Spring Security.
+     */
+    private UserDetails buildUserDetails(User user) {
+        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities(new ArrayList<>()) // Ajoutez les rôles ici si nécessaire
+                .build();
+    }
+
 }

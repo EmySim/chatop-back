@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.logging.Logger;
 
+/**
+ * Service pour gérer les opérations liées aux utilisateurs.
+ */
 @Service
 public class UserService {
 
@@ -21,7 +24,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * Constructeur de UserService.
+     * Constructeur pour injecter le UserRepository et le PasswordEncoder.
      * @param userRepository Le repository des utilisateurs.
      * @param passwordEncoder L'encodeur de mot de passe pour la sécurité.
      */
@@ -30,7 +33,6 @@ public class UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
 
     /**
      * Méthode utilisée pour créer un utilisateur dans la base de données.
@@ -53,40 +55,29 @@ public class UserService {
     /**
      * Recherche d'un utilisateur par son email.
      * @param email L'email de l'utilisateur à rechercher.
-     * @return User représentant l'utilisateur trouvé.
+     * @return UserDTO représentant l'utilisateur trouvé.
      */
     @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
             @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
     })
-    public User findUserByEmail(String email) {
+    public UserDTO getUserByEmail(String email) {
         logger.info("Recherche d'un utilisateur avec l'email : " + email);
 
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
-                    return new IllegalStateException("Utilisateur non trouvé avec cet email : " + email);
-                });
-    }
-
-    /**
-     * Recherche d'un utilisateur par son email et renvoie un UserDTO.
-     * @param email L'email de l'utilisateur à rechercher.
-     * @return UserDTO représentant l'utilisateur trouvé.
-     */
-    public UserDTO findUserDTOByEmail(String email) {
-        logger.info("Recherche d'un utilisateur avec l'email pour DTO : " + email);
-
+        // Récupération de l'utilisateur depuis le repository.
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
-                    return new IllegalStateException("Utilisateur non trouvé avec cet email : " + email);
+                    logger.warning("Aucun utilisateur trouvé avec l'email : " + email);
+                    return new IllegalArgumentException("Utilisateur non trouvé pour l'email : " + email);
                 });
 
-        // Retourne le UserDTO après transformation
+        logger.info("Utilisateur trouvé : " + user.getEmail());
+
+        // Transformer l'utilisateur trouvé en DTO avant de le retourner.
         return convertToDTO(user);
     }
+
     /**
      * Recherche d'un utilisateur par son ID.
      * @param id L'ID de l'utilisateur à rechercher.
@@ -109,8 +100,13 @@ public class UserService {
         // Transformation de l'entité User en DTO
         return convertToDTO(user);
     }
+
+    /**
+     * Convertit un utilisateur en DTO.
+     * @param user L'entité utilisateur.
+     * @return UserDTO représentant l'utilisateur.
+     */
     private UserDTO convertToDTO(User user) {
-        // Conversion de l'entité User en DTO
         UserDTO userDTO = new UserDTO();
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
