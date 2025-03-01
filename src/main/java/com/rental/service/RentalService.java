@@ -7,6 +7,7 @@ import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -34,8 +35,7 @@ public class RentalService {
      * @return List of rentals.
      */
     public List<Rental> getAllRentals() {
-        // Implementation omitted for shortness
-        return null; // Placeholder
+        return rentalRepository.findAll();
     }
 
     /**
@@ -44,8 +44,10 @@ public class RentalService {
      * @return List of RentalDTOs.
      */
     public List<RentalDTO> getAllRentalDTOs() {
-        // Implementation omitted for shortness
-        return null; // Placeholder
+        List<Rental> rentals = rentalRepository.findAll();
+        return rentals.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -61,13 +63,16 @@ public class RentalService {
         }
 
         RentalDTO rentalDTO = new RentalDTO();
-        rentalDTO.setId(rental.getId().intValue()); // Conversion Long -> int
+        rentalDTO.setId(rental.getId().intValue());
         rentalDTO.setName(rental.getName());
         rentalDTO.setDescription(rental.getDescription());
         rentalDTO.setPrice(rental.getPrice());
         rentalDTO.setLocation(rental.getLocation());
         rentalDTO.setCreatedAt(rental.getCreatedAt());
         rentalDTO.setUpdatedAt(rental.getUpdatedAt());
+        rentalDTO.setSurface(rental.getSurface());
+        rental.setPictureUrl(pictureUrl);
+        rentalDTO.setOwner_id(rental.getOwner_id());
 
         return rentalDTO;
     }
@@ -104,5 +109,8 @@ public class RentalService {
     public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO) {
         // Implementation omitted for shortness
         return null; // Placeholder
+    }
+
+    public RentalDTO createRentalWithFile(String name, String description, Double price, String location, MultipartFile file) {
     }
 }

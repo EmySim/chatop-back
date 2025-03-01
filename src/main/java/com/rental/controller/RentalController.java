@@ -1,13 +1,13 @@
 package com.rental.controller;
 
 import com.rental.dto.RentalDTO;
-import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -43,7 +43,7 @@ public class RentalController {
             return ResponseEntity.ok(rentalDTOs);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Erreur lors de la récupération des locations", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);  // Ajoute un message d'erreur ici si tu veux plus de détails
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -68,21 +68,31 @@ public class RentalController {
     }
 
     /**
-     * Creates a new rental.
+     * Creates a new rental with file upload.
      *
-     * @param createRentalDTO The DTO containing rental details.
+     * @param name The name of the rental.
+     * @param description The description of the rental.
+     * @param price The price of the rental.
+     * @param location The location of the rental.
+     * @param file The image file.
      * @return ResponseEntity with the created rental.
      */
-    @PostMapping
-    public ResponseEntity<RentalDTO> createRental(@RequestBody CreateRentalDTO createRentalDTO) {
-        logger.info("Début de la méthode createRental");
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<RentalDTO> createRentalWithFile(
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam("price") Double price,
+            @RequestParam("location") String location,
+            @RequestParam("file") MultipartFile file) {
+
+        logger.info("Début de la méthode createRentalWithFile");
 
         try {
-            RentalDTO rentalDTO = rentalService.createRental(createRentalDTO);
-            logger.info("Fin de la méthode createRental");
+            RentalDTO rentalDTO = rentalService.createRentalWithFile(name, description, price, location, file);
+            logger.info("Fin de la méthode createRentalWithFile");
             return ResponseEntity.status(HttpStatus.CREATED).body(rentalDTO);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
+            logger.log(Level.SEVERE, "Erreur lors de la création de la location avec fichier", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }

@@ -30,7 +30,7 @@ public class Rental {
     private int surface;
 
     @Column(nullable = false)
-    private String picture;
+    private String pictureUrl;
 
     @Column(nullable = false)
     private Long owner_id;
@@ -71,8 +71,8 @@ public class Rental {
     public int getSurface() { return surface; }
     public void setSurface(int surface) { this.surface = surface; }
 
-    public String getPicture() { return picture; }
-    public void setPicture(String picture) { this.picture = picture; }
+    public String getPicture() { return pictureUrl; }
+    public void setPicture(String picture) { this.pictureUrl = picture; }
 
     public Long getOwner_id() { return owner_id; }
     public void setOwner_id(Long owner_id) { this.owner_id = owner_id; }
