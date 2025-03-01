@@ -5,9 +5,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 /**
- * DTO for updating an existing rental.
+ * DTO for creating a new rental.
  */
-public class UpdateRentalDTO {
+public class CreateRentalDTO {
+
+    // Constructeurs
+    public CreateRentalDTO(String propertyName) {
+        this.propertyName = propertyName;
+    }
+
 
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;

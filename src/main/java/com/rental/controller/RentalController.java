@@ -1,9 +1,7 @@
 package com.rental.controller;
 
 import com.rental.dto.RentalDTO;
-import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.UpdateRentalDTO;
-import com.rental.entity.Rental;
 import com.rental.service.RentalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

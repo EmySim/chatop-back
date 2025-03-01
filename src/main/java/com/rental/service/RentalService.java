@@ -1,7 +1,6 @@
 package com.rental.service;
 
 import com.rental.dto.RentalDTO;
-import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
