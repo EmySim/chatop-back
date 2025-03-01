@@ -26,6 +26,15 @@ public class Rental {
     @Column(nullable = false)
     private String location;
 
+    @Column(nullable = false)
+    private int surface;
+
+    @Column(nullable = false)
+    private String picture;
+
+    @Column(nullable = false)
+    private Long owner_id;
+
     @Temporal(TemporalType.TIMESTAMP) // Pour les champs de type Date
     private Date createdAt;
 
@@ -58,6 +67,15 @@ public class Rental {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public int getSurface() { return surface; }
+    public void setSurface(int surface) { this.surface = surface; }
+
+    public String getPicture() { return picture; }
+    public void setPicture(String picture) { this.picture = picture; }
+
+    public Long getOwner_id() { return owner_id; }
+    public void setOwner_id(Long owner_id) { this.owner_id = owner_id; }
 
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }

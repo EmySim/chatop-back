@@ -10,6 +10,9 @@ public class RentalDTO {
     private String location;
     private Date createdAt;
     private Date updatedAt;
+    private int surface;
+    private String picture;
+    private Long owner_id;
 
     // Constructeurs
     public RentalDTO() {
@@ -76,5 +79,29 @@ public class RentalDTO {
 
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public int getSurface() {
+        return surface;
+    }
+
+    public void setSurface(int surface) {
+        this.surface = surface;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public Long getOwner_id() {
+        return owner_id;
+    }
+
+    public void setOwner_id(Long owner_id) {
+        this.owner_id = owner_id;
     }
 }

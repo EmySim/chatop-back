@@ -22,6 +22,16 @@ public class UpdateRentalDTO {
     @NotBlank(message = "La localisation est obligatoire.")
     private String location;
 
+    @NotNull(message = "La surface est obligatoire.")
+    @Positive(message = "La surface doit être positive.")
+    private int surface;
+
+    @NotBlank(message = "L'image est obligatoire.")
+    private String picture;
+
+    @NotNull(message = "L'ID du propriétaire est obligatoire.")
+    private Long owner_id;
+
     // Getters and Setters
     public String getName() {
         return name;
@@ -53,5 +63,29 @@ public class UpdateRentalDTO {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public int getSurface() {
+        return surface;
+    }
+
+    public void setSurface(int surface) {
+        this.surface = surface;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public Long getOwner_id() {
+        return owner_id;
+    }
+
+    public void setOwner_id(Long owner_id) {
+        this.owner_id = owner_id;
     }
 }
