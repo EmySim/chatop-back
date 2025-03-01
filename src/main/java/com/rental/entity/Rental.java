@@ -7,7 +7,7 @@ import java.util.Date;
  * Entity class representing a rental property.
  */
 @Entity
-@Table(name = "rentals") // Définir le nom de la table pour la base de données
+@Table(name = "rentals")
 public class Rental {
 
     @Id

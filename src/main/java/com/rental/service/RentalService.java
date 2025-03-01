@@ -1,6 +1,8 @@
 package com.rental.service;
 
 import com.rental.dto.RentalDTO;
+import com.rental.dto.CreateRentalDTO;
+import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,5 +73,75 @@ public class RentalService {
         rentalDTO.setCreatedAt(rental.getCreatedAt());
         rentalDTO.setUpdatedAt(rental.getUpdatedAt());
         return rentalDTO;
+    }
+
+    /**
+     * Retrieves a rental by ID.
+     *
+     * @param id The ID of the rental.
+     * @return The RentalDTO of the rental.
+     */
+    public RentalDTO getRentalById(Long id) {
+        logger.info("Début de la méthode getRentalById");
+
+        try {
+            Rental rental = rentalRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Location non trouvée"));
+            logger.info("Fin de la méthode getRentalById");
+            return convertToDTO(rental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la récupération de la location", e);
+            throw new RuntimeException("Erreur lors de la récupération de la location", e);
+        }
+    }
+
+    /**
+     * Creates a new rental.
+     *
+     * @param createRentalDTO The DTO containing rental details.
+     * @return The created RentalDTO.
+     */
+    public RentalDTO createRental(CreateRentalDTO createRentalDTO) {
+        logger.info("Début de la méthode createRental");
+
+        try {
+            Rental rental = new Rental();
+            rental.setName(createRentalDTO.getName());
+            rental.setDescription(createRentalDTO.getDescription());
+            rental.setPrice(createRentalDTO.getPrice());
+            rental.setLocation(createRentalDTO.getLocation());
+            rental = rentalRepository.save(rental);
+            logger.info("Fin de la méthode createRental");
+            return convertToDTO(rental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
+            throw new RuntimeException("Erreur lors de la création de la location", e);
+        }
+    }
+
+    /**
+     * Updates an existing rental.
+     *
+     * @param id The ID of the rental to update.
+     * @param updateRentalDTO The DTO containing updated rental details.
+     * @return The updated RentalDTO.
+     */
+    public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO) {
+        logger.info("Début de la méthode updateRental");
+
+        try {
+            Rental rental = rentalRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Location non trouvée"));
+            rental.setName(updateRentalDTO.getName());
+            rental.setDescription(updateRentalDTO.getDescription());
+            rental.setPrice(updateRentalDTO.getPrice());
+            rental.setLocation(updateRentalDTO.getLocation());
+            rental = rentalRepository.save(rental);
+            logger.info("Fin de la méthode updateRental");
+            return convertToDTO(rental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la mise à jour de la location", e);
+            throw new RuntimeException("Erreur lors de la mise à jour de la location", e);
+        }
     }
 }
