@@ -9,12 +9,6 @@ import jakarta.validation.constraints.Positive;
  */
 public class CreateRentalDTO {
 
-    // Constructeurs
-    public CreateRentalDTO(String propertyName) {
-        this.propertyName = propertyName;
-    }
-
-
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;
 
@@ -27,6 +21,16 @@ public class CreateRentalDTO {
 
     @NotBlank(message = "La localisation est obligatoire.")
     private String location;
+
+    // Constructeurs
+    public CreateRentalDTO() {}
+
+    public CreateRentalDTO(String name, String description, double price, String location) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.location = location;
+    }
 
     // Getters and Setters
     public String getName() {
