@@ -36,9 +36,9 @@ public class MessageController {
     })
     @PostMapping
     public ResponseEntity<String> sendMessage(@Valid @RequestBody MessageDTO messageDTO) {
-        logger.info("Attempting to send message from: " + messageDTO.getSender() + " to: " + messageDTO.getRecipient());
+        logger.info("Attempting to send message with content: " + messageDTO.getMessage());
         messageService.sendMessage(messageDTO);
-        logger.info("Message sent successfully from: " + messageDTO.getSender() + " to: " + messageDTO.getRecipient());
+        logger.info("Message sent successfully.");
         return ResponseEntity.ok("Message sent successfully");
     }
 }
