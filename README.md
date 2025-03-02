@@ -21,14 +21,9 @@ Before you begin, ensure you have the following installed on your machine:
    cd chatop-back
    ```
 
-2. **Create a `.env` file in the root directory and add the following environment variables:**
+2. **Ask authorization to Github Gist to get environment variables**
 
-   ```plaintext
-   DATABASE_URL=jdbc:mysql://localhost:3306/chatopdb
-   DATABASE_USERNAME=ChatopUser
-   DATABASE_PASSWORD=ChatopDB2025!
-   JWT_SECRET=1Ux6Dnxnx1mfnAM1aQFf+fzMoUuyitQCXTEIHfgTklg=
-   ```
+<script src="https://gist.github.com/EmySim/4950aa154de3e771f0979bc9480b32fb.js"></script>
 
 3. **Ensure the MySQL server is running and accessible at the specified `DATABASE_URL`.**
 
