@@ -146,4 +146,23 @@ public class UserService {
         logger.info("Récupération de l'utilisateur connecté : " + email);
         return getUserByEmail(email);
     }
+
+    /**
+     * Met à jour un utilisateur.
+     * @param id L'ID de l'utilisateur à mettre à jour.
+     * @param userDTO Les nouvelles informations de l'utilisateur.
+     * @return UserDTO représentant l'utilisateur mis à jour.
+     */
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + id));
+
+        user.setName(userDTO.getName());
+        user.setEmail(userDTO.getEmail());
+        user.setRole(Role.valueOf(userDTO.getRole()));
+        user.setPassword(encodePassword(userDTO.getPassword()));
+
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
 }
