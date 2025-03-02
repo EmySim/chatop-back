@@ -32,4 +32,25 @@ public class FileStorageService {
         // Retourner l'URL de l'image stockée
         return "/uploads/" + fileName;
     }
+
+    public String storeFileWithFormData(MultipartFile file, String additionalData) throws IOException {
+        // Vérifier si le dossier de stockage existe, sinon le créer
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Générer un nom unique pour éviter les conflits
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(fileName);
+
+        // Sauvegarder le fichier sur le disque
+        Files.copy(file.getInputStream(), filePath);
+
+        // Log additional data
+        System.out.println("Additional Data: " + additionalData);
+
+        // Retourner l'URL de l'image stockée
+        return "/uploads/" + fileName;
+    }
 }
