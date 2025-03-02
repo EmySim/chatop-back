@@ -2,6 +2,9 @@ package com.rental.dto;
 
 import java.util.Date;
 
+/**
+ * DTO pour représenter une location (Rental).
+ */
 public class RentalDTO {
     private int id;
     private String name;
@@ -14,11 +17,11 @@ public class RentalDTO {
     private String picture;
     private Long owner_id;
 
-    // Constructeurs
+    // Constructeur par défaut
     public RentalDTO() {
-        // Constructeur par défaut obligatoire
     }
 
+    // Constructeur avec paramètres
     public RentalDTO(int id, String name) {
         this.id = id;
         this.name = name;

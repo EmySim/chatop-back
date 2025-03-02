@@ -1,8 +1,6 @@
 package com.rental.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,7 +11,6 @@ import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
 import com.rental.dto.UserDTO;
 import com.rental.service.AuthService;
-import com.rental.service.JwtService;
 import com.rental.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,17 +28,10 @@ public class AuthController {
 
     private static final Logger logger = Logger.getLogger(AuthController.class.getName());
     private final AuthService authService;
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
     private final UserService userService;
 
-    public AuthController(AuthService authService,
-                          AuthenticationManager authenticationManager,
-                          JwtService jwtService,
-                          UserService userService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
         this.userService = userService;
     }
 
@@ -74,18 +64,9 @@ public class AuthController {
         logger.info("Tentative de connexion pour : " + loginDTO.getEmail());
 
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
-
-            // On définit l'authentification dans le contexte de sécurité
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // Générez un token JWT pour l'utilisateur
-            String jwtToken = jwtService.generateToken(((UserDetails) authentication.getPrincipal()).getUsername());
-
+            AuthResponseDTO response = authService.login(loginDTO);
             logger.info("Connexion réussie pour : " + loginDTO.getEmail());
-            return ResponseEntity.ok(new AuthResponseDTO(jwtToken));
-
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.warning("Échec de l'authentification pour : " + loginDTO.getEmail() + " - Erreur : " + e.getMessage());
             return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));

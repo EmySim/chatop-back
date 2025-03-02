@@ -23,10 +23,12 @@ public class RentalService {
 
     private static final Logger logger = Logger.getLogger(RentalService.class.getName());
     private final RentalRepository rentalRepository;
+    private final FileStorageService fileStorageService;
 
     @Autowired
-    public RentalService(RentalRepository rentalRepository) {
+    public RentalService(RentalRepository rentalRepository, FileStorageService fileStorageService) {
         this.rentalRepository = rentalRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
@@ -71,7 +73,7 @@ public class RentalService {
         rentalDTO.setCreatedAt(rental.getCreatedAt());
         rentalDTO.setUpdatedAt(rental.getUpdatedAt());
         rentalDTO.setSurface(rental.getSurface());
-        rental.setPictureUrl(pictureUrl);
+        rentalDTO.setPicture(rental.getPicture());
         rentalDTO.setOwner_id(rental.getOwner_id());
 
         return rentalDTO;
@@ -84,8 +86,9 @@ public class RentalService {
      * @return The RentalDTO of the rental.
      */
     public RentalDTO getRentalById(Long id) {
-        // Implementation omitted for shortness
-        return null; // Placeholder
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rental not found with id: " + id));
+        return convertToDTO(rental);
     }
 
     /**
@@ -95,8 +98,19 @@ public class RentalService {
      * @return The created RentalDTO.
      */
     public RentalDTO createRental(CreateRentalDTO createRentalDTO) {
-        // Implementation omitted for shortness
-        return null; // Placeholder
+        Rental rental = new Rental();
+        rental.setName(createRentalDTO.getName());
+        rental.setDescription(createRentalDTO.getDescription());
+        rental.setPrice(createRentalDTO.getPrice());
+        rental.setLocation(createRentalDTO.getLocation());
+        rental.setSurface(createRentalDTO.getSurface());
+        rental.setPicture(createRentalDTO.getPicture());
+        rental.setOwner_id(createRentalDTO.getOwner_id());
+        rental.setCreatedAt(new Date());
+        rental.setUpdatedAt(new Date());
+
+        Rental savedRental = rentalRepository.save(rental);
+        return convertToDTO(savedRental);
     }
 
     /**
@@ -107,10 +121,52 @@ public class RentalService {
      * @return The updated RentalDTO.
      */
     public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO) {
-        // Implementation omitted for shortness
-        return null; // Placeholder
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rental not found with id: " + id));
+
+        rental.setName(updateRentalDTO.getName());
+        rental.setDescription(updateRentalDTO.getDescription());
+        rental.setPrice(updateRentalDTO.getPrice());
+        rental.setLocation(updateRentalDTO.getLocation());
+        rental.setSurface(updateRentalDTO.getSurface());
+        rental.setPicture(updateRentalDTO.getPicture());
+        rental.setOwner_id(updateRentalDTO.getOwner_id());
+        rental.setUpdatedAt(new Date());
+
+        Rental updatedRental = rentalRepository.save(rental);
+        return convertToDTO(updatedRental);
     }
 
+    /**
+     * Creates a new rental with file upload.
+     *
+     * @param name The name of the rental.
+     * @param description The description of the rental.
+     * @param price The price of the rental.
+     * @param location The location of the rental.
+     * @param file The image file.
+     * @return The created RentalDTO.
+     */
     public RentalDTO createRentalWithFile(String name, String description, Double price, String location, MultipartFile file) {
+        try {
+            String pictureUrl = fileStorageService.storeFile(file);
+
+            Rental rental = new Rental();
+            rental.setName(name);
+            rental.setDescription(description);
+            rental.setPrice(price);
+            rental.setLocation(location);
+            rental.setSurface(0); // Set default surface value
+            rental.setPicture(pictureUrl);
+            rental.setOwner_id(0L); // Set default owner_id value
+            rental.setCreatedAt(new Date());
+            rental.setUpdatedAt(new Date());
+
+            Rental savedRental = rentalRepository.save(rental);
+            return convertToDTO(savedRental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error creating rental with file", e);
+            throw new RuntimeException("Error creating rental with file", e);
+        }
     }
 }

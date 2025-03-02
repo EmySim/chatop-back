@@ -118,26 +118,9 @@ public class User {
         return password;
     }
 
-    /**
-     * Définit le mot de passe avec validation.
-     * @param password Mot de passe brut fourni.
-     */
     public void setPassword(String password) {
-        if (password == null || password.length() < 6) {
-            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
-        }
-
-        // Simuler un encodage de mot de passe (vous devrez injecter un Encoder réel comme BCryptPasswordEncoder)
-        this.password = encodePassword(password);
-        logger.info("Mot de passe défini pour l'utilisateur.");
+        this.password = password;
     }
-
-
-    private String encodePassword(String password) {
-        // Logiciel d'encodage à remplacer par un encodeur réel
-        return "hashed_" + password; // Ceci est uniquement pour illustrer
-    }
-
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

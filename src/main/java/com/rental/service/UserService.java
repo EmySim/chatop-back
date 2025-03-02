@@ -46,7 +46,7 @@ public class UserService {
         logger.info("Création de l'utilisateur : " + email);
 
         // Crée un utilisateur avec un mot de passe crypté
-        User user = new User(email, name, passwordEncoder.encode(password), role);
+        User user = new User(email, name, encodePassword(password), role);
 
         // Sauvegarde l'utilisateur en base de données
         return userRepository.save(user);
@@ -62,11 +62,11 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + email));
     }
 
-        /**
-         * Recherche d'un utilisateur par son email.
-         * @param email L'email de l'utilisateur à rechercher.
-         * @return UserDTO représentant l'utilisateur trouvé.
-         */
+    /**
+     * Recherche d'un utilisateur par son email.
+     * @param email L'email de l'utilisateur à rechercher.
+     * @return UserDTO représentant l'utilisateur trouvé.
+     */
     @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
@@ -126,5 +126,14 @@ public class UserService {
         userDTO.setLastUpdated(user.getLastUpdated());
 
         return userDTO;
+    }
+
+    /**
+     * Encode le mot de passe de l'utilisateur.
+     * @param password Le mot de passe en clair.
+     * @return Le mot de passe encodé.
+     */
+    public String encodePassword(String password) {
+        return passwordEncoder.encode(password);
     }
 }
