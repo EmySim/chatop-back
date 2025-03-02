@@ -54,7 +54,7 @@ public class RentalController {
             @RequestPart("image") MultipartFile image) {
 
         logger.info("Début de createRentalWithImage");
-        RentalDTO newRental = rentalService.createRentalWithFile(rentalDTO, image);
+        RentalDTO newRental = rentalService.createRentalWithImage(rentalDTO, image);
         return ResponseEntity.status(HttpStatus.CREATED).body(newRental);
     }
 

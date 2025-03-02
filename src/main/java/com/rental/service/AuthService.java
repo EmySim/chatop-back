@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
+import com.rental.dto.UserDTO;
 import com.rental.entity.Role;
 import com.rental.entity.User;
 import com.rental.repository.UserRepository;
