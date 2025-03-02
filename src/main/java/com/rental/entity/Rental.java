@@ -29,7 +29,7 @@ public class Rental {
     @Column(nullable = false)
     private int surface;
 
-    @Column(nullable = false)
+    @Column(name = "picture", nullable = false) // Synchronisation avec la colonne existante "picture"
     private String pictureUrl;
 
     @Column(nullable = false)
