@@ -169,4 +169,34 @@ public class RentalService {
             throw new RuntimeException("Error creating rental with file", e);
         }
     }
+
+    /**
+     * Creates a new rental with image upload.
+     *
+     * @param rentalDTO The DTO containing rental details.
+     * @param image The image file.
+     * @return The created RentalDTO.
+     */
+    public RentalDTO createRentalWithImage(CreateRentalDTO rentalDTO, MultipartFile image) {
+        try {
+            String pictureUrl = fileStorageService.storeFile(image);
+
+            Rental rental = new Rental();
+            rental.setName(rentalDTO.getName());
+            rental.setDescription(rentalDTO.getDescription());
+            rental.setPrice(rentalDTO.getPrice());
+            rental.setLocation(rentalDTO.getLocation());
+            rental.setSurface(rentalDTO.getSurface());
+            rental.setPicture(pictureUrl);
+            rental.setOwner_id(rentalDTO.getOwner_id());
+            rental.setCreatedAt(new Date());
+            rental.setUpdatedAt(new Date());
+
+            Rental savedRental = rentalRepository.save(rental);
+            return convertToDTO(savedRental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error creating rental with image", e);
+            throw new RuntimeException("Error creating rental with image", e);
+        }
+    }
 }

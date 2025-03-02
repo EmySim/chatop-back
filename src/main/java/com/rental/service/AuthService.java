@@ -15,6 +15,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import com.rental.dto.AuthLoginDTO;
+import com.rental.service.JwtService;
+import com.rental.service.UserService;
+
 @Service
 public class AuthService {
 
@@ -57,5 +61,39 @@ public class AuthService {
 
         // Retourne la réponse avec le JWT généré
         return new AuthResponseDTO(jwtToken);
+    }
+
+    // Méthode de connexion d'un utilisateur
+    @Operation(summary = "Connexion d'un utilisateur", description = "Permet de connecter un utilisateur et génère un JWT.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Connexion réussie"),
+            @ApiResponse(responseCode = "401", description = "Échec de l'authentification")
+    })
+    public AuthResponseDTO login(AuthLoginDTO loginDTO) {
+        logger.info("Tentative de connexion pour l'utilisateur : " + loginDTO.getEmail());
+
+        // Récupère l'utilisateur par email
+        User user = userRepository.findByEmail(loginDTO.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'email : " + loginDTO.getEmail()));
+
+        // Vérifie le mot de passe
+        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+            logger.warning("Échec de l'authentification pour l'utilisateur : " + loginDTO.getEmail());
+            throw new IllegalArgumentException("Mot de passe incorrect.");
+        }
+
+        // Génère un token JWT pour l'utilisateur
+        String jwtToken = jwtService.generateToken(user.getEmail());
+
+        logger.info("Connexion réussie pour l'utilisateur : " + loginDTO.getEmail());
+
+        // Retourne la réponse avec le JWT généré
+        return new AuthResponseDTO(jwtToken);
+    }
+
+    // Méthode pour récupérer les informations de l'utilisateur actuellement authentifié
+    public UserDTO getCurrentUser(String email) {
+        logger.info("Récupération de l'utilisateur connecté : " + email);
+        return userService.getUserByEmail(email);
     }
 }

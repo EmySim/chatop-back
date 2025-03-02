@@ -136,4 +136,14 @@ public class UserService {
     public String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }
+
+    /**
+     * Récupère les informations de l'utilisateur actuellement authentifié.
+     * @param email L'email de l'utilisateur.
+     * @return UserDTO représentant l'utilisateur.
+     */
+    public UserDTO getCurrentUser(String email) {
+        logger.info("Récupération de l'utilisateur connecté : " + email);
+        return getUserByEmail(email);
+    }
 }
