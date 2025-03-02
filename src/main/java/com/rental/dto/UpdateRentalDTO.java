@@ -1,41 +1,38 @@
 package com.rental.dto;
 
-import java.util.Date;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
- * DTO pour représenter une location (Rental).
+ * DTO for updating an existing rental.
  */
-public class RentalDTO {
-    private int id;
+public class UpdateRentalDTO {
+
+    @NotBlank(message = "Le nom est obligatoire.")
     private String name;
+
+    @NotBlank(message = "La description est obligatoire.")
     private String description;
+
+    @NotNull(message = "Le prix est obligatoire.")
+    @Positive(message = "Le prix doit être positif.")
     private double price;
+
+    @NotBlank(message = "La localisation est obligatoire.")
     private String location;
-    private Date createdAt;
-    private Date updatedAt;
+
+    @NotNull(message = "La surface est obligatoire.")
+    @Positive(message = "La surface doit être positive.")
     private int surface;
+
+    @NotBlank(message = "L'image est obligatoire.")
     private String picture;
+
+    @NotNull(message = "L'ID du propriétaire est obligatoire.")
     private Long owner_id;
 
-    // Constructeur par défaut
-    public RentalDTO() {
-    }
-
-    // Constructeur avec paramètres
-    public RentalDTO(int id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    // Getters et setters
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
+    // Getters and Setters
     public String getName() {
         return name;
     }
@@ -66,22 +63,6 @@ public class RentalDTO {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public int getSurface() {
