@@ -185,4 +185,15 @@ public class RentalService {
             throw new RuntimeException("Error creating rental with image", e);
         }
     }
+
+    /**
+     * Updates an existing rental via POST.
+     *
+     * @param rentalId The ID of the rental to update.
+     * @param updateRentalDTO The DTO containing updated rental details.
+     * @return The updated RentalDTO.
+     */
+    public RentalDTO updateRentalViaPost(Long rentalId, UpdateRentalDTO updateRentalDTO) {
+        return updateRental(rentalId, updateRentalDTO);
+    }
 }

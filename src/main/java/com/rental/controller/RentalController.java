@@ -75,4 +75,12 @@ public class RentalController {
         RentalDTO newRental = rentalService.createRental(rentalDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(newRental);
     }
+
+    @Operation(summary = "Met à jour une location via POST")
+    @PostMapping("/{rental_id}")
+    public ResponseEntity<RentalDTO> updateRentalViaPost(@PathVariable("rental_id") Long rentalId, @RequestBody UpdateRentalDTO updateRentalDTO) {
+        logger.info("Début de updateRentalViaPost");
+        RentalDTO updatedRental = rentalService.updateRental(rentalId, updateRentalDTO);
+        return ResponseEntity.ok(updatedRental);
+    }
 }
