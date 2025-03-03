@@ -4,9 +4,9 @@ import com.rental.dto.RentalDTO;
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.RentalService;
+import com.rental.service.ImageStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +25,11 @@ public class RentalController {
 
     private static final Logger logger = Logger.getLogger(RentalController.class.getName());
     private final RentalService rentalService;
+    private final ImageStorageService imageStorageService;
 
-    public RentalController(RentalService rentalService) {
+    public RentalController(RentalService rentalService, ImageStorageService imageStorageService) {
         this.rentalService = rentalService;
+        this.imageStorageService = imageStorageService;
     }
 
     @Operation(summary = "Récupère toutes les locations")
@@ -68,7 +70,9 @@ public class RentalController {
 
         logger.info("Début de createRentalWithFormData");
         CreateRentalDTO rentalDTO = new CreateRentalDTO(name, description, price, location, surface, "", ownerId);
-        RentalDTO newRental = rentalService.createRentalWithImage(rentalDTO, image);
+        String pictureUrl = imageStorageService.storeImage(image).block();
+        rentalDTO.setPicture(pictureUrl);
+        RentalDTO newRental = rentalService.createRental(rentalDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(newRental);
     }
 }

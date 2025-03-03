@@ -23,12 +23,12 @@ public class RentalService {
 
     private static final Logger logger = Logger.getLogger(RentalService.class.getName());
     private final RentalRepository rentalRepository;
-    private final FileStorageService fileStorageService;
+    private final ImageStorageService imageStorageService;
 
     @Autowired
-    public RentalService(RentalRepository rentalRepository, FileStorageService fileStorageService) {
+    public RentalService(RentalRepository rentalRepository, ImageStorageService imageStorageService) {
         this.rentalRepository = rentalRepository;
-        this.fileStorageService = fileStorageService;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -128,7 +128,7 @@ public class RentalService {
         String oldPictureUrl = rental.getPicture();
         if (oldPictureUrl != null && !oldPictureUrl.isEmpty()) {
             try {
-                fileStorageService.deleteFile(oldPictureUrl);
+                imageStorageService.deleteFile(oldPictureUrl);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Error deleting old image from S3", e);
             }
@@ -137,7 +137,7 @@ public class RentalService {
         // Upload new image to AWS S3
         String newPictureUrl;
         try {
-            newPictureUrl = fileStorageService.storeFile(updateRentalDTO.getPicture());
+            newPictureUrl = imageStorageService.storeFile(updateRentalDTO.getPicture());
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error uploading new image to S3", e);
             throw new RuntimeException("Error uploading new image to S3", e);
@@ -157,39 +157,6 @@ public class RentalService {
     }
 
     /**
-     * Creates a new rental with file upload.
-     *
-     * @param name The name of the rental.
-     * @param description The description of the rental.
-     * @param price The price of the rental.
-     * @param location The location of the rental.
-     * @param file The image file.
-     * @return The created RentalDTO.
-     */
-    public RentalDTO createRentalWithFile(String name, String description, Double price, String location, MultipartFile file) {
-        try {
-            String pictureUrl = fileStorageService.storeFile(file);
-
-            Rental rental = new Rental();
-            rental.setName(name);
-            rental.setDescription(description);
-            rental.setPrice(price);
-            rental.setLocation(location);
-            rental.setSurface(0); // Set default surface value
-            rental.setPicture(pictureUrl);
-            rental.setOwner_id(0L); // Set default owner_id value
-            rental.setCreatedAt(new Date());
-            rental.setUpdatedAt(new Date());
-
-            Rental savedRental = rentalRepository.save(rental);
-            return convertToDTO(savedRental);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error creating rental with file", e);
-            throw new RuntimeException("Error creating rental with file", e);
-        }
-    }
-
-    /**
      * Creates a new rental with image upload.
      *
      * @param rentalDTO The DTO containing rental details.
@@ -198,7 +165,7 @@ public class RentalService {
      */
     public RentalDTO createRentalWithImage(CreateRentalDTO rentalDTO, MultipartFile image) {
         try {
-            String pictureUrl = fileStorageService.storeFile(image);
+            String pictureUrl = imageStorageService.storeImage(image).block();
 
             Rental rental = new Rental();
             rental.setName(rentalDTO.getName());

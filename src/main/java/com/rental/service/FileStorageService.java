@@ -1,5 +1,6 @@
 package com.rental.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,16 +21,30 @@ public class FileStorageService {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
-    @Value("${aws.access-key-id}")
+    @Value("${aws.s3.access-key}")
     private String accessKeyId;
 
-    @Value("${aws.secret-access-key}")
+    @Value("${aws.s3.secret-key}")
     private String secretAccessKey;
 
-    @Value("${aws.region}")
+    @Value("${aws.s3.region}")
     private String region;
 
     private S3Client s3Client;
+
+    /**
+     * Méthode appelée après l'injection des dépendances via Spring.
+     * Configure le client S3 avec les informations d'authentification.
+     */
+    @PostConstruct
+    public void init() {
+        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+        this.s3Client = S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+                .build();
+    }
+
 
     public FileStorageService() {
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
