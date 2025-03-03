@@ -13,8 +13,17 @@ import java.util.concurrent.CompletableFuture;
 @Configuration
 public class S3Config {
 
-    @Value("${aws.region}")
+    @Value("${aws.s3.access-key}")
+    private String accessKeyId;
+
+    @Value("${aws.s3.secret-key}")
+    private String secretAccessKey;
+
+    @Value("${aws.s3.region}")
     private String region;
+
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
 
     @Bean
     public S3AsyncClient s3AsyncClient() {

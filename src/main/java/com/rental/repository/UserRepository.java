@@ -3,11 +3,10 @@ package com.rental.repository;
 import com.rental.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
-/**
- * Repository interface for User entity.
- * Provides custom methods for user lookup by email.
- */
+@Repository
+
 public interface UserRepository extends JpaRepository<User, Long> {
 
     /**

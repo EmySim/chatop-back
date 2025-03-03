@@ -60,19 +60,20 @@ public class FileStorageService {
     }
 
     public String storeFile(MultipartFile file) throws IOException {
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-
-        try {
-            s3Client.putObject(PutObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(fileName)
-                            .build(),
-                    software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
-        } catch (S3Exception e) {
-            throw new IOException("Error uploading file to S3", e);
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Le fichier est vide.");
         }
-
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        s3Client.putObject(PutObjectRequest.builder().bucket(bucketName).key(fileName).build(),
+                software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
         return generateS3Url(fileName);
+    }
+
+    private String generateS3Url(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            throw new IllegalArgumentException("fileName cannot be null or empty");
+        }
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + fileName;
     }
 
     public String storeFileWithFormData(MultipartFile file, String additionalData) throws IOException {
@@ -104,7 +105,4 @@ public class FileStorageService {
         }
     }
 
-    private String generateS3Url(String fileName) {
-        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + fileName;
-    }
 }
