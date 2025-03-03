@@ -1,199 +1,68 @@
 package com.rental.service;
 
 import com.rental.dto.CreateRentalDTO;
-import com.rental.dto.RentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.Date;
 
-/**
- * Service for handling rental-related operations.
- */
 @Service
 public class RentalService {
 
-    private static final Logger logger = Logger.getLogger(RentalService.class.getName());
+    // Remplacement de java.util.logging.Logger par SLF4J
+    private static final Logger logger = LoggerFactory.getLogger(RentalService.class);
     private final RentalRepository rentalRepository;
     private final ImageStorageService imageStorageService;
 
-    @Autowired
     public RentalService(RentalRepository rentalRepository, ImageStorageService imageStorageService) {
         this.rentalRepository = rentalRepository;
         this.imageStorageService = imageStorageService;
     }
 
-    /**
-     * Retrieves all rentals.
-     *
-     * @return List of rentals.
-     */
-    public List<Rental> getAllRentals() {
-        return rentalRepository.findAll();
+    public Mono<String> createRental(CreateRentalDTO rentalDTO, MultipartFile image) {
+        return imageStorageService.storeImage(image)
+                .flatMap(pictureUrl -> {
+                    Rental rental = new Rental();
+                    rental.setName(rentalDTO.getName());
+                    rental.setDescription(rentalDTO.getDescription());
+                    rental.setPrice(rentalDTO.getPrice());
+                    rental.setLocation(rentalDTO.getLocation());
+                    rental.setSurface(rentalDTO.getSurface());
+                    rental.setPicture(pictureUrl);
+                    rental.setOwner_id(rentalDTO.getOwner_id());
+                    rental.setCreatedAt(new Date());
+                    rental.setUpdatedAt(new Date());
+
+                    return rentalRepository.save(rental)
+                            .map(savedRental -> "Rental created!");
+                })
+                .doOnSuccess(message -> logger.info(message))
+                .doOnError(e -> logger.error("Erreur lors de la création de la location", e));
     }
 
-    /**
-     * Converts a list of Rental entities to a list of RentalDTOs.
-     *
-     * @return List of RentalDTOs.
-     */
-    public List<RentalDTO> getAllRentalDTOs() {
-        List<Rental> rentals = rentalRepository.findAll();
-        return rentals.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+    public Mono<String> updateRental(Long id, UpdateRentalDTO updateRentalDTO, MultipartFile image) {
+        return rentalRepository.findById(id)
+                .flatMap(rental -> imageStorageService.storeImage(image)
+                        .flatMap(newPictureUrl -> {
+                            rental.setPicture(newPictureUrl);
+                            rental.setName(updateRentalDTO.getName());
+                            rental.setDescription(updateRentalDTO.getDescription());
+                            rental.setPrice(updateRentalDTO.getPrice());
+                            rental.setLocation(updateRentalDTO.getLocation());
+                            rental.setSurface(updateRentalDTO.getSurface());
+                            rental.setOwner_id(updateRentalDTO.getOwner_id());
+                            rental.setUpdatedAt(new Date());
 
-    /**
-     * Converts a Rental entity to a RentalDTO.
-     *
-     * @param rental The Rental entity to convert.
-     * @return The converted RentalDTO.
-     * @throws IllegalArgumentException if the rental object is null.
-     */
-    private RentalDTO convertToDTO(Rental rental) {
-        if (rental == null) {
-            throw new IllegalArgumentException("Rental cannot be null");
-        }
-
-        RentalDTO rentalDTO = new RentalDTO();
-        rentalDTO.setId(rental.getId().intValue());
-        rentalDTO.setName(rental.getName());
-        rentalDTO.setDescription(rental.getDescription());
-        rentalDTO.setPrice(rental.getPrice());
-        rentalDTO.setLocation(rental.getLocation());
-        rentalDTO.setCreatedAt(rental.getCreatedAt());
-        rentalDTO.setUpdatedAt(rental.getUpdatedAt());
-        rentalDTO.setSurface(rental.getSurface());
-        rentalDTO.setPicture(rental.getPicture());
-        rentalDTO.setOwner_id(rental.getOwner_id());
-
-        return rentalDTO;
-    }
-
-    /**
-     * Retrieves a rental by ID.
-     *
-     * @param id The ID of the rental.
-     * @return The RentalDTO of the rental.
-     */
-    public RentalDTO getRentalById(Long id) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Rental not found with id: " + id));
-        return convertToDTO(rental);
-    }
-
-    /**
-     * Creates a new rental.
-     *
-     * @param createRentalDTO The DTO containing rental details.
-     * @return The created RentalDTO.
-     */
-    public RentalDTO createRental(CreateRentalDTO createRentalDTO) {
-        Rental rental = new Rental();
-        rental.setName(createRentalDTO.getName());
-        rental.setDescription(createRentalDTO.getDescription());
-        rental.setPrice(createRentalDTO.getPrice());
-        rental.setLocation(createRentalDTO.getLocation());
-        rental.setSurface(createRentalDTO.getSurface());
-        rental.setPicture(createRentalDTO.getPicture());
-        rental.setOwner_id(createRentalDTO.getOwner_id());
-        rental.setCreatedAt(new Date());
-        rental.setUpdatedAt(new Date());
-
-        Rental savedRental = rentalRepository.save(rental);
-        return convertToDTO(savedRental);
-    }
-
-    /**
-     * Updates an existing rental.
-     *
-     * @param id The ID of the rental to update.
-     * @param updateRentalDTO The DTO containing updated rental details.
-     * @return The updated RentalDTO.
-     */
-    public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Rental not found with id: " + id));
-
-        // Delete old image from AWS S3
-        String oldPictureUrl = rental.getPicture();
-        if (oldPictureUrl != null && !oldPictureUrl.isEmpty()) {
-            try {
-                imageStorageService.deleteFile(oldPictureUrl);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error deleting old image from S3", e);
-            }
-        }
-
-        // Upload new image to AWS S3
-        String newPictureUrl;
-        try {
-            newPictureUrl = imageStorageService.storeFile(updateRentalDTO.getPicture());
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error uploading new image to S3", e);
-            throw new RuntimeException("Error uploading new image to S3", e);
-        }
-
-        rental.setName(updateRentalDTO.getName());
-        rental.setDescription(updateRentalDTO.getDescription());
-        rental.setPrice(updateRentalDTO.getPrice());
-        rental.setLocation(updateRentalDTO.getLocation());
-        rental.setSurface(updateRentalDTO.getSurface());
-        rental.setPicture(newPictureUrl);
-        rental.setOwner_id(updateRentalDTO.getOwner_id());
-        rental.setUpdatedAt(new Date());
-
-        Rental updatedRental = rentalRepository.save(rental);
-        return convertToDTO(updatedRental);
-    }
-
-    /**
-     * Creates a new rental with image upload.
-     *
-     * @param rentalDTO The DTO containing rental details.
-     * @param image The image file.
-     * @return The created RentalDTO.
-     */
-    public RentalDTO createRentalWithImage(CreateRentalDTO rentalDTO, MultipartFile image) {
-        try {
-            String pictureUrl = imageStorageService.storeImage(image).block();
-
-            Rental rental = new Rental();
-            rental.setName(rentalDTO.getName());
-            rental.setDescription(rentalDTO.getDescription());
-            rental.setPrice(rentalDTO.getPrice());
-            rental.setLocation(rentalDTO.getLocation());
-            rental.setSurface(rentalDTO.getSurface());
-            rental.setPicture(pictureUrl);
-            rental.setOwner_id(rentalDTO.getOwner_id());
-            rental.setCreatedAt(new Date());
-            rental.setUpdatedAt(new Date());
-
-            Rental savedRental = rentalRepository.save(rental);
-            return convertToDTO(savedRental);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error creating rental with image", e);
-            throw new RuntimeException("Error creating rental with image", e);
-        }
-    }
-
-    /**
-     * Updates an existing rental via POST.
-     *
-     * @param rentalId The ID of the rental to update.
-     * @param updateRentalDTO The DTO containing updated rental details.
-     * @return The updated RentalDTO.
-     */
-    public RentalDTO updateRentalViaPost(Long rentalId, UpdateRentalDTO updateRentalDTO) {
-        return updateRental(rentalId, updateRentalDTO);
+                            return rentalRepository.save(rental)
+                                    .map(savedRental -> "Rental updated!");
+                        }))
+                .doOnError(e -> logger.error("Erreur lors de la mise à jour de la location", e))
+                .onErrorResume(e -> Mono.just("Erreur lors de la mise à jour"));
     }
 }
