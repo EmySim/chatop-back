@@ -33,9 +33,7 @@ You will need to retrieve the environment variables to configure the application
 
 Visit the following Gist for instructions on how to set these variables:
 
-```html
-<script src="https://gist.github.com/EmySim/4950aa154de3e771f0979bc9480b32fb.js"></script>
-```
+[https://gist.github.com/EmySim/](https://gist.github.com/EmySim/4950aa154de3e771f0979bc9480b32fb.js)
 
 ### 3. **Configure MySQL connection**
 
