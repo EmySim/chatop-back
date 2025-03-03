@@ -39,16 +39,16 @@ public class ChatopBackApplication {
     @Value("${JWT_EXPIRATION}")
     private long jwtExpiration;
 
-    @Value("${aws.s3.access-key}")
+    @Value("${AWS_ACCESS_KEY_ID}")
     private String awsAccessKeyId;
 
-    @Value("${aws.s3.secret-key}")
+    @Value("${AWS_SECRET_ACCESS_KEY}")
     private String awsSecretAccessKey;
 
-    @Value("${aws.s3.region}")
+    @Value("${AWS_REGION}")
     private String awsRegion;
 
-    @Value("${aws.s3.bucket-name}")
+    @Value("${AWS_BUCKET_NAME}")
     private String awsBucketName;
 
     /**
