@@ -124,12 +124,31 @@ public class RentalService {
         Rental rental = rentalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Rental not found with id: " + id));
 
+        // Delete old image from AWS S3
+        String oldPictureUrl = rental.getPicture();
+        if (oldPictureUrl != null && !oldPictureUrl.isEmpty()) {
+            try {
+                fileStorageService.deleteFile(oldPictureUrl);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Error deleting old image from S3", e);
+            }
+        }
+
+        // Upload new image to AWS S3
+        String newPictureUrl;
+        try {
+            newPictureUrl = fileStorageService.storeFile(updateRentalDTO.getPicture());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error uploading new image to S3", e);
+            throw new RuntimeException("Error uploading new image to S3", e);
+        }
+
         rental.setName(updateRentalDTO.getName());
         rental.setDescription(updateRentalDTO.getDescription());
         rental.setPrice(updateRentalDTO.getPrice());
         rental.setLocation(updateRentalDTO.getLocation());
         rental.setSurface(updateRentalDTO.getSurface());
-        rental.setPicture(updateRentalDTO.getPicture());
+        rental.setPicture(newPictureUrl);
         rental.setOwner_id(updateRentalDTO.getOwner_id());
         rental.setUpdatedAt(new Date());
 

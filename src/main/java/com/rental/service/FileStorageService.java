@@ -1,56 +1,90 @@
 package com.rental.service;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
 public class FileStorageService {
 
-    @Value("${file.upload-dir}") // Récupération du dossier défini dans application.properties
-    private String uploadDir;
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
+
+    @Value("${aws.access-key-id}")
+    private String accessKeyId;
+
+    @Value("${aws.secret-access-key}")
+    private String secretAccessKey;
+
+    @Value("${aws.region}")
+    private String region;
+
+    private S3Client s3Client;
+
+    public FileStorageService() {
+        AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+        this.s3Client = S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+                .build();
+    }
 
     public String storeFile(MultipartFile file) throws IOException {
-        // Vérifier si le dossier de stockage existe, sinon le créer
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+
+        try {
+            s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(fileName)
+                            .build(),
+                    software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
+        } catch (S3Exception e) {
+            throw new IOException("Error uploading file to S3", e);
         }
 
-        // Générer un nom unique pour éviter les conflits
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-
-        // Sauvegarder le fichier sur le disque
-        Files.copy(file.getInputStream(), filePath);
-
-        // Retourner l'URL de l'image stockée
-        return "/uploads/" + fileName;
+        return generateS3Url(fileName);
     }
 
     public String storeFileWithFormData(MultipartFile file, String additionalData) throws IOException {
-        // Vérifier si le dossier de stockage existe, sinon le créer
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+
+        try {
+            s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(fileName)
+                            .build(),
+                    software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
+        } catch (S3Exception e) {
+            throw new IOException("Error uploading file to S3", e);
         }
 
-        // Générer un nom unique pour éviter les conflits
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-
-        // Sauvegarder le fichier sur le disque
-        Files.copy(file.getInputStream(), filePath);
-
-        // Log additional data
         System.out.println("Additional Data: " + additionalData);
 
-        // Retourner l'URL de l'image stockée
-        return "/uploads/" + fileName;
+        return generateS3Url(fileName);
+    }
+
+    public void deleteFile(String fileName) throws IOException {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build());
+        } catch (S3Exception e) {
+            throw new IOException("Error deleting file from S3", e);
+        }
+    }
+
+    private String generateS3Url(String fileName) {
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + fileName;
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -26,27 +27,43 @@ public class ImageStorageService {
         this.s3Client = s3Client;
     }
 
+    /**
+     * Uploads an image to an S3 bucket asynchronously while streaming data directly.
+     *
+     * @param filePartMono A Mono wrapper containing the FilePart object to be uploaded.
+     * @return A Mono wrapping the URL of the uploaded image.
+     */
     public Mono<String> uploadImage(Mono<FilePart> filePartMono) {
         return filePartMono.flatMap(filePart -> {
+            // Generate a unique filename for the image
             String fileName = UUID.randomUUID() + "-" + filePart.filename();
+
+            // Create the PutObjectRequest for S3
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(fileName)
                     .build();
 
-            return filePart.content()
-                    .reduce(new byte[0], (acc, buffer) -> {
-                        byte[] newAcc = new byte[acc.length + buffer.remaining()];
-                        System.arraycopy(acc, 0, newAcc, 0, acc.length);
-                        buffer.get(newAcc, acc.length, buffer.remaining());
-                        return newAcc;
+            // Use file content as InputStream directly for S3 upload
+            return s3Client.putObject(
+                            request,
+                            AsyncRequestBody.fromPublisher(
+                                    filePart.content()
+                                            .map(dataBuffer -> {
+                                                byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                                                dataBuffer.read(bytes); // Read data chunk into byte array
+                                                dataBuffer.release(); // Release DataBuffer reference
+                                                return bytes;
+                                            })
+                            )
+                    )
+                    .map(response -> URI.create(s3EndpointUrl + "/" + bucketName + "/" + fileName).toString())
+                    .doOnError(error -> {
+                        // Logging or additional error handling (if needed)
+                        System.err.println("Error during S3 upload: " + error.getMessage());
                     })
-                    .flatMap(bytes -> s3Client.putObject(request, AsyncRequestBody.fromBytes(bytes))
-                            .thenReturn(URI.create(s3EndpointUrl + "/" + bucketName + "/" + fileName).toString()));
+                    .onErrorResume(error -> Mono.error(new RuntimeException("Image upload failed", error)))
+                    .subscribeOn(Schedulers.boundedElastic()); // Ensure non-blocking execution
         });
     }
-}
-
-
-public class ImageStorageService {
 }
