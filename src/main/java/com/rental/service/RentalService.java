@@ -1,6 +1,7 @@
 package com.rental.service;
 
 import com.rental.dto.CreateRentalDTO;
+import com.rental.dto.RentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class RentalService {
@@ -65,4 +67,5 @@ public class RentalService {
                 .doOnError(e -> logger.error("Erreur lors de la mise à jour de la location", e))
                 .onErrorResume(e -> Mono.just("Erreur lors de la mise à jour"));
     }
+
 }

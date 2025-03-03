@@ -2,6 +2,7 @@ package com.rental.entity;
 
 import jakarta.persistence.*;
 import java.util.Date;
+import java.util.function.Function;
 
 /**
  * Entity class representing a rental property.
@@ -82,4 +83,8 @@ public class Rental {
 
     public Date getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
+
+    public <R> R map(Function<Rental, R> mapper) {
+        return mapper.apply(this);
+    }
 }
