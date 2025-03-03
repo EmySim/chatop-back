@@ -38,6 +38,9 @@ public class FileStorageService {
      */
     @PostConstruct
     public void init() {
+        if (accessKeyId == null || accessKeyId.isEmpty() || secretAccessKey == null || secretAccessKey.isEmpty()) {
+            throw new IllegalArgumentException("Access key ID and Secret access key cannot be null or empty.");
+        }
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
         this.s3Client = S3Client.builder()
                 .region(Region.of(region))
@@ -45,8 +48,10 @@ public class FileStorageService {
                 .build();
     }
 
-
     public FileStorageService() {
+        if (accessKeyId == null || accessKeyId.isEmpty() || secretAccessKey == null || secretAccessKey.isEmpty()) {
+            throw new IllegalArgumentException("Access key ID and Secret access key cannot be null or empty.");
+        }
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
         this.s3Client = S3Client.builder()
                 .region(Region.of(region))

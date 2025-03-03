@@ -12,111 +12,126 @@ import javax.sql.DataSource;
 @SpringBootApplication
 public class ChatopBackApplication {
 
-	/**
-	 * Point d'entrée principal pour démarrer l'application Spring Boot.
-	 */
-	public static void main(String[] args) {
-		SpringApplication.run(ChatopBackApplication.class, args);
-	}
+    /**
+     * Point d'entrée principal pour démarrer l'application Spring Boot.
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(ChatopBackApplication.class, args);
+    }
 
-	// ==========================================================
-	// Configuration des variables d'environnement (recommandé)
-	// ==========================================================
-	// Les annotations @Value injectent automatiquement les propriétés
-	// définies dans l'environnement ou le fichier configuration (application.properties).
-	@Value("${DATABASE_URL}")
-	private String databaseUrl;
+    // ==========================================================
+    // Configuration des variables d'environnement (recommandé)
+    // ==========================================================
+    // Les annotations @Value injectent automatiquement les propriétés
+    // définies dans l'environnement ou le fichier configuration (application.properties).
+    @Value("${DATABASE_URL}")
+    private String databaseUrl;
 
-	@Value("${DATABASE_USERNAME}")
-	private String databaseUsername;
+    @Value("${DATABASE_USERNAME}")
+    private String databaseUsername;
 
-	@Value("${DATABASE_PASSWORD}")
-	private String databasePassword;
+    @Value("${DATABASE_PASSWORD}")
+    private String databasePassword;
 
-	@Value("${JWT_SECRET}")
-	private String jwtSecret;
+    @Value("${JWT_SECRET}")
+    private String jwtSecret;
 
-	@Value("${JWT_EXPIRATION}")
-	private long jwtExpiration;
+    @Value("${JWT_EXPIRATION}")
+    private long jwtExpiration;
 
-	/**
-	 * Bean pour l'exécution au démarrage de l'application.
-	 * Vérifie que les variables d'environnement essentielles sont présentes
-	 * et correctement initialisées avant que l'application ne démarre pleinement.
-	 *
-	 * @return CommandLineRunner, une fonction qui s'exécute après le démarrage du contexte Spring.
-	 */
-	@Bean
-	public CommandLineRunner diagnosticRunner() {
-		return args -> {
-			System.out.println("=== Vérification des variables de configuration ===");
+    @Value("${aws.s3.access-key}")
+    private String awsAccessKeyId;
 
-			try {
-				printEnvVariable("DATABASE_URL", databaseUrl);
-				printEnvVariable("DATABASE_USERNAME", databaseUsername);
-				printEnvVariable("DATABASE_PASSWORD", obfuscate(databasePassword));
-				printEnvVariable("JWT_SECRET", obfuscate(jwtSecret));
-				printEnvVariable("JWT_EXPIRATION", jwtExpiration + " ms");
+    @Value("${aws.s3.secret-key}")
+    private String awsSecretAccessKey;
 
-				System.out.println("TOUTES LES VARIABLES SONT PRÉSENTES ET VALIDÉES !");
-			} catch (Exception e) {
-				// Affiche une erreur descriptive si une variable manque ou est mal configurée
-				System.err.println("Erreur de configuration : " + e.getMessage());
-				System.exit(1); // Arrête l'application
-			}
-		};
-	}
+    @Value("${aws.s3.region}")
+    private String awsRegion;
 
-	/**
-	 * Bean manuel pour la configuration du DataSource.
-	 * NOTE : Ce bean n'est nécessaire que pour les cas où les propriétés
-	 * ne sont pas suffisantes. Dans des scénarios normaux, il est préférable
-	 * de laisser Spring Boot configurer automatiquement le DataSource.
-	 *
-	 * @return DataSource configuré.
-	 */
-	@Bean
-	public DataSource dataSource() {
-		return DataSourceBuilder.create()
-				.url(databaseUrl)
-				.username(databaseUsername)
-				.password(databasePassword)
-				.build();
-	}
+    @Value("${aws.s3.bucket-name}")
+    private String awsBucketName;
 
-	/**
-	 * Permet d'afficher une variable avec son nom.
-	 *
-	 * @param name  Nom de la variable d'environnement.
-	 * @param value Valeur actuelle (affichée en clair ou masquée dans le cas de mots de passe/secrets).
-	 */
-	private void printEnvVariable(String name, String value) {
-		System.out.println(name + " : " + value);
-	}
+    /**
+     * Bean pour l'exécution au démarrage de l'application.
+     * Vérifie que les variables d'environnement essentielles sont présentes
+     * et correctement initialisées avant que l'application ne démarre pleinement.
+     *
+     * @return CommandLineRunner, une fonction qui s'exécute après le démarrage du contexte Spring.
+     */
+    @Bean
+    public CommandLineRunner diagnosticRunner() {
+        return args -> {
+            System.out.println("=== Vérification des variables de configuration ===");
 
-	/**
-	 * Masque une chaîne de caractères sensible pour éviter qu'elle ne soit affichée en clair.
-	 *
-	 * @param value La valeur à masquer.
-	 * @return Une version masquée de la valeur (ex. : "******").
-	 */
-	private String obfuscate(String value) {
-		if (value == null || value.isEmpty()) {
-			return "NON FOURNIE";
-		}
-		return "*".repeat(value.length());
-	}
+            try {
+                printEnvVariable("DATABASE_URL", databaseUrl);
+                printEnvVariable("DATABASE_USERNAME", databaseUsername);
+                printEnvVariable("DATABASE_PASSWORD", obfuscate(databasePassword));
+                printEnvVariable("JWT_SECRET", obfuscate(jwtSecret));
+                printEnvVariable("JWT_EXPIRATION", jwtExpiration + " ms");
+                printEnvVariable("AWS_ACCESS_KEY_ID", obfuscate(awsAccessKeyId));
+                printEnvVariable("AWS_SECRET_ACCESS_KEY", obfuscate(awsSecretAccessKey));
+                printEnvVariable("AWS_REGION", awsRegion);
+                printEnvVariable("AWS_BUCKET_NAME", awsBucketName);
 
-	@Bean
-	public CommandLineRunner checkAwsEnvironmentVariables() {
-		return args -> {
-			System.out.println("=== Vérification dans l'application ===");
-			System.out.println("AWS_ACCESS_KEY_ID: " + System.getenv("AWS_ACCESS_KEY_ID"));
-			System.out.println("AWS_SECRET_ACCESS_KEY: " + (System.getenv("AWS_SECRET_ACCESS_KEY") != null ? "OK (masqué)" : "NON DÉFINI"));
-			System.out.println("AWS_REGION: " + System.getenv("AWS_REGION"));
-			System.out.println("AWS_BUCKET_NAME: " + System.getenv("AWS_BUCKET_NAME"));
-		};
-	}
+                System.out.println("TOUTES LES VARIABLES SONT PRÉSENTES ET VALIDÉES !");
+            } catch (Exception e) {
+                // Affiche une erreur descriptive si une variable manque ou est mal configurée
+                System.err.println("Erreur de configuration : " + e.getMessage());
+                System.exit(1); // Arrête l'application
+            }
+        };
+    }
 
+    /**
+     * Bean manuel pour la configuration du DataSource.
+     * NOTE : Ce bean n'est nécessaire que pour les cas où les propriétés
+     * ne sont pas suffisantes. Dans des scénarios normaux, il est préférable
+     * de laisser Spring Boot configurer automatiquement le DataSource.
+     *
+     * @return DataSource configuré.
+     */
+    @Bean
+    public DataSource dataSource() {
+        return DataSourceBuilder.create()
+                .url(databaseUrl)
+                .username(databaseUsername)
+                .password(databasePassword)
+                .build();
+    }
+
+    /**
+     * Permet d'afficher une variable avec son nom.
+     *
+     * @param name  Nom de la variable d'environnement.
+     * @param value Valeur actuelle (affichée en clair ou masquée dans le cas de mots de passe/secrets).
+     */
+    private void printEnvVariable(String name, String value) {
+        System.out.println(name + " : " + value);
+    }
+
+    /**
+     * Masque une chaîne de caractères sensible pour éviter qu'elle ne soit affichée en clair.
+     *
+     * @param value La valeur à masquer.
+     * @return Une version masquée de la valeur (ex. : "******").
+     */
+    private String obfuscate(String value) {
+        if (value == null || value.isEmpty()) {
+            return "NON FOURNIE";
+        }
+        return "*".repeat(value.length());
+    }
+
+    @Bean
+    public CommandLineRunner checkAwsEnvironmentVariables() {
+        return args -> {
+            System.out.println("=== Vérification dans l'application ===");
+            System.out.println("AWS_ACCESS_KEY_ID: " + System.getenv("AWS_ACCESS_KEY_ID"));
+            System.out.println("AWS_SECRET_ACCESS_KEY: " + (System.getenv("AWS_SECRET_ACCESS_KEY") != null ? "OK (masqué)" : "NON DÉFINI"));
+            System.out.println("AWS_REGION: " + System.getenv("AWS_REGION"));
+            System.out.println("AWS_BUCKET_NAME: " + System.getenv("AWS_BUCKET_NAME"));
+        };
+    }
 
 }
