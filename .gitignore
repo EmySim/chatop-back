@@ -33,4 +33,5 @@ build/
 .vscode/
 
 # Ignorer les fichiers sensibles
+.application.properties
 .env
