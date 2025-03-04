@@ -12,10 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,35 +34,31 @@ public class RentalController {
 
     @Operation(summary = "Récupère toutes les locations")
     @GetMapping
-    public Flux<RentalDTO> getAllRentals() {
+    public List<RentalDTO> getAllRentals() {
         logger.info("Début de getAllRentals : récupération de toutes les locations.");
-        return rentalService.getAllRentals()
-                .doOnComplete(() -> logger.info("Fin de getAllRentals : locations récupérées avec succès."));
+        List<RentalDTO> rentals = rentalService.getAllRentals();
+        logger.info("Fin de getAllRentals : locations récupérées avec succès.");
+        return rentals;
     }
 
     @Operation(summary = "Récupère une location par ID")
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<RentalDTO>> getRentalById(@PathVariable Long id) {
+    public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
         logger.info("Début de getRentalById : récupération de la location avec ID " + id);
-        return rentalService.getRental(id)
-                .map(ResponseEntity::ok)
-                .doOnSuccess(rental -> {
-                    if (rental != null) {
-                        logger.info("Fin de getRentalById : location trouvée pour ID " + id);
-                    } else {
-                        logger.warning("Fin de getRentalById : aucune location trouvée pour ID " + id);
-                    }
-                })
-                .onErrorResume(e -> {
-                    logger.log(Level.SEVERE, "Erreur lors de la récupération de la location avec ID " + id, e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
-                });
+        try {
+            RentalDTO rental = rentalService.getRental(id);
+            logger.info("Fin de getRentalById : location trouvée pour ID " + id);
+            return ResponseEntity.ok(rental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la récupération de la location avec ID " + id, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     @Operation(summary = "Crée une nouvelle location")
     @PostMapping
-    public Mono<ResponseEntity<RentalDTO>> createRental(@RequestBody CreateRentalDTO createRentalDTO,
-                                                        @RequestPart(value = "image", required = false) MultipartFile image) {
+    public ResponseEntity<RentalDTO> createRental(@RequestBody CreateRentalDTO createRentalDTO,
+                                                  @RequestPart(value = "image", required = false) MultipartFile image) {
         logger.info("Début de createRental : création d'une nouvelle location.");
 
         if (image != null) {
@@ -76,25 +71,24 @@ public class RentalController {
         String decodedDescription = new String(Base64.getUrlDecoder().decode(createRentalDTO.getDescription()));
         createRentalDTO.setDescription(decodedDescription);
 
-        return rentalService.createRental(createRentalDTO, image)
-                .map(rental -> {
-                    logger.info("Fin de createRental : location créée avec succès.");
-                    // Encode the rental body with base64Url before sending
-                    String encodedDescription = Base64.getUrlEncoder().encodeToString(rental.getDescription().getBytes());
-                    rental.setDescription(encodedDescription);
-                    return ResponseEntity.status(HttpStatus.CREATED).body(rental);
-                })
-                .onErrorResume(e -> {
-                    logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null));
-                });
+        try {
+            RentalDTO rental = rentalService.createRental(createRentalDTO, image);
+            logger.info("Fin de createRental : location créée avec succès.");
+            // Encode the rental body with base64Url before sending
+            String encodedDescription = Base64.getUrlEncoder().encodeToString(rental.getDescription().getBytes());
+            rental.setDescription(encodedDescription);
+            return ResponseEntity.status(HttpStatus.CREATED).body(rental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     @Operation(summary = "Met à jour une location existante")
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<RentalDTO>> updateRental(@PathVariable Long id,
-                                                        @RequestBody UpdateRentalDTO updateRentalDTO,
-                                                        @RequestPart(value = "image", required = false) MultipartFile image) {
+    public ResponseEntity<RentalDTO> updateRental(@PathVariable Long id,
+                                                  @RequestBody UpdateRentalDTO updateRentalDTO,
+                                                  @RequestPart(value = "image", required = false) MultipartFile image) {
         logger.info("Début de updateRental : mise à jour de la location avec ID " + id);
 
         if (image != null) {
@@ -107,17 +101,16 @@ public class RentalController {
         String decodedDescription = new String(Base64.getUrlDecoder().decode(updateRentalDTO.getDescription()));
         updateRentalDTO.setDescription(decodedDescription);
 
-        return rentalService.updateRental(id, updateRentalDTO, image)
-                .map(rental -> {
-                    logger.info("Fin de updateRental : location avec ID " + id + " mise à jour avec succès.");
-                    // Encode the rental body with base64Url before sending
-                    String encodedDescription = Base64.getUrlEncoder().encodeToString(rental.getDescription().getBytes());
-                    rental.setDescription(encodedDescription);
-                    return ResponseEntity.ok(rental);
-                })
-                .onErrorResume(e -> {
-                    logger.log(Level.SEVERE, "Erreur lors de la mise à jour de la location avec ID " + id, e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null));
-                });
+        try {
+            RentalDTO rental = rentalService.updateRental(id, updateRentalDTO, image);
+            logger.info("Fin de updateRental : location avec ID " + id + " mise à jour avec succès.");
+            // Encode the rental body with base64Url before sending
+            String encodedDescription = Base64.getUrlEncoder().encodeToString(rental.getDescription().getBytes());
+            rental.setDescription(encodedDescription);
+            return ResponseEntity.ok(rental);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la mise à jour de la location avec ID " + id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 }
