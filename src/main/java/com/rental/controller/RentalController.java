@@ -4,12 +4,15 @@ import com.rental.dto.RentalDTO;
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.RentalService;
+import com.rental.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,10 +29,12 @@ public class RentalController {
 
     private static final Logger logger = Logger.getLogger(RentalController.class.getName());
     private final RentalService rentalService;
+    private final UserService userService;
 
     @Autowired
-    public RentalController(RentalService rentalService) {
+    public RentalController(RentalService rentalService, UserService userService) {
         this.rentalService = Objects.requireNonNull(rentalService, "RentalService ne peut pas être null");
+        this.userService = Objects.requireNonNull(userService, "UserService ne peut pas être null");
     }
 
     @Operation(summary = "Récupère toutes les locations")
@@ -60,6 +65,15 @@ public class RentalController {
     public ResponseEntity<RentalDTO> createRental(@RequestBody CreateRentalDTO createRentalDTO,
                                                   @RequestPart(value = "image", required = false) MultipartFile image) {
         logger.info("Début de createRental : création d'une nouvelle location.");
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warning("Utilisateur non authentifié.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String userEmail = authentication.getName();
+        logger.info("Utilisateur authentifié : " + userEmail);
 
         if (image != null) {
             logger.info("Image reçue pour la location : " + image.getOriginalFilename());

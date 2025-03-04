@@ -1,25 +1,25 @@
 package com.rental.service;
 
-import com.rental.dto.RentalDTO;
-import com.rental.dto.CreateRentalDTO;
-import com.rental.dto.UpdateRentalDTO;
-import com.rental.entity.Rental;
-import com.rental.repository.RentalRepository;
+import java.util.Base64;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.rental.dto.CreateRentalDTO;
+import com.rental.dto.RentalDTO;
+import com.rental.dto.UpdateRentalDTO;
+import com.rental.entity.Rental;
+import com.rental.repository.RentalRepository;
 
 @Service
 public class RentalService {
 
     private static final Logger logger = Logger.getLogger(RentalService.class.getName());
-
     private final RentalRepository rentalRepository;
     private final ImageStorageService imageStorageService;
 
@@ -57,18 +57,20 @@ public class RentalService {
      * @return Un RentalDTO
      */
     public RentalDTO createRental(CreateRentalDTO createRentalDTO, MultipartFile image) {
+        // Enregistre l'URL de l'image
+        String imageUrl = null;
+        if (image != null) {
+            imageUrl = imageStorageService.saveImage(image).orElse(null);
+        }
+
         Rental rental = new Rental();
         rental.setName(createRentalDTO.getName());
-        rental.setDescription(createRentalDTO.getDescription());
-        rental.setPrice(createRentalDTO.getPrice());
-        rental.setLocation(createRentalDTO.getLocation());
-        rental.setOwnerId(createRentalDTO.getOwnerId());
         rental.setSurface(createRentalDTO.getSurface());
-
-        if (image != null) {
-            String url = imageStorageService.storeImage(image);
-            rental.setPicture(url);
-        }
+        rental.setPrice(createRentalDTO.getPrice());
+        rental.setPicture(imageUrl); // Enregistre l'URL de l'image
+        rental.setDescription(createRentalDTO.getDescription());
+        rental.setCreatedAt(new Date());
+        rental.setUpdatedAt(new Date());
 
         rental = rentalRepository.save(rental);
         return mapToDTO(rental);
@@ -91,15 +93,17 @@ public class RentalService {
         existingRental.setLocation(Optional.ofNullable(updateRentalDTO.getLocation()).orElse(existingRental.getLocation()));
         existingRental.setSurface(Optional.ofNullable(updateRentalDTO.getSurface()).orElse(existingRental.getSurface()));
 
-        if (image != null) {
-            String url = imageStorageService.storeImage(image);
-            existingRental.setPicture(url);
+         // Mise à jour de l'image si une nouvelle est fournie
+         if (image != null) {
+            String imageUrl = imageStorageService.saveImage(image).orElse(null);
+            existingRental.setPicture(imageUrl);
         }
 
-        existingRental = rentalRepository.save(existingRental);
-        return mapToDTO(existingRental);
-    }
+        existingRental.setUpdatedAt(new Date()); // Mise à jour de la date
 
+        rentalRepository.save(existingRental); // Sauvegarde dans la BDD
+        return mapToDTO(existingRental); // Retourne les données mises à jour
+    }
     /**
      * Transforme une entité Rental en DTO.
      * @param rental L'entité Rental
@@ -120,12 +124,12 @@ public class RentalService {
         return dto;
     }
 
-    // Implement base64Url encoding for the rental body
+    // Encodage base64Url pour le corps de la location
     public String encodeRentalBody(String rentalBody) {
         return Base64.getUrlEncoder().encodeToString(rentalBody.getBytes());
     }
 
-    // Implement base64Url decoding for the rental body
+    // Décodage base64Url pour le corps de la location
     public String decodeRentalBody(String encodedRentalBody) {
         return new String(Base64.getUrlDecoder().decode(encodedRentalBody));
     }

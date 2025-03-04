@@ -44,13 +44,11 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/me", "/api/user/**", "/api/rentals/**", "/api/messages/**").authenticated()
-                        .requestMatchers("/api/rentals/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsLoader), UsernamePasswordAuthenticationFilter.class);
 
         logger.info("✅ Configuration de sécurité appliquée.");
         return http.build();
