@@ -32,7 +32,12 @@ public class CreateRentalDTO {
     @NotNull(message = "L'ID du propriétaire est obligatoire.")
     private Long owner_id;
 
-    // Constructeurs
+    public Long getOwnerId() {
+        return owner_id; // Correction pour utiliser la propriété correcte
+    }
+
+
+        // Constructeurs
     public CreateRentalDTO() {}
 
     public CreateRentalDTO(String name, String description, double price, String location, int surface, String picture, Long owner_id) {

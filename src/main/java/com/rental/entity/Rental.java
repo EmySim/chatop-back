@@ -5,17 +5,17 @@ import java.util.Date;
 import java.util.function.Function;
 
 /**
- * Entity class representing a rental property.
+ * Entité représentant une location.
  */
 @Entity
 @Table(name = "rentals")
 public class Rental {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Génération automatique de l'ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false) // Nom requis non null
+    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)
@@ -30,13 +30,13 @@ public class Rental {
     @Column(nullable = false)
     private int surface;
 
-    @Column(name = "picture", nullable = false) // Synchronisation avec la colonne existante "picture"
+    @Column(name = "picture", nullable = false)
     private String pictureUrl;
 
     @Column(nullable = false)
     private Long owner_id;
 
-    @Temporal(TemporalType.TIMESTAMP) // Pour les champs de type Date
+        @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -75,8 +75,8 @@ public class Rental {
     public String getPicture() { return pictureUrl; }
     public void setPicture(String picture) { this.pictureUrl = picture; }
 
-    public Long getOwner_id() { return owner_id; }
-    public void setOwner_id(Long owner_id) { this.owner_id = owner_id; }
+    public Long getOwnerId() { return owner_id; }
+    public void setOwnerId(Long ownerId) { this.owner_id = ownerId; }
 
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
@@ -87,4 +87,5 @@ public class Rental {
     public <R> R map(Function<Rental, R> mapper) {
         return mapper.apply(this);
     }
+
 }
