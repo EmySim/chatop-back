@@ -7,6 +7,7 @@ import com.rental.service.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,8 +27,9 @@ public class RentalController {
     private static final Logger logger = Logger.getLogger(RentalController.class.getName());
     private final RentalService rentalService;
 
+    @Autowired
     public RentalController(RentalService rentalService) {
-        this.rentalService = rentalService;
+        this.rentalService = Objects.requireNonNull(rentalService, "RentalService ne peut pas être null");
     }
 
     @Operation(summary = "Récupère toutes les locations")

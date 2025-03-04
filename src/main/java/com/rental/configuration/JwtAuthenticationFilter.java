@@ -85,6 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 logger.info("Token validé pour l'utilisateur : " + userEmail);
+                logger.info("Utilisateur authentifié avec succès : " + userEmail);
             } else {
                 logger.warning("Token invalide pour l'utilisateur : " + userEmail);
             }
@@ -93,6 +94,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Utilisateur non authentifié");
             return;
         }
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            logger.warning("Utilisateur non authentifié après validation du token.");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Utilisateur non authentifié");
+            return;
+        }
+
         filterChain.doFilter(request, response);
         logger.info("Fin du filtrage JWT.");
     }

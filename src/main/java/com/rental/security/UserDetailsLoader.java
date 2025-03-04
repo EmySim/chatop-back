@@ -50,4 +50,21 @@ public class UserDetailsLoader implements UserDetailsService {
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }
+    /**
+     * Charge les détails de l'utilisateur par ID (utilisé pour Spring Security).
+     */
+    public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.warning("Utilisateur non trouvé avec l'ID : " + id);
+                    return new UsernameNotFoundException("Utilisateur non trouvé avec l'ID : " + id);
+                });
+
+        logger.info("Utilisateur chargé avec l'ID : " + user.getId());
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+        );
+    }
 }
