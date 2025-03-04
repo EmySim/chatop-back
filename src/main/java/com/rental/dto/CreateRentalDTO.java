@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+import java.util.Base64;
+
 /**
  * DTO for creating a new rental.
  */
@@ -36,8 +38,7 @@ public class CreateRentalDTO {
         return owner_id; // Correction pour utiliser la propriété correcte
     }
 
-
-        // Constructeurs
+    // Constructeurs
     public CreateRentalDTO() {}
 
     public CreateRentalDTO(String name, String description, double price, String location, int surface, String picture, Long owner_id) {
@@ -105,5 +106,15 @@ public class CreateRentalDTO {
 
     public void setOwner_id(Long owner_id) {
         this.owner_id = owner_id;
+    }
+
+    // Add base64Url encoding for the rental body
+    public String getEncodedDescription() {
+        return Base64.getUrlEncoder().encodeToString(description.getBytes());
+    }
+
+    // Add base64Url decoding for the rental body
+    public void setEncodedDescription(String encodedDescription) {
+        this.description = new String(Base64.getUrlDecoder().decode(encodedDescription));
     }
 }

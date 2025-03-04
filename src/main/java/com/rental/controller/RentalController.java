@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Base64;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,9 +72,16 @@ public class RentalController {
             logger.info("Aucune image reçue pour la location.");
         }
 
+        // Decode the rental body with base64Url before processing
+        String decodedDescription = new String(Base64.getUrlDecoder().decode(createRentalDTO.getDescription()));
+        createRentalDTO.setDescription(decodedDescription);
+
         return rentalService.createRental(createRentalDTO, image)
                 .map(rental -> {
                     logger.info("Fin de createRental : location créée avec succès.");
+                    // Encode the rental body with base64Url before sending
+                    String encodedDescription = Base64.getUrlEncoder().encodeToString(rental.getDescription().getBytes());
+                    rental.setDescription(encodedDescription);
                     return ResponseEntity.status(HttpStatus.CREATED).body(rental);
                 })
                 .onErrorResume(e -> {
@@ -95,9 +103,16 @@ public class RentalController {
             logger.info("Aucune nouvelle image reçue pour la mise à jour de la location.");
         }
 
+        // Decode the rental body with base64Url before processing
+        String decodedDescription = new String(Base64.getUrlDecoder().decode(updateRentalDTO.getDescription()));
+        updateRentalDTO.setDescription(decodedDescription);
+
         return rentalService.updateRental(id, updateRentalDTO, image)
                 .map(rental -> {
                     logger.info("Fin de updateRental : location avec ID " + id + " mise à jour avec succès.");
+                    // Encode the rental body with base64Url before sending
+                    String encodedDescription = Base64.getUrlEncoder().encodeToString(rental.getDescription().getBytes());
+                    rental.setDescription(encodedDescription);
                     return ResponseEntity.ok(rental);
                 })
                 .onErrorResume(e -> {

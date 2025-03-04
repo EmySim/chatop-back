@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.logging.Logger;
 
 /**
@@ -29,6 +30,10 @@ public class MessageService {
      * @param messageDTO The DTO containing message details.
      */
     public void sendMessage(MessageDTO messageDTO) {
+        // Decode the message body with base64Url before processing
+        String decodedMessage = new String(Base64.getUrlDecoder().decode(messageDTO.getMessage()));
+        messageDTO.setMessage(decodedMessage);
+
         Message message = new Message();
         message.setMessage(messageDTO.getMessage()); // Mappe "message" du JSON
         message.setUserId(messageDTO.getUserId());   // Mappe "user_id" du JSON
@@ -39,5 +44,9 @@ public class MessageService {
         messageRepository.save(message); // Sauvegarde dans la base de données
         logger.info("Message registered successfully for user ID: " + message.getUserId() +
                 ", rental ID: " + message.getRentalId());
+
+        // Encode the message body with base64Url before sending
+        String encodedMessage = Base64.getUrlEncoder().encodeToString("Message sent successfully".getBytes());
+        logger.info("Message sent successfully: " + encodedMessage);
     }
 }

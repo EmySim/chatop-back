@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,5 +41,8 @@ public class ImageStorageService {
                 ))
                 .doOnError(e -> logger.log(Level.SEVERE, "Erreur lors de la mise en ligne de l'image", e))
                 .thenReturn("https://s3.amazonaws.com/" + bucketName + "/" + fileName);
+    }
+
+    public Optional<String> saveImage(MultipartFile image) {
     }
 }

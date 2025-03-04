@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Base64;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -119,5 +120,15 @@ public class RentalService {
         dto.setPicture(rental.getPicture());
         dto.setOwnerId(rental.getOwnerId());
         return dto;
+    }
+
+    // Implement base64Url encoding for the rental body
+    public String encodeRentalBody(String rentalBody) {
+        return Base64.getUrlEncoder().encodeToString(rentalBody.getBytes());
+    }
+
+    // Implement base64Url decoding for the rental body
+    public String decodeRentalBody(String encodedRentalBody) {
+        return new String(Base64.getUrlDecoder().decode(encodedRentalBody));
     }
 }

@@ -67,13 +67,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7); // Récupérer ce qui suit "Bearer ".
         logger.info("Token JWT extrait : " + jwt);
 
-
         // Étape 2 : Extraire les informations après validation
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Erreur lors de l'extraction de l'utilisateur du JWT", e);
-            filterChain.doFilter(request, response);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT malformé");
             return;
         }
 
@@ -88,6 +87,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.info("Utilisateur authentifié avec succès : " + userEmail);
             } else {
                 logger.warning("Token invalide pour l'utilisateur : " + userEmail);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token JWT invalide");
+                return;
             }
         } else {
             logger.warning("Utilisateur non authentifié : " + userEmail);
