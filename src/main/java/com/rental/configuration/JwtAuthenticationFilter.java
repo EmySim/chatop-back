@@ -88,6 +88,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } else {
                 logger.warning("Token invalide pour l'utilisateur : " + userEmail);
             }
+        } else {
+            logger.warning("Utilisateur non authentifié : " + userEmail);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Utilisateur non authentifié");
+            return;
         }
         filterChain.doFilter(request, response);
         logger.info("Fin du filtrage JWT.");
