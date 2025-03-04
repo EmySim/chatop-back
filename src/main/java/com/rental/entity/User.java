@@ -56,7 +56,9 @@ public class User {
     /**
      * Constructeur par défaut (nécessaire pour Hibernate).
      */
-    public User() {}
+    public User() {
+        this.role = Role.USER;
+    }
 
     /**
      * Constructeur pour créer un utilisateur avec un rôle spécifique.

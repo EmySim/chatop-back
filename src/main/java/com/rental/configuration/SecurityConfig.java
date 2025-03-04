@@ -61,6 +61,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable()) // Désactivation de la protection CSRF (inutilisée avec JWT)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Autorisation publique pour register/login et Swagger
+                        .requestMatchers("/api/auth/me", "/api/user/**", "/api/rentals/**", "/api/messages/**").authenticated()
                         .anyRequest().authenticated() // Toute autre requête nécessite d'être authentifié
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT => pas de session côté serveur
