@@ -14,7 +14,7 @@ public class RentalDTO {
     private Date createdAt;
     private Date updatedAt;
     private int surface;
-    private String picture;
+    private String picturePath;
     private Long ownerId;
 
     // Constructeur par défaut
@@ -92,18 +92,19 @@ public class RentalDTO {
         this.surface = surface;
     }
 
-    public String getPicture() {
-        return picture;
+    public String getPicturePath() {
+        return picturePath;
     }
 
-    public void setPicture(String picture) {
-        this.picture = picture;
+    public void setPicturePath(String picturePath) {
+        this.picturePath = picturePath;
     }
 
     public Long getOwnerId() {
         return ownerId;}
 
     public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;}
+        this.ownerId = ownerId;
+    }
 
 }

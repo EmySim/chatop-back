@@ -103,7 +103,7 @@ public class RentalController {
             summary = "Crée une nouvelle location",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Location créée avec succès", content = @Content(mediaType = "application/json")),
-                    @ApiResponse(responseCode = "500", description = "Erreur lors de la création de la location")
+                    @ApiResponse(responseCode = "401", description = "Données de création invalides")
             }
     )
     @PostMapping(consumes = {"multipart/form-data"})
@@ -112,22 +112,28 @@ public class RentalController {
             @RequestPart(value = "image", required = false) MultipartFile image) {
 
         logger.info("Début de createRental : création d'une nouvelle location.");
-
-        if (image != null) {
-            logger.info("Image reçue pour la location : " + image.getOriginalFilename());
-        } else {
-            logger.info("Aucune image reçue pour la location.");
-        }
-
         try {
-            RentalDTO rental = rentalService.createRental(createRentalDTO, image);
+            // Gestion du fichier image (upload et récupération du chemin)
+            String imagePath = null;
+            if (image != null && !image.isEmpty()) {
+                imagePath = rentalService.storeImage(image); // Gestion de l'image déportée au service
+            }
+
+            // Ajouter le chemin de l'image au DTO
+            createRentalDTO.setPicturePath(imagePath);
+
+            // Appeler le service métier pour créer la location
+            RentalDTO createdRental = rentalService.createRental(createRentalDTO);
+
             logger.info("Fin de createRental : location créée avec succès.");
-            return ResponseEntity.status(HttpStatus.CREATED).body(rental);
+            return new ResponseEntity<>(createdRental, HttpStatus.CREATED);
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     /**
      * Met à jour une location existante.

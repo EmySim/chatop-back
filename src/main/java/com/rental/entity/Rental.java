@@ -75,6 +75,11 @@ public class Rental {
     public String getPicture() { return pictureUrl; }
     public void setPicture(String picture) { this.pictureUrl = picture; }
 
+    // Ajout du setter pour pictureUrl
+    public void setPicturePath(String picturePath) {
+        this.pictureUrl = picturePath;
+    }
+
     public Long getOwnerId() { return owner_id; }
     public void setOwnerId(Long ownerId) { this.owner_id = ownerId; }
 
