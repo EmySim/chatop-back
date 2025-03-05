@@ -40,13 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         logger.info("🔍 Début du filtrage JWT.");
 
-        // 🔥 Bypass du filtre pour les routes publiques 🔥
-        String path = request.getServletPath();
-        if (path.startsWith("/api/auth/")) {
-            logger.info("🛑 Route publique détectée : " + path + " - Bypass du filtre JWT.");
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         final String authHeader = request.getHeader("Authorization");
 
