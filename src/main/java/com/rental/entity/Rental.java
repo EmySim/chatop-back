@@ -36,7 +36,7 @@ public class Rental {
     @Column(nullable = false)
     private Long owner_id;
 
-        @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -72,8 +72,10 @@ public class Rental {
     public int getSurface() { return surface; }
     public void setSurface(int surface) { this.surface = surface; }
 
-    public String getPicture() { return pictureUrl; }
-    public void setPicture(String picture) { this.pictureUrl = picture; }
+    public String getPicturePath() { return pictureUrl; } // Renommé en getPicturePath
+    public void setPicturePath(String picturePath) {
+        this.pictureUrl = picturePath;
+    }
 
     public Long getOwnerId() { return owner_id; }
     public void setOwnerId(Long ownerId) { this.owner_id = ownerId; }
@@ -87,5 +89,4 @@ public class Rental {
     public <R> R map(Function<Rental, R> mapper) {
         return mapper.apply(this);
     }
-
 }

@@ -1,57 +1,55 @@
 package com.rental.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-import java.util.Base64;
 
 /**
- * DTO for creating a new rental.
+ * DTO pour la création d'une location.
  */
 public class CreateRentalDTO {
 
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;
 
-    @NotBlank(message = "La description est obligatoire.")
-    private String description;
+    @NotNull(message = "La surface est obligatoire.")
+    @Positive(message = "La surface doit être positive.")
+    private int surface;
 
     @NotNull(message = "Le prix est obligatoire.")
     @Positive(message = "Le prix doit être positif.")
     private double price;
 
-    @NotBlank(message = "La localisation est obligatoire.")
-    private String location;
+    // Stocke le chemin ou l'URL de l'image, non le fichier
+    private String picturePath;
 
-    @NotNull(message = "La surface est obligatoire.")
-    @Positive(message = "La surface doit être positive.")
-    private int surface;
+    @NotBlank(message = "La description est obligatoire.")
+    private String description;
 
-    @NotBlank(message = "L'image est obligatoire.")
-    private String picture;
-
-    @NotNull(message = "L'ID du propriétaire est obligatoire.")
+    @NotBlank(message = "L'ID du propriétaire est obligatoire.")
     private Long owner_id;
 
-    public Long getOwnerId() {
-        return owner_id; // Correction pour utiliser la propriété correcte
-    }
+    @NotBlank(message = "La localisation est obligatoire.")
+    private String location;
 
     // Constructeurs
     public CreateRentalDTO() {}
 
-    public CreateRentalDTO(String name, String description, double price, String location, int surface, String picture, Long owner_id) {
+    public CreateRentalDTO(String name, String description, double price, String location, int surface, String picturePath, Long owner_id) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.location = location;
         this.surface = surface;
-        this.picture = picture;
+        this.picturePath = picturePath;
         this.owner_id = owner_id;
     }
 
-    // Getters and Setters
+
+    // Getters et Setters
     public String getName() {
         return name;
     }
@@ -92,29 +90,20 @@ public class CreateRentalDTO {
         this.surface = surface;
     }
 
-    public String getPicture() {
-        return picture;
-    }
-
-    public void setPicture(String picture) {
-        this.picture = picture;
-    }
-
-    public Long getOwner_id() {
+    public Long getOwnerId() {
         return owner_id;
     }
 
-    public void setOwner_id(Long owner_id) {
+    public void setOwnerId(Long owner_id) {
         this.owner_id = owner_id;
     }
 
-    // Add base64Url encoding for the rental body
-    public String getEncodedDescription() {
-        return Base64.getUrlEncoder().encodeToString(description.getBytes());
+    public String getPicturePath() {
+        return picturePath;
     }
 
-    // Add base64Url decoding for the rental body
-    public void setEncodedDescription(String encodedDescription) {
-        this.description = new String(Base64.getUrlDecoder().decode(encodedDescription));
+    public void setPicturePath(String picturePath) {
+        this.picturePath = picturePath;
     }
+
 }

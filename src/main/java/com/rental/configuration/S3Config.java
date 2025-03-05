@@ -1,14 +1,14 @@
 package com.rental.configuration;
 
-import java.util.logging.Logger;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+
+import java.util.logging.Logger;
 
 @Configuration
 public class S3Config {
@@ -29,20 +29,24 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
-        // Logs des variables pour vérifier qu'elles sont bien lues
-        logger.info("Configuration AWS S3 :");
-        logger.info("Access Key ID: " + (accessKeyId != null ? "OK" : "NON DÉFINIE"));
-        logger.info("Secret Access Key: " + (secretAccessKey != null ? "OK" : "NON DÉFINIE"));
-        logger.info("Région: " + region);
-        logger.info("Bucket Name: " + bucketName);
-
-        if (region == null || region.isBlank()) {
-            throw new IllegalStateException("La région AWS S3 n'est pas configurée !");
+        if (accessKeyId == null || accessKeyId.isBlank() || secretAccessKey == null || secretAccessKey.isBlank()) {
+            logger.warning("⚠️  Les credentials AWS ne sont pas définis ! Utilisation du profil par défaut.");
+            return S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
+                    .build();
         }
+
+        logger.info("✅ Configuration AWS S3 réussie. Région : " + region);
 
         return S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(DefaultCredentialsProvider.create())
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
                 .build();
+    }
+
+    @Bean
+    public String bucketName() {
+        return bucketName;
     }
 }

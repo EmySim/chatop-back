@@ -17,7 +17,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 public class ImageStorageService {
 
     private final S3Client s3Client;
-    private final String bucketName = "your-bucket-name";
+    private final String bucketName = "chatop-bucket-2025";
     private static final Logger logger = Logger.getLogger(ImageStorageService.class.getName());
 
     public ImageStorageService(S3Client s3Client) {
