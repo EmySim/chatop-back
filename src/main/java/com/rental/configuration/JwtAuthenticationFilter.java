@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,8 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsLoader userDetailsLoader;
 
     public JwtAuthenticationFilter(JwtService jwtService, UserDetailsLoader userDetailsLoader) {
-        this.jwtService = jwtService;
-        this.userDetailsLoader = userDetailsLoader;
+        this.jwtService = Objects.requireNonNull(jwtService, "JwtService ne peut pas être null");
+        this.userDetailsLoader = Objects.requireNonNull(userDetailsLoader, "UserDetailsLoader ne peut pas être null");
     }
 
     @Override
@@ -40,7 +41,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         logger.info("🔍 Début du filtrage JWT.");
 
-
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -50,16 +50,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Extraire le JWT de l'en-tête
-        final String jwt = authHeader.substring(7);
-        logger.info("🔑 Token JWT extrait : " + jwt);
+        final String jwt = authHeader.substring(7).trim();
+        logger.info("🔑 Token JWT extrait.");
+
+        // Vérification de l'encodage du JWT en Base64URL avant toute opération
+        if (!isBase64UrlEncoded(jwt)) {
+            logger.warning("❌ Token JWT invalide : encodage incorrect.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Encodage JWT invalide.");
+            return;
+        }
 
         final String userEmail;
         try {
             userEmail = jwtService.extractUsername(jwt);
-            logger.info("👤 Utilisateur extrait du JWT.");
+            logger.info("👤 Utilisateur extrait du JWT : " + userEmail);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "❌ Erreur lors de l'extraction du username du JWT", e);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT invalide");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT invalide.");
             return;
         }
 
@@ -68,21 +75,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
-
-            // Vérifiez que le JWT semble être en Base64URL.
-            if (!isBase64UrlEncoded(jwt)) {
-                logger.warning("Le token ne semble pas être encodé en Base64URL : " + jwt);
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Encodage JWT invalide.");
-                return;
-            }
-
+        // Vérification de la validité du JWT
         if (!jwtService.validateToken(jwt, userEmail)) {
-            logger.warning("🚫 Tentative d'authentification échouée.");
+            logger.warning("🚫 Tentative d'authentification échouée : JWT non valide.");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Échec d'authentification.");
             return;
         }
 
+        UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -93,10 +93,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Vérifie si une chaîne est encodée en Base64URL et ne contient que des caractères valides.
+     * Vérifie si un JWT suit le format Base64URL (sans padding).
+     * Un JWT doit contenir exactement trois parties séparées par des points.
      */
     private boolean isBase64UrlEncoded(String jwt) {
         return jwt.matches("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
     }
-
 }
