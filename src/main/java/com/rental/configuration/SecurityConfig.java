@@ -46,11 +46,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Liste des routes accessibles sans authentification
                         .requestMatchers(
-                                "/auth/login",
-                                "/auth/register",
-                                "/public/**", // Tous les endpoints commençant par /public/
-                                "/swagger-ui/**", // Autoriser Swagger UI
-                                "/v3/api-docs/**" // Autoriser la documentation OpenAPI
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/public/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         // Tout le reste doit être authentifié
                         .anyRequest().authenticated()
