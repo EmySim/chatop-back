@@ -44,15 +44,25 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/me", "/api/user/**", "/api/rentals/**", "/api/messages/**").authenticated()
+                        // Liste des routes accessibles sans authentification
+                        .requestMatchers(
+                                "/auth/login",
+                                "/auth/register",
+                                "/public/**", // Tous les endpoints commençant par /public/
+                                "/swagger-ui/**", // Autoriser Swagger UI
+                                "/v3/api-docs/**" // Autoriser la documentation OpenAPI
+                        ).permitAll()
+                        // Tout le reste doit être authentifié
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsLoader), UsernamePasswordAuthenticationFilter.class);
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        logger.info("✅ Configuration de sécurité appliquée.");
+        logger.info("Configuration de la sécurité chargée avec succès.");
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

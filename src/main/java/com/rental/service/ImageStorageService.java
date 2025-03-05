@@ -43,6 +43,6 @@ public class ImageStorageService {
             logger.log(Level.SEVERE, "Erreur lors de la mise en ligne de l'image : ", e);
         }
 
-        return Optional.ofNullable(imageUrl);
+        return Optional.empty();
     }
 }

@@ -11,7 +11,6 @@ import io.jsonwebtoken.security.Keys;
 import java.util.function.Function;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Map;
 import java.util.logging.Logger;
 
 @Service
@@ -19,17 +18,19 @@ public class JwtService {
 
     private static final Logger logger = Logger.getLogger(JwtService.class.getName());
     private final Key signingKey;
+    private final long jwtExpirationTime;
 
-    @Value("${JWT_EXPIRATION}")
-    private long jwtExpirationTime;
+    public JwtService(
+            @Value("${JWT_SECRET}") String secretKeyBase64,
+            @Value("${JWT_EXPIRATION}") long jwtExpirationTime) {
 
-    public JwtService(@Value("${JWT_SECRET}") String secretKeyBase64) {
         if (secretKeyBase64 == null || secretKeyBase64.isEmpty()) {
             logger.severe("❌ La clé secrète JWT est manquante !");
             throw new IllegalArgumentException("La clé secrète JWT doit être définie.");
         }
         this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyBase64));
-        logger.info("✅ Clé secrète JWT chargée.");
+        this.jwtExpirationTime = jwtExpirationTime;
+        logger.info("✅ Clé secrète JWT chargée avec expiration de " + jwtExpirationTime + " ms.");
     }
 
     public String generateToken(String subject) {
@@ -49,17 +50,23 @@ public class JwtService {
 
     public boolean validateToken(String token, String userDetails) {
         String username = extractUsername(token);
-        boolean isValid = (username.equals(userDetails) && !isTokenExpired(token));
+        boolean isValid = (username != null && username.equals(userDetails) && !isTokenExpired(token));
         logger.info("✅ Validation du token : " + (isValid ? "VALIDE" : "INVALIDE"));
         return isValid;
     }
 
     private boolean isTokenExpired(String token) {
-        return getClaim(token, Claims::getExpiration).before(new Date());
+        Date expiration = getClaim(token, Claims::getExpiration);
+        return expiration != null && expiration.before(new Date());
     }
 
     private <T> T getClaim(String token, Function<Claims, T> resolver) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token).getBody();
-        return resolver.apply(claims);
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token).getBody();
+            return resolver.apply(claims);
+        } catch (Exception e) {
+            logger.severe("❌ Erreur lors de l'extraction des claims du token : " + e.getMessage());
+            return null;  // Ou lever une exception custom
+        }
     }
 }

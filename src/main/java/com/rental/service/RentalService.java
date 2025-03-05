@@ -89,9 +89,9 @@ public class RentalService {
 
         existingRental.setName(Optional.ofNullable(updateRentalDTO.getName()).orElse(existingRental.getName()));
         existingRental.setDescription(Optional.ofNullable(updateRentalDTO.getDescription()).orElse(existingRental.getDescription()));
-        existingRental.setPrice(Optional.ofNullable(updateRentalDTO.getPrice()).orElse(existingRental.getPrice()));
+        existingRental.setPrice(Optional.of(updateRentalDTO.getPrice()).orElse(existingRental.getPrice()));
         existingRental.setLocation(Optional.ofNullable(updateRentalDTO.getLocation()).orElse(existingRental.getLocation()));
-        existingRental.setSurface(Optional.ofNullable(updateRentalDTO.getSurface()).orElse(existingRental.getSurface()));
+        existingRental.setSurface(Optional.of(updateRentalDTO.getSurface()).orElse(existingRental.getSurface()));
 
          // Mise à jour de l'image si une nouvelle est fournie
          if (image != null) {

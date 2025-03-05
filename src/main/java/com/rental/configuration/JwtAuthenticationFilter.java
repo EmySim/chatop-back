@@ -42,49 +42,60 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null) {
-            logger.warning("⚠️ L'en-tête Authorization est manquant.");
-        } else {
-            logger.info("✅ En-tête Authorization trouvé : " + authHeader);
-        }
-
-        final String jwt;
-        final String userEmail;
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.info("🚫 Aucun token Bearer trouvé.");
+            logger.warning("⚠️ Aucun token Bearer trouvé.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
+        // Extraire le JWT de l'en-tête
+        final String jwt = authHeader.substring(7);
         logger.info("🔑 Token JWT extrait : " + jwt);
 
+        final String userEmail;
         try {
             userEmail = jwtService.extractUsername(jwt);
+            logger.info("👤 Utilisateur extrait du JWT.");
         } catch (Exception e) {
             logger.log(Level.SEVERE, "❌ Erreur lors de l'extraction du username du JWT", e);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT malformé");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT invalide");
             return;
         }
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            logger.info("👤 Utilisateur trouvé : " + userEmail);
-            UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
+        if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            if (jwtService.validateToken(jwt, userEmail)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                logger.info("✅ Authentification réussie pour l'utilisateur : " + userEmail);
-            } else {
-                logger.warning("🚫 Token JWT invalide.");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token JWT invalide");
+        UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
+
+            // Vérifiez que le JWT semble être en Base64URL.
+            if (!isBase64UrlEncoded(jwt)) {
+                logger.warning("Le token ne semble pas être encodé en Base64URL : " + jwt);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Encodage JWT invalide.");
                 return;
             }
+
+        if (!jwtService.validateToken(jwt, userEmail)) {
+            logger.warning("🚫 Tentative d'authentification échouée.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Échec d'authentification.");
+            return;
         }
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        logger.info("✅ Authentification réussie.");
 
         filterChain.doFilter(request, response);
         logger.info("✅ Fin du filtrage JWT.");
     }
+
+    /**
+     * Vérifie si une chaîne est encodée en Base64URL et ne contient que des caractères valides.
+     */
+    private boolean isBase64UrlEncoded(String jwt) {
+        return jwt.matches("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
+    }
+
 }
