@@ -6,7 +6,7 @@ import java.util.Date;
  * DTO pour représenter une location (Rental).
  */
 public class RentalDTO {
-    private int id;
+    private Long id;
     private String name;
     private String description;
     private double price;
@@ -15,24 +15,24 @@ public class RentalDTO {
     private Date updatedAt;
     private int surface;
     private String picture;
-    private Long owner_id;
+    private Long ownerId;
 
     // Constructeur par défaut
     public RentalDTO() {
     }
 
     // Constructeur avec paramètres
-    public RentalDTO(int id, String name) {
+    public RentalDTO(Long id, String name) {
         this.id = id;
         this.name = name;
     }
 
     // Getters et setters
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -100,11 +100,10 @@ public class RentalDTO {
         this.picture = picture;
     }
 
-    public Long getOwner_id() {
-        return owner_id;
-    }
+    public Long getOwnerId() {
+        return ownerId;}
 
-    public void setOwner_id(Long owner_id) {
-        this.owner_id = owner_id;
-    }
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;}
+
 }

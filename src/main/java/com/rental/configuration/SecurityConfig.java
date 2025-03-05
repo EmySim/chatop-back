@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.rental.security.UserDetailsLoader;
 import com.rental.service.JwtService;
 
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -29,13 +30,6 @@ public class SecurityConfig {
     private final UserDetailsLoader userDetailsLoader;
     private final JwtService jwtService;
 
-    /**
-     * Constructeur de configuration de sécurité avec injection des dépendances.
-     *
-     * @param jwtAuthenticationFilter Filtre pour gérer l'authentification JWT
-     * @param userDetailsLoader Service de chargement des utilisateurs
-     * @param jwtService Service pour la gestion des tokens JWT
-     */
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           UserDetailsLoader userDetailsLoader,
                           JwtService jwtService) {
@@ -44,64 +38,50 @@ public class SecurityConfig {
         this.jwtService = jwtService;
     }
 
-    /**
-     * Définit la configuration de sécurité de l'application.
-     *
-     * - Désactive CSRF car on utilise JWT.
-     * - Définit les autorisations des endpoints.
-     * - Ajoute un filtre d'authentification JWT.
-     * - Configure une politique de session stateless.
-     *
-     * @param http Configuration HTTP de Spring Security.
-     * @return Le filtre de sécurité configuré.
-     * @throws Exception En cas d'erreur de configuration.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()) // Désactivation de la protection CSRF (inutilisée avec JWT)
+        logger.info("🔒 Initialisation de la configuration de sécurité...");
+
+        http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Autorisation publique pour register/login et Swagger
-                        .anyRequest().authenticated() // Toute autre requête nécessite d'être authentifié
+                        // Liste des routes accessibles sans authentification
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/public/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        // Tout le reste doit être authentifié
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT => pas de session côté serveur
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Ajout du filtre d'authentification JWT
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         logger.info("Configuration de la sécurité chargée avec succès.");
         return http.build();
     }
 
-    /**
-     * Définit l'encodeur de mots de passe (BCrypt).
-     *
-     * @return Un encodeur BCryptPasswordEncoder.
-     */
+
     @Bean
     public PasswordEncoder passwordEncoder() {
+        logger.info("🔑 Utilisation de BCryptPasswordEncoder.");
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Définit le fournisseur d'authentification basé sur UserDetailsLoader.
-     *
-     * @return Le provider d'authentification DAO.
-     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsLoader);
         authProvider.setPasswordEncoder(passwordEncoder());
+        logger.info("✅ AuthenticationProvider configuré.");
         return authProvider;
     }
 
-    /**
-     * Définit l'AuthenticationManager pour Spring Security.
-     *
-     * @param authenticationConfiguration Configuration d'authentification.
-     * @return L'AuthenticationManager configuré.
-     * @throws Exception En cas d'erreur de configuration.
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        logger.info("🔑 Initialisation de l'AuthenticationManager.");
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

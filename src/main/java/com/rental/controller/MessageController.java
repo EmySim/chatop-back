@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
 import java.util.logging.Logger;
 
 /**
@@ -37,8 +38,16 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<String> sendMessage(@Valid @RequestBody MessageDTO messageDTO) {
         logger.info("Attempting to send message with content: " + messageDTO.getMessage());
+
+        // Decode the message body with base64Url before processing
+        String decodedMessage = new String(Base64.getUrlDecoder().decode(messageDTO.getMessage()));
+        messageDTO.setMessage(decodedMessage);
+
         messageService.sendMessage(messageDTO);
+
+        // Encode the message body with base64Url before sending
+        String encodedMessage = Base64.getUrlEncoder().encodeToString("Message sent successfully".getBytes());
         logger.info("Message sent successfully.");
-        return ResponseEntity.ok("Message sent successfully");
+        return ResponseEntity.ok(encodedMessage);
     }
 }

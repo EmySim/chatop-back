@@ -27,12 +27,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsLoader userDetailsLoader;
 
-    /**
-     * Constructeur avec injection des dépendances.
-     *
-     * @param jwtService Service de gestion des tokens JWT.
-     * @param userDetailsLoader Service de récupération des détails utilisateurs.
-     */
     public JwtAuthenticationFilter(JwtService jwtService, UserDetailsLoader userDetailsLoader) {
         this.jwtService = jwtService;
         this.userDetailsLoader = userDetailsLoader;
@@ -44,52 +38,65 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        logger.info("Début du filtrage JWT.");
+        logger.info("🔍 Début du filtrage JWT.");
+
 
         final String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null) {
-            logger.warning("L'en-tête Authorization est manquant.");
-        } else {
-            logger.info("En-tête Authorization trouvé : " + authHeader);
-        }
-
-        final String jwt;
-        final String userEmail;
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.info("Aucun token Bearer trouvé dans l'en-tête Authorization.");
+            logger.warning("⚠️ Aucun token Bearer trouvé.");
             filterChain.doFilter(request, response);
             return;
         }
 
         // Extraire le JWT de l'en-tête
-        jwt = authHeader.substring(7); // Récupérer ce qui suit "Bearer ".
-        logger.info("Token JWT extrait : " + jwt);
+        final String jwt = authHeader.substring(7);
+        logger.info("🔑 Token JWT extrait : " + jwt);
 
-
-        // Étape 2 : Extraire les informations après validation
+        final String userEmail;
         try {
             userEmail = jwtService.extractUsername(jwt);
+            logger.info("👤 Utilisateur extrait du JWT.");
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur lors de l'extraction de l'utilisateur du JWT", e);
+            logger.log(Level.SEVERE, "❌ Erreur lors de l'extraction du username du JWT", e);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT invalide");
+            return;
+        }
+
+        if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            logger.info("Authentification non présente dans le contexte pour l'utilisateur : " + userEmail);
-            UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
+        UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
 
-            if (jwtService.validateToken(jwt, userEmail)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                logger.info("Token validé pour l'utilisateur : " + userEmail);
-            } else {
-                logger.warning("Token invalide pour l'utilisateur : " + userEmail);
+            // Vérifiez que le JWT semble être en Base64URL.
+            if (!isBase64UrlEncoded(jwt)) {
+                logger.warning("Le token ne semble pas être encodé en Base64URL : " + jwt);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Encodage JWT invalide.");
+                return;
             }
+
+        if (!jwtService.validateToken(jwt, userEmail)) {
+            logger.warning("🚫 Tentative d'authentification échouée.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Échec d'authentification.");
+            return;
         }
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        logger.info("✅ Authentification réussie.");
+
         filterChain.doFilter(request, response);
-        logger.info("Fin du filtrage JWT.");
+        logger.info("✅ Fin du filtrage JWT.");
     }
+
+    /**
+     * Vérifie si une chaîne est encodée en Base64URL et ne contient que des caractères valides.
+     */
+    private boolean isBase64UrlEncoded(String jwt) {
+        return jwt.matches("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
+    }
+
 }

@@ -123,15 +123,4 @@ public class ChatopBackApplication {
         return "*".repeat(value.length());
     }
 
-    @Bean
-    public CommandLineRunner checkAwsEnvironmentVariables() {
-        return args -> {
-            System.out.println("=== Vérification dans l'application ===");
-            System.out.println("AWS_ACCESS_KEY_ID: " + System.getenv("AWS_ACCESS_KEY_ID"));
-            System.out.println("AWS_SECRET_ACCESS_KEY: " + (System.getenv("AWS_SECRET_ACCESS_KEY") != null ? "OK (masqué)" : "NON DÉFINI"));
-            System.out.println("AWS_REGION: " + System.getenv("AWS_REGION"));
-            System.out.println("AWS_BUCKET_NAME: " + System.getenv("AWS_BUCKET_NAME"));
-        };
-    }
-
 }
