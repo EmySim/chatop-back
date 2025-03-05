@@ -16,6 +16,8 @@ import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
 
+import io.jsonwebtoken.io.IOException;
+
 @Service
 public class RentalService {
 
@@ -31,6 +33,7 @@ public class RentalService {
 
     /**
      * Récupère toutes les locations dans une liste.
+     * 
      * @return Liste de RentalDTO
      */
     public List<RentalDTO> getAllRentals() {
@@ -41,6 +44,7 @@ public class RentalService {
 
     /**
      * Récupère une location par ID.
+     * 
      * @param id L'identifiant de la location
      * @return Un RentalDTO ou une erreur si non trouvé
      */
@@ -58,7 +62,8 @@ public class RentalService {
      */
     public String storeImage(MultipartFile image) {
         try {
-            return imageStorageService.saveImage(image).orElseThrow(() -> new RuntimeException("Échec de l'upload de l'image"));
+            return imageStorageService.saveImage(image)
+                    .orElseThrow(() -> new RuntimeException("Échec de l'upload de l'image"));
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Erreur lors de la sauvegarde de l'image", e);
             throw new RuntimeException("Impossible de sauvegarder l'image");
@@ -69,9 +74,10 @@ public class RentalService {
      * Crée une nouvelle location.
      *
      * @param createRentalDTO Données de création.
+     * @param image           L'image de la location.
      * @return DTO de la location créée.
      */
-    public RentalDTO createRental(CreateRentalDTO createRentalDTO) {
+    public RentalDTO createRental(CreateRentalDTO createRentalDTO, MultipartFile image) throws IOException {
         Rental rental = new Rental();
         rental.setName(createRentalDTO.getName());
         rental.setDescription(createRentalDTO.getDescription());
@@ -81,18 +87,25 @@ public class RentalService {
         rental.setOwnerId(createRentalDTO.getOwnerId());
 
         // Gestion de l'image
-        String imagePath = storeImage(createRentalDTO.getImage());
-        rental.setPicturePath(imagePath);
+        String imagePath = null;
+        if (image != null && !image.isEmpty()) {
+            imagePath = storeImage(image); // Méthode qui gère le stockage de l'image
+        }
+        rental.setPicturePath(imagePath); // Assurez-vous d'utiliser `setPicturePath` et pas `setPicture`
 
+        // Sauvegarder la location
         rentalRepository.save(rental);
+
+        // Retourner le DTO de la location créée
         return mapToDTO(rental);
     }
 
     /**
      * Met à jour une location existante.
-     * @param id L'identifiant de la location.
+     * 
+     * @param id              L'identifiant de la location.
      * @param updateRentalDTO Les données mises à jour.
-     * @param image L'image mise à jour.
+     * @param image           L'image mise à jour.
      * @return Un RentalDTO avec les données mises à jour.
      */
     public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO, MultipartFile image) {
@@ -100,15 +113,17 @@ public class RentalService {
                 .orElseThrow(() -> new RuntimeException("Location non trouvée"));
 
         existingRental.setName(Optional.ofNullable(updateRentalDTO.getName()).orElse(existingRental.getName()));
-        existingRental.setDescription(Optional.ofNullable(updateRentalDTO.getDescription()).orElse(existingRental.getDescription()));
+        existingRental.setDescription(
+                Optional.ofNullable(updateRentalDTO.getDescription()).orElse(existingRental.getDescription()));
         existingRental.setPrice(Optional.of(updateRentalDTO.getPrice()).orElse(existingRental.getPrice()));
-        existingRental.setLocation(Optional.ofNullable(updateRentalDTO.getLocation()).orElse(existingRental.getLocation()));
-        existingRental.setSurface(Optional.of(updateRentalDTO.getSurface()).orElse(existingRental.getSurface()));
+        existingRental
+                .setLocation(Optional.ofNullable(updateRentalDTO.getLocation()).orElse(existingRental.getLocation()));
+        existingRental.setSurface(Optional.ofNullable(updateRentalDTO.getSurface()).orElse(existingRental.getSurface()));
 
         // Mise à jour de l'image si nécessaire
         if (image != null && !image.isEmpty()) {
             String imagePath = storeImage(image);
-            existingRental.setPicture(imagePath);
+            existingRental.setPicturePath(imagePath); // Correctement définir le chemin de l'image
         }
 
         existingRental.setUpdatedAt(new Date());
@@ -118,6 +133,7 @@ public class RentalService {
 
     /**
      * Transforme une entité Rental en DTO.
+     * 
      * @param rental L'entité Rental
      * @return Le DTO correspondant
      */
@@ -131,7 +147,7 @@ public class RentalService {
         dto.setCreatedAt(rental.getCreatedAt());
         dto.setUpdatedAt(rental.getUpdatedAt());
         dto.setSurface(rental.getSurface());
-        dto.setPicture(rental.getPicture());
+        dto.setPicturePath(rental.getPicturePath()); // Assurez-vous d'utiliser `getPicturePath`
         dto.setOwnerId(rental.getOwnerId());
         return dto;
     }

@@ -5,12 +5,14 @@ import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.RentalService;
 import com.rental.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import io.jsonwebtoken.io.IOException;
 
 /**
  * Contrôleur pour gérer les opérations liées aux locations.
@@ -123,18 +127,16 @@ public class RentalController {
             createRentalDTO.setPicturePath(imagePath);
 
             // Appeler le service métier pour créer la location
-            RentalDTO createdRental = rentalService.createRental(createRentalDTO);
+            RentalDTO createdRental = rentalService.createRental(createRentalDTO, image);
 
             logger.info("Fin de createRental : location créée avec succès.");
             return new ResponseEntity<>(createdRental, HttpStatus.CREATED);
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-
     /**
      * Met à jour une location existante.
      *
