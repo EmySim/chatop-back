@@ -37,9 +37,14 @@ public class ImageStorageService {
         String pictureURL = null;
 
         try {
+            // Détecter le Content-Type basé sur l'extension
+            String contentType = guessContentType(fileName);
+            logger.info("Content-Type détecté : " + contentType);
+
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(fileName)
+                    .contentType(contentType) // Ajouter le Content-Type ici
                     .build();
 
             PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
@@ -53,5 +58,34 @@ public class ImageStorageService {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Devine le type MIME (Content-Type) de l'image en fonction de son extension.
+     *
+     * @param fileName Nom du fichier.
+     * @return Un Content-Type valide ou une valeur par défaut.
+     */
+    private String guessContentType(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return "application/octet-stream"; // Default fallback Content-Type
+        }
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+                return "image/jpeg";
+            case "png":
+                return "image/png";
+            case "gif":
+                return "image/gif";
+            case "bmp":
+                return "image/bmp";
+            case "webp":
+                return "image/webp";
+            default:
+                return "application/octet-stream"; // Default Content-Type for unsupported extensions
+        }
     }
 }

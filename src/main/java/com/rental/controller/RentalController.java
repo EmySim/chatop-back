@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.jsonwebtoken.io.IOException;
 
 /**
  * Contrôleur pour gérer les opérations liées aux locations.
@@ -99,43 +98,43 @@ public class RentalController {
      * Crée une nouvelle location.
      *
      * @param createRentalDTO Données de la location à créer.
-     * @param image (Optionnel) Image associée à la location.
+     * @param picture (Optionnel) Image associée à la location.
      * @return La location créée.
      */
     @Operation(
             summary = "Crée une nouvelle location",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Location créée avec succès", content = @Content(mediaType = "application/json")),
+                    @ApiResponse(responseCode = "200", description = "Location créée avec succès", content = @Content(mediaType = "application/json")),
                     @ApiResponse(responseCode = "401", description = "Données de création invalides")
             }
     )
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<RentalDTO> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
-
-        logger.info("Début de createRental : création d'une nouvelle location.");
+            @RequestPart(value = "picture", required = true) MultipartFile picture) {
         try {
-            // Gestion du fichier image (upload et récupération du chemin)
-            String imagePath = null;
-            if (image != null && !image.isEmpty()) {
-                imagePath = rentalService.storeImage(image); // Gestion de l'image déportée au service
+            // Stockage de l'image et mise à jour du DTO
+            if (picture != null && !picture.isEmpty()) {
+                String pictureURL = rentalService.saveImage(picture)
+                        .orElseThrow(() -> new IllegalStateException("Impossible de sauvegarder l'image."));
+                createRentalDTO.setpictureURL(pictureURL);
             }
 
-            // Ajouter le chemin de l'image au DTO
-            createRentalDTO.setPicturePath(imagePath);
+            // Création de la location via RentalService
+            RentalDTO createdRental = rentalService.createRental(createRentalDTO, picture, createRentalDTO.getOwnerId());
 
-            // Appeler le service métier pour créer la location
-            RentalDTO createdRental = rentalService.createRental(createRentalDTO, image);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdRental);
 
-            logger.info("Fin de createRental : location créée avec succès.");
-            return new ResponseEntity<>(createdRental, HttpStatus.CREATED);
-
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Erreur lors de la création de la location", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (IllegalStateException e) {
+            logger.log(Level.SEVERE, "Erreur lors de la création de la location : " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur inattendue lors de la création de la location : " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
     /**
      * Met à jour une location existante.
      *

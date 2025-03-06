@@ -53,6 +53,18 @@ public class RentalService {
     }
 
     /**
+     * Sauvegarde une image via ImageStorageService et retourne son URL.
+     *
+     * @param image MultipartFile de l'image.
+     * @return URL de l'image stockée.
+     */
+    public Optional<String> saveImage(MultipartFile image) {
+        logger.info("Début de l'appel à ImageStorageService pour sauvegarder l'image.");
+        return imageStorageService.saveImage(image);
+    }
+
+
+    /**
      * Crée une nouvelle location.
      *
      * @param createRentalDTO Données de création.
@@ -61,7 +73,7 @@ public class RentalService {
      * @return DTO de la location créée.
      */
     public RentalDTO createRental(CreateRentalDTO createRentalDTO, MultipartFile image, Long ownerId) {
-        logger.info("Début de la création d'une location"+ createRentalDTO.getID());
+        logger.info("Début de la création d'une location"+ createRentalDTO.getId());
 
 
         // Sauvegarder l'image
@@ -74,6 +86,7 @@ public class RentalService {
 
         // Création de l'entité Rental
         Rental rental = new Rental();
+        rental.setId(createRentalDTO.getId());
         rental.setName(createRentalDTO.getName());
         rental.setDescription(createRentalDTO.getDescription());
         rental.setPrice(createRentalDTO.getPrice());
@@ -112,7 +125,7 @@ public class RentalService {
         if (image != null && !image.isEmpty()) {
             String imagePath = imageStorageService.saveImage(image)
                     .orElseThrow(() -> new RuntimeException("Échec de l'upload de l'image"));
-            existingRental.setPicturePath(imagePath);
+            existingRental.setpictureURL(imagePath);
         }
 
         existingRental.setUpdatedAt(new Date());
@@ -134,7 +147,7 @@ public class RentalService {
         dto.setCreatedAt(rental.getCreatedAt());
         dto.setUpdatedAt(rental.getUpdatedAt());
         dto.setSurface(rental.getSurface());
-        dto.setPicturePath(rental.getPicturePath());
+        dto.setpictureURL(rental.getpictureURL());
         dto.setOwnerId(rental.getOwnerId());
         return dto;
     }
