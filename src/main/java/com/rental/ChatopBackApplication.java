@@ -61,7 +61,7 @@ public class ChatopBackApplication {
     @Bean
     public CommandLineRunner diagnosticRunner() {
         return args -> {
-            System.out.println("=== Vérification des variables de configuration ===");
+            System.out.println("=== Verification des variables de configuration ===");
 
             try {
                 printEnvVariable("DATABASE_URL", databaseUrl);
@@ -74,7 +74,7 @@ public class ChatopBackApplication {
                 printEnvVariable("AWS_REGION", awsRegion);
                 printEnvVariable("AWS_BUCKET_NAME", awsBucketName);
 
-                System.out.println("TOUTES LES VARIABLES SONT PRÉSENTES ET VALIDÉES !");
+                System.out.println("TOUTES LES VARIABLES SONT PRESENTES ET VALIDEES !");
             } catch (Exception e) {
                 // Affiche une erreur descriptive si une variable manque ou est mal configurée
                 System.err.println("Erreur de configuration : " + e.getMessage());

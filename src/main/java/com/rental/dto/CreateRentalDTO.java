@@ -5,12 +5,17 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
+import java.util.logging.Logger;
 
 /**
  * DTO pour la création d'une location.
  */
 public class CreateRentalDTO {
+
+    private static final Logger logger = Logger.getLogger(CreateRentalDTO.class.getName());
+
+    // ID généré automatiquement lors de la création de la location
+    private Long id;
 
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;
@@ -24,7 +29,7 @@ public class CreateRentalDTO {
     private double price;
 
     // Stocke le chemin ou l'URL de l'image, non le fichier
-    private String picturePath;
+    private String pictureURL;
 
     @NotBlank(message = "La description est obligatoire.")
     private String description;
@@ -38,18 +43,28 @@ public class CreateRentalDTO {
     // Constructeurs
     public CreateRentalDTO() {}
 
-    public CreateRentalDTO(String name, String description, double price, String location, int surface, String picturePath, Long owner_id) {
+    public CreateRentalDTO(Long id, String name, String description, double price, String location, int surface, String pictureURL, Long owner_id) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.location = location;
         this.surface = surface;
-        this.picturePath = picturePath;
+        this.pictureURL = pictureURL;
         this.owner_id = owner_id;
     }
 
 
     // Getters et Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }
@@ -98,12 +113,14 @@ public class CreateRentalDTO {
         this.owner_id = owner_id;
     }
 
-    public String getPicturePath() {
-        return picturePath;
+    public String getpictureURL() {
+        return pictureURL;
     }
 
-    public void setPicturePath(String picturePath) {
-        this.picturePath = picturePath;
+    public void setpictureURL(String pictureURL) {
+        logger.info("Début du stockage de l'URL de l'image.");
+        this.pictureURL = pictureURL;
+        logger.info("Fin du stockage de l'URL de l'image.");
     }
 
 }

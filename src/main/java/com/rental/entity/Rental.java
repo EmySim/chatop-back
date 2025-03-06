@@ -3,6 +3,7 @@ package com.rental.entity;
 import jakarta.persistence.*;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 /**
  * Entité représentant une location.
@@ -10,6 +11,8 @@ import java.util.function.Function;
 @Entity
 @Table(name = "rentals")
 public class Rental {
+
+    private static final Logger logger = Logger.getLogger(Rental.class.getName());
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,11 +33,11 @@ public class Rental {
     @Column(nullable = false)
     private int surface;
 
-    @Column(name = "picture", nullable = false)
-    private String pictureUrl;
+    @Column(name = "picture_url", nullable = false)
+    private String pictureURL;
 
-    @Column(nullable = false)
-    private Long owner_id;
+    @Column(name = "owner_id", nullable = false)
+    private Long ownerId;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -46,11 +49,13 @@ public class Rental {
     protected void onCreate() {
         this.createdAt = new Date();
         this.updatedAt = new Date();
+        logger.info("Création de l'entité Rental : " + this);
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = new Date();
+        logger.info("Mise à jour de l'entité Rental : " + this);
     }
 
     // Getters et setters
@@ -72,13 +77,14 @@ public class Rental {
     public int getSurface() { return surface; }
     public void setSurface(int surface) { this.surface = surface; }
 
-    public String getPicturePath() { return pictureUrl; } // Renommé en getPicturePath
-    public void setPicturePath(String picturePath) {
-        this.pictureUrl = picturePath;
+    public String getPictureURL() { return pictureURL; }
+    public void setPictureURL(String pictureURL) {
+        logger.info("Stockage de l'URL de l'image : " + pictureURL);
+        this.pictureURL = pictureURL;
     }
 
-    public Long getOwnerId() { return owner_id; }
-    public void setOwnerId(Long ownerId) { this.owner_id = ownerId; }
+    public Long getOwnerId() { return ownerId; }
+    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
 
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
@@ -88,5 +94,21 @@ public class Rental {
 
     public <R> R map(Function<Rental, R> mapper) {
         return mapper.apply(this);
+    }
+
+    @Override
+    public String toString() {
+        return "Rental{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", location='" + location + '\'' +
+                ", surface=" + surface +
+                ", pictureURL='" + pictureURL + '\'' +
+                ", ownerId=" + ownerId +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }
