@@ -38,6 +38,8 @@ public class S3Config {
         }
 
         logger.info("✅ Configuration AWS S3 réussie. Région : " + region);
+        logger.info("✅ AWS Access Key ID: ");
+        logger.info("✅ AWS Secret Access Key: ");
 
         return S3Client.builder()
                 .region(Region.of(region))

@@ -5,12 +5,14 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
+import java.util.logging.Logger;
 
 /**
  * DTO pour la création d'une location.
  */
 public class CreateRentalDTO {
+
+    private static final Logger logger = Logger.getLogger(CreateRentalDTO.class.getName());
 
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;
@@ -103,7 +105,9 @@ public class CreateRentalDTO {
     }
 
     public void setPicturePath(String picturePath) {
+        logger.info("Début du stockage de l'URL de l'image.");
         this.picturePath = picturePath;
+        logger.info("Fin du stockage de l'URL de l'image.");
     }
 
 }

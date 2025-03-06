@@ -2,6 +2,7 @@ package com.rental.service;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,9 +25,16 @@ public class ImageStorageService {
         this.s3Client = s3Client;
     }
 
+    /**
+     * Enregistre une image dans S3 et retourne son URL.
+     *
+     * @param file Fichier à stocker.
+     * @return URL de l'image stockée.
+     */
     public Optional<String> saveImage(MultipartFile file) {
-        String fileName = file.getOriginalFilename();
-        String imageUrl = null;
+        logger.info("Début de l'upload de l'image vers S3.");
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        String pictureURL = null;
 
         try {
             PutObjectRequest request = PutObjectRequest.builder()
@@ -36,11 +44,12 @@ public class ImageStorageService {
 
             PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
             if (response != null) {
-                imageUrl = "https://s3.amazonaws.com/" + bucketName + "/" + fileName;
-                return Optional.of(imageUrl);
+                pictureURL = "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
+                logger.info("Upload terminé : " + pictureURL);
+                return Optional.of(pictureURL);
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Erreur lors de la mise en ligne de l'image : ", e);
+            logger.log(Level.SEVERE, "Erreur lors de l'upload de l'image", e);
         }
 
         return Optional.empty();
