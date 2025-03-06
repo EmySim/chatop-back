@@ -92,11 +92,11 @@ public class RentalDTO {
         this.surface = surface;
     }
 
-    public String getpictureURL() {
+    public String getPictureURL() {
         return pictureURL;
     }
 
-    public void setpictureURL(String pictureURL) {
+    public void setPictureURL(String pictureURL) {
         this.pictureURL = pictureURL;
     }
 

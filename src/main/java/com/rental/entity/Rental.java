@@ -77,8 +77,8 @@ public class Rental {
     public int getSurface() { return surface; }
     public void setSurface(int surface) { this.surface = surface; }
 
-    public String getpictureURL() { return pictureURL; }
-    public void setpictureURL(String pictureURL) {
+    public String getPictureURL() { return pictureURL; }
+    public void setPictureURL(String pictureURL) {
         logger.info("Stockage de l'URL de l'image : " + pictureURL);
         this.pictureURL = pictureURL;
     }

@@ -3,7 +3,6 @@ package com.rental.service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +89,7 @@ public class RentalService {
         rental.setName(createRentalDTO.getName());
         rental.setDescription(createRentalDTO.getDescription());
         rental.setPrice(createRentalDTO.getPrice());
-        rental.setpictureURL(pictureURL);
+        rental.setPictureURL(pictureURL);
         rental.setLocation(createRentalDTO.getLocation());
         rental.setOwnerId(ownerId);
         rental.setSurface(createRentalDTO.getSurface());
@@ -125,7 +124,7 @@ public class RentalService {
         if (image != null && !image.isEmpty()) {
             String imagePath = imageStorageService.saveImage(image)
                     .orElseThrow(() -> new RuntimeException("Échec de l'upload de l'image"));
-            existingRental.setpictureURL(imagePath);
+            existingRental.setPictureURL(imagePath);
         }
 
         existingRental.setUpdatedAt(new Date());
@@ -147,7 +146,7 @@ public class RentalService {
         dto.setCreatedAt(rental.getCreatedAt());
         dto.setUpdatedAt(rental.getUpdatedAt());
         dto.setSurface(rental.getSurface());
-        dto.setpictureURL(rental.getpictureURL());
+        dto.setPictureURL(rental.getPictureURL());
         dto.setOwnerId(rental.getOwnerId());
         return dto;
     }

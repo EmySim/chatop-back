@@ -60,11 +60,11 @@ public class RentalController {
             }
     )
     @GetMapping
-    public List<RentalDTO> getAllRentals() {
+    public ResponseEntity<List<RentalDTO>> getAllRentals() {
         logger.info("Début de getAllRentals : récupération de toutes les locations.");
         List<RentalDTO> rentals = rentalService.getAllRentals();
         logger.info("Fin de getAllRentals : locations récupérées avec succès.");
-        return rentals;
+        return ResponseEntity.ok(rentals);
     }
 
     /**
