@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 import java.util.logging.Logger;
 
@@ -70,10 +71,14 @@ public class User {
         this.role = role;
     }
 
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    private List<Rental> rentals;
+
     /**
      * Constructeur avec rôle par défaut (USER).
      */
     public User(String email, String name, String password) {
+
         this(email, name, password, Role.USER);
     }
 

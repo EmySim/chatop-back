@@ -28,16 +28,15 @@ public class Rental {
     private double price;
 
     @Column(nullable = false)
-    private String location;
-
-    @Column(nullable = false)
     private int surface;
 
     @Column(name = "picture_url", nullable = false)
     private String pictureURL;
 
-    @Column(name = "owner_id", nullable = false)
-    private Long ownerId;
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false) // Correspond à la clé étrangère dans la base de données
+    private User owner; // Remplace "Long ownerId" par "User owner"
+
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -71,9 +70,6 @@ public class Rental {
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-
     public int getSurface() { return surface; }
     public void setSurface(int surface) { this.surface = surface; }
 
@@ -83,8 +79,9 @@ public class Rental {
         this.pictureURL = pictureURL;
     }
 
-    public Long getOwnerId() { return ownerId; }
-    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
+    public User getOwner() { return owner; } // Getter pour User
+    public void setOwner(User owner) { this.owner = owner; } // Setter pour User
+
 
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
@@ -103,10 +100,9 @@ public class Rental {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", price=" + price +
-                ", location='" + location + '\'' +
                 ", surface=" + surface +
                 ", pictureURL='" + pictureURL + '\'' +
-                ", ownerId=" + ownerId +
+                ", owner=" + (owner != null ? owner.getId() : "null") +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';

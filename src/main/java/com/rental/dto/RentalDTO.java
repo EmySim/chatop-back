@@ -8,13 +8,12 @@ import java.util.Date;
 public class RentalDTO {
     private Long id;
     private String name;
-    private String description;
+    private int surface;
     private double price;
-    private String location;
+    private String pictureURL;
+    private String description;
     private Date createdAt;
     private Date updatedAt;
-    private int surface;
-    private String pictureURL;
     private Long ownerId;
 
     // Constructeur par défaut
@@ -60,14 +59,6 @@ public class RentalDTO {
         this.price = price;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -106,5 +97,6 @@ public class RentalDTO {
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
     }
-
 }
+
+

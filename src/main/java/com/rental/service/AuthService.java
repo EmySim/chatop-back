@@ -2,6 +2,8 @@ package com.rental.service;
 
 import java.util.logging.Logger;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -96,5 +98,39 @@ public class AuthService {
     public UserDTO getCurrentUser(String email) {
         logger.info("Récupération de l'utilisateur connecté : " + email);
         return userService.getUserByEmail(email);
+    }
+
+    /**
+     * Récupère l'ID de l'utilisateur actuellement connecté.
+     *
+     * @return ID de l'utilisateur authentifié.
+     * @throws IllegalStateException si l'utilisateur authentifié est introuvable dans la base de données.
+     */
+    public Long getAuthenticatedUserId() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            return userRepository.findByEmail(((UserDetails) principal).getUsername())
+                    .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé")).getId();
+        } else {
+            throw new IllegalStateException("Utilisateur non authentifié");
+        }
+    }
+
+    /**
+     * Récupère l'utilisateur actuellement connecté.
+     *
+     * @return L'utilisateur authentifié.
+     * @throws IllegalStateException si l'utilisateur authentifié est introuvable dans la base de données.
+     */
+    public User getAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            return userRepository.findByEmail(((UserDetails) principal).getUsername())
+                    .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé"));
+        } else {
+            throw new IllegalStateException("Utilisateur non authentifié");
+        }
     }
 }
