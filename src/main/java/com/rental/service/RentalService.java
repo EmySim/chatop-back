@@ -16,7 +16,6 @@ import com.rental.dto.RentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
-
 import com.rental.entity.User;
 
 @Service
@@ -47,10 +46,10 @@ public class RentalService {
                         return mapToDTO(rental);
                     } catch (Exception e) {
                         logger.warning("Erreur lors de la conversion d'une location en DTO : " + e.getMessage());
-                        return null; // Ne bloque pas toute la liste si un élément pose problème
+                        return null;
                     }
                 })
-                .filter(dto -> dto != null) // Évite d'avoir des `null` dans la liste finale
+                .filter(dto -> dto != null)
                 .toList();
 
         logger.info("Nombre de locations trouvées : " + rentals.size());
@@ -59,7 +58,6 @@ public class RentalService {
 
     /**
      * Récupère une location par ID.
-     *
      * @param id L'identifiant de la location.
      * @return Un RentalDTO.
      */
@@ -70,9 +68,9 @@ public class RentalService {
     }
 
     /**
-     * Sauvegarde une image via ImageStorageService et retourne son URL.
+     * Sauvegarde une image via ImageStorageService et retourne son chemin.
      * @param image MultipartFile de l'image.
-     * @return URL de l'image stockée.
+     * @return Chemin de l'image stockée.
      */
     public Optional<String> saveImage(MultipartFile image) {
         logger.info("Début de l'appel à ImageStorageService pour sauvegarder l'image.");
@@ -89,11 +87,11 @@ public class RentalService {
         logger.info("Début de la création d'une nouvelle location.");
 
         // Sauvegarder l'image
-        String pictureURL = null;
+        String picture = null;
         if (image != null && !image.isEmpty()) {
-            pictureURL = imageStorageService.saveImage(image)
-                    .orElseThrow(() -> new IllegalStateException("Une erreur est survenue lors de l'enregistrement de l'image."));
-            logger.info("Image sauvegardée avec succès : " + pictureURL);
+            picture = imageStorageService.saveImage(image)
+                    .orElseThrow(() -> new IllegalStateException("Erreur lors de l'enregistrement de l'image."));
+            logger.info("Image sauvegardée avec succès : " + picture);
         }
 
         // Création de l'entité Rental
@@ -101,13 +99,13 @@ public class RentalService {
         rental.setName(createRentalDTO.getName());
         rental.setDescription(createRentalDTO.getDescription());
         rental.setPrice(createRentalDTO.getPrice());
-        rental.setPictureURL(pictureURL);
+        rental.setPicture(picture); // Changement ici
         rental.setSurface(createRentalDTO.getSurface());
         rental.setCreatedAt(new Date());
 
-        // Obtenir l'utilisateur authentifié et le définir comme propriétaire
-    User authenticatedUser = authService.getAuthenticatedUser();
-    rental.setOwner(authenticatedUser);
+        // Définir le propriétaire
+        User authenticatedUser = authService.getAuthenticatedUser();
+        rental.setOwner(authenticatedUser);
 
         // Sauvegarde en base
         Rental savedRental = rentalRepository.save(rental);
@@ -138,7 +136,7 @@ public class RentalService {
         if (image != null && !image.isEmpty()) {
             String imagePath = imageStorageService.saveImage(image)
                     .orElseThrow(() -> new RuntimeException("Échec de l'upload de l'image"));
-            existingRental.setPictureURL(imagePath);
+            existingRental.setPicture(imagePath); // Changement ici
             logger.info("Image mise à jour pour la location ID: " + id);
         }
 
@@ -152,17 +150,18 @@ public class RentalService {
     /**
      * Transforme une entité Rental en DTO.
      */
-        private RentalDTO mapToDTO(Rental rental) {
-        RentalDTO dto = new RentalDTO();
-        dto.setId(rental.getId());
-        dto.setName(rental.getName());
-        dto.setDescription(rental.getDescription());
-        dto.setPrice(rental.getPrice());
-        dto.setCreatedAt(rental.getCreatedAt());
-        dto.setUpdatedAt(rental.getUpdatedAt());
-        dto.setSurface(rental.getSurface());
-        dto.setPictureURL(rental.getPictureURL());
-        dto.setOwnerId(rental.getOwner().getId()); // Utiliser l'ID du propriétaire
-        return dto;
+    private RentalDTO mapToDTO(Rental rental) {
+        logger.info("Conversion en DTO : " + rental.toString());
+        return new RentalDTO(
+                rental.getId(),
+                rental.getName(),
+                rental.getDescription(),
+                rental.getPrice(),
+                rental.getSurface(),
+                rental.getPicture(), // Changement ici
+                rental.getCreatedAt(),
+                rental.getUpdatedAt(),
+                rental.getOwner().getId()
+        );
     }
 }

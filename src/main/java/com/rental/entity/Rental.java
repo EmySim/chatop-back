@@ -31,7 +31,7 @@ public class Rental {
     private int surface;
 
     @Column(name = "picture", nullable = false)
-    private String pictureURL;
+    private String picture;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false) // Correspond à la clé étrangère dans la base de données
@@ -73,10 +73,11 @@ public class Rental {
     public int getSurface() { return surface; }
     public void setSurface(int surface) { this.surface = surface; }
 
-    public String getPictureURL() { return pictureURL; }
-    public void setPictureURL(String pictureURL) {
+    public String getPicture() { return picture; }
+    public void setPicture(String pictureURL) {
         logger.info("Stockage de l'URL de l'image : " + pictureURL);
-        this.pictureURL = pictureURL;
+        this.picture = pictureURL; // Corrige l'attribution à `picture`.
+
     }
 
     public User getOwner() { return owner; } // Getter pour User
@@ -101,7 +102,7 @@ public class Rental {
                 ", description='" + description + '\'' +
                 ", price=" + price +
                 ", surface=" + surface +
-                ", pictureURL='" + pictureURL + '\'' +
+                ", picture='" + picture + '\'' +
                 ", owner=" + (owner != null ? owner.getId() : "null") +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
