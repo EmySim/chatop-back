@@ -5,6 +5,9 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +45,7 @@ public class RentalController {
 
     private RentalService rentalService;
     private AuthService authService;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructeur avec injection des services.
@@ -54,6 +58,8 @@ public class RentalController {
     public RentalController(RentalService rentalService, AuthService authService) {
         this.rentalService = Objects.requireNonNull(rentalService, "RentalService ne peut pas être null");
         this.authService = Objects.requireNonNull(authService, "AuthService ne peut pas être null");
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     /**
@@ -68,6 +74,12 @@ public class RentalController {
     public ResponseEntity<List<RentalDTO>> getAllRentals() {
         logger.info("Début de getAllRentals : récupération de toutes les locations.");
         List<RentalDTO> rentals = rentalService.getAllRentals();
+        try {
+            String jsonResponse = objectMapper.writeValueAsString(rentals);
+            logger.info("Contenu de la réponse envoyée au client : " + jsonResponse);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Erreur lors de la sérialisation de la réponse en JSON", e);
+        }
         logger.info("Nombre de locations récupérées : " + rentals.size());
         return ResponseEntity.ok(rentals);
     }
@@ -76,12 +88,12 @@ public class RentalController {
      * Récupère une location par son ID.
      *
      * @param id Identifiant de la location.
-     * @return La location trouvée ou une réponse 401 si non trouvée.
+     * @return La location trouvée ou une réponse 404 si non trouvée.
      */
 
     @Operation(summary = "Récupère une location par ID", parameters = @Parameter(name = "id", description = "ID de la location", required = true), responses = {
             @ApiResponse(responseCode = "200", description = "Location trouvée", content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "401", description = "Location non trouvée")
+            @ApiResponse(responseCode = "404", description = "Location non trouvée")
     })
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(
@@ -109,16 +121,16 @@ public class RentalController {
 
     @Operation(summary = "Crée une nouvelle location", responses = {
             @ApiResponse(responseCode = "200", description = "Location créée avec succès", content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "401", description = "Données de création invalides")
+            @ApiResponse(responseCode = "400", description = "Données de création invalides")
     })
 
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<RentalDTO> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
-            @RequestPart(value = "picture", required = true) MultipartFile picture) {
+            @RequestPart(value = "picture", required = false) MultipartFile picture) {
 
         try {
-            logger.info("début createRental");
+            logger.info("Début de createRental");
 
             Long authenticatedUserId = authService.getAuthenticatedUserId();
             createRentalDTO.setOwnerId(authenticatedUserId);
@@ -157,7 +169,7 @@ public class RentalController {
     public ResponseEntity<RentalDTO> updateRental(
             @PathVariable Long id,
             @ModelAttribute UpdateRentalDTO updateRentalDTO,
-            @RequestPart(value = "picture", required = true) MultipartFile picture) {
+            @RequestPart(value = "picture", required = false) MultipartFile picture) {
 
         try {
             logger.info("Requête reçue pour mettre à jour la location avec ID " + id);

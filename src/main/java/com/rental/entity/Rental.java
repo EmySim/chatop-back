@@ -30,7 +30,7 @@ public class Rental {
     @Column(nullable = false)
     private int surface;
 
-    @Column(name = "picture_url", nullable = false)
+    @Column(name = "picture", nullable = false)
     private String pictureURL;
 
     @ManyToOne

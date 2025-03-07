@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import com.rental.dto.RentalDTO;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.repository.RentalRepository;
+
 import com.rental.entity.User;
 
 @Service
@@ -40,11 +42,19 @@ public class RentalService {
      */
     public List<RentalDTO> getAllRentals() {
         List<RentalDTO> rentals = rentalRepository.findAll().stream()
-                .map(this::mapToDTO)
+                .map(rental -> {
+                    try {
+                        return mapToDTO(rental);
+                    } catch (Exception e) {
+                        logger.warning("Erreur lors de la conversion d'une location en DTO : " + e.getMessage());
+                        return null; // Ne bloque pas toute la liste si un élément pose problème
+                    }
+                })
+                .filter(dto -> dto != null) // Évite d'avoir des `null` dans la liste finale
                 .toList();
 
         logger.info("Nombre de locations trouvées : " + rentals.size());
-        return rentals;
+        return rentals.isEmpty() ? Collections.emptyList() : rentals;
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.rental.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 
 /**
@@ -16,17 +18,28 @@ public class RentalDTO {
     private Date updatedAt;
     private Long ownerId;
 
-    // Constructeur par défaut
+    // Constructeur sans argument
     public RentalDTO() {
     }
 
-    // Constructeur avec paramètres
-    public RentalDTO(Long id, String name) {
+    // Constructeur avec arguments
+
+    /// Constructeur
+    public RentalDTO(Long id, String name, String description, double price, int surface, String pictureURL,
+            Date createdAt, Date updatedAt, Long ownerId) {
         this.id = id;
         this.name = name;
+        this.description = description; // Ajout de description
+        this.price = price;
+        this.surface = surface;
+        this.pictureURL = pictureURL;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.ownerId = ownerId;
     }
 
     // Getters et setters
+    @JsonProperty("id") 
     public Long getId() {
         return id;
     }
@@ -92,11 +105,26 @@ public class RentalDTO {
     }
 
     public Long getOwnerId() {
-        return ownerId;}
+        return ownerId;
+    }
 
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
     }
+
+    // Implémentation de toString()
+    @Override
+    public String toString() {
+        return "RentalDTO{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", surface=" + surface +
+                ", price=" + price +
+                ", pictureURL='" + pictureURL + '\'' +
+                ", description='" + description + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", ownerId=" + ownerId +
+                '}';
+    }
 }
-
-
