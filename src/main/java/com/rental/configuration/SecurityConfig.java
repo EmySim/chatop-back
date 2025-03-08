@@ -49,8 +49,13 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/register",
                                 "/public/**",
+                                "/swagger-ui.html", // Ancienne URL (au cas où)
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/configuration/ui",
+                                "/configuration/security"
                         ).permitAll()
                         // Tout le reste doit être authentifié
                         .anyRequest().authenticated()

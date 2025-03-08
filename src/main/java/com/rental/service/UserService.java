@@ -117,7 +117,7 @@ public class UserService {
      * @return UserDTO représentant l'utilisateur.
      */
     private UserDTO convertToDTO(User user) {
-        UserDTO userDTO = new UserDTO();
+        UserDTO userDTO = new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getRole());
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
         userDTO.setEmail(user.getEmail());
