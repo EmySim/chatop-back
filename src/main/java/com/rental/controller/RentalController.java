@@ -93,9 +93,19 @@ public class RentalController {
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<RentalDTO> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
-            @RequestPart(value = "picture", required = false) MultipartFile picture) {
+            @RequestParam(value = "image", required = false) MultipartFile picture) {
 
         logger.info("Données reçues pour la création d'une location : " + createRentalDTO);
+        logger.info("🔹 Requête reçue pour créer une location.");
+
+        // Vérifier si l'image est présente dans la requête
+        if (picture != null && !picture.isEmpty()) {
+            logger.info("📷 Image reçue : " + picture.getOriginalFilename() +
+                    " | Taille : " + picture.getSize() + " octets | Type : " + picture.getContentType());
+        } else {
+            logger.severe("🚨 ERREUR CRITIQUE : L'image est NULL ou vide !");
+            throw new RuntimeException("L'image est obligatoire !");
+        }
 
         // Récupérer l'ID de l'utilisateur authentifié
         Long ownerId = authService.getAuthenticatedUserId();

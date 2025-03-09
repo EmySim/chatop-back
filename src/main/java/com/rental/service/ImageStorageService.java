@@ -32,7 +32,8 @@ public class ImageStorageService {
      * @return URL de l'image stockée.
      */
     public Optional<String> saveImage(MultipartFile file) {
-        logger.info("Début de l'upload de l'image vers S3.");
+        logger.info("📤 Début de l'upload de l'image : " + file.getOriginalFilename());
+
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         String pictureURL = null;
 
@@ -50,13 +51,14 @@ public class ImageStorageService {
             PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
             if (response != null) {
                 pictureURL = "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
-                logger.info("Upload terminé : " + pictureURL);
+                logger.info("✅ Upload réussi. URL : " + pictureURL);
                 return Optional.of(pictureURL);
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Erreur lors de l'upload de l'image", e);
+            logger.log(Level.SEVERE, "❌ Erreur lors de l'upload de l'image", e);
         }
 
+        logger.warning("⚠ Upload échoué. Retour d'une valeur vide.");
         return Optional.empty();
     }
 

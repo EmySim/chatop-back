@@ -103,8 +103,8 @@ public class RentalService {
      * @param ownerId ID du propriétaire de la location.
      * @return DTO de la location créée.
      */
-    public RentalDTO createRental(CreateRentalDTO createRentalDTO, 
-    MultipartFile picture, Long ownerId) {
+    public RentalDTO createRental(CreateRentalDTO createRentalDTO,
+                                  MultipartFile picture, Long ownerId) {
         logger.info("Création d'une nouvelle location avec les données : " + createRentalDTO);
 
         // Transférer les données du DTO vers l'entité Rental
@@ -115,16 +115,17 @@ public class RentalService {
         rental.setSurface(createRentalDTO.getSurface());
         rental.setOwner(new User(ownerId));
         rental.setCreatedAt(new Date());
-        
+        rental.setUpdatedAt(new Date());
 
-    // Sauvegarder l'image si elle est disponible
-    if (picture != null && !picture.isEmpty()) {
-        Optional<String> pictureURL = saveImage(picture);
-        pictureURL.ifPresent(rental::setPicture); // Associer l'URL au champ `picture`
-    } else {
-        logger.warning("Aucune image n'a été fournie. Utilisation de l'image par défaut.");
-        rental.setPicture("default_picture_url"); // Définir une valeur par défaut pour `picture`
-    }
+
+        // Sauvegarder l'image si elle est disponible
+        if (picture != null && !picture.isEmpty()) {
+            Optional<String> pictureURL = saveImage(picture);
+            pictureURL.ifPresent(rental::setPicture); // Associer l'URL au champ `picture`
+        } else {
+            logger.warning("Aucune image n'a été fournie. Utilisation de l'image par défaut.");
+            rental.setPicture("default_picture_url"); // Définir une valeur par défaut pour `picture`
+        }
         // Enregistrer la location dans la base de données
         Rental savedRental = rentalRepository.save(rental);
         logger.info("Location créée avec succès : " + savedRental.getId());
@@ -155,6 +156,7 @@ public class RentalService {
         rental.setDescription(updateRentalDTO.getDescription());
         rental.setPrice(updateRentalDTO.getPrice());
         rental.setSurface(updateRentalDTO.getSurface());
+        rental.setUpdatedAt(new Date());
 
         // Mettre à jour l'image si elle existe
         if (picture != null && !picture.isEmpty()) {

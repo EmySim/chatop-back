@@ -1,5 +1,6 @@
 package com.rental.dto;
 
+import java.util.Date;
 import java.util.logging.Logger;
 
 /**
@@ -32,6 +33,12 @@ public class CreateRentalDTO {
     // ID du propriétaire ou utilisateur créateur de la location
     private Long ownerId;
 
+    // Date de création de la location
+    private Date createdAt;
+
+    // Date de dernière mise à jour de la location
+    private Date updatedAt;
+
     // ====== Constructeurs ======
 
     /**
@@ -51,8 +58,10 @@ public class CreateRentalDTO {
      * @param surface La surface en m²
      * @param pictureURL L'URL ou chemin de l'image associée
      * @param ownerId ID du propriétaire (créateur)
+     * @param createdAt Date de création de la location
+     * @param updatedAt Date de dernière mise à jour de la location
      */
-    public CreateRentalDTO(Long id, String name, String description, double price, int surface, String pictureURL, Long ownerId) {
+    public CreateRentalDTO(Long id, String name, String description, double price, int surface, String pictureURL, Long ownerId, Date createdAt, Date updatedAt) {
         logger.info("Instanciation d'un nouvel objet CreateRentalDTO avec tous les champs.");
         this.id = id;
         this.name = name;
@@ -61,6 +70,8 @@ public class CreateRentalDTO {
         this.surface = surface;
         this.pictureURL = pictureURL;
         this.ownerId = ownerId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // ====== Getters & Setters ======
@@ -194,6 +205,42 @@ public class CreateRentalDTO {
         logger.info("Fin du stockage de l'URL de l'image.");
     }
 
+    /**
+     * Récupère la date de création de la location.
+     *
+     * @return Date La date de création
+     */
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * Définit la date de création de la location.
+     *
+     * @param createdAt La date de création
+     */
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    /**
+     * Récupère la date de dernière mise à jour de la location.
+     *
+     * @return Date La date de dernière mise à jour
+     */
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    /**
+     * Définit la date de dernière mise à jour de la location.
+     *
+     * @param updatedAt La date de dernière mise à jour
+     */
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     // ====== toString() ======
 
     /**
@@ -211,6 +258,8 @@ public class CreateRentalDTO {
                 ", pictureURL='" + pictureURL + '\'' +
                 ", description='" + description + '\'' +
                 ", ownerId=" + ownerId +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }
