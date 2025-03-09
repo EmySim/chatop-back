@@ -22,20 +22,20 @@ public class UpdateRentalDTO {
 
     private double price;
 
-    private String pictureURL;
+    private String picture;
 
     private String description;
 
     private Long ownerId;
 
 
-    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, String pictureURL, Long ownerId) {
+    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, String picture, Long ownerId) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.surface = surface;
-        this.pictureURL = pictureURL;
+        this.picture = picture;
         this.ownerId = ownerId;
     }
     // Getters and Setters
@@ -79,13 +79,13 @@ public class UpdateRentalDTO {
         this.ownerId = owner_id;
     }
 
-    public String getPictureURL() {
-        return pictureURL;
+    public String getPicture() {
+        return picture;
     }
 
-    public void setPictureURL(String pictureURL) {
+    public void setPicture(String picture) {
         logger.info("Début du stockage de l'URL de l'image.");
-        this.pictureURL = pictureURL;
+        this.picture = picture;
         logger.info("Fin du stockage de l'URL de l'image.");
     }
 }

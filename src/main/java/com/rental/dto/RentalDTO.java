@@ -1,7 +1,7 @@
 package com.rental.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -10,36 +10,36 @@ import java.util.Date;
 public class RentalDTO {
     private Long id;
     private String name;
-    private int surface;
-    private double price;
-    private String pictureURL;
+    private Integer surface;
+    private Double price;
+    private String picture;
     private String description;
-    private Date createdAt;
-    private Date updatedAt;
     private Long ownerId;
+    private String createdAt;
+    private String updatedAt;
 
     // Constructeur sans argument
     public RentalDTO() {
     }
 
-    // Constructeur avec arguments
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    /// Constructeur
-    public RentalDTO(Long id, String name, String description, double price, int surface, String pictureURL,
+    // Constructeur avec arguments
+    public RentalDTO(Long id, String name, String description, double price, int surface, String picture,
             Date createdAt, Date updatedAt, Long ownerId) {
         this.id = id;
         this.name = name;
-        this.description = description; // Ajout de description
-        this.price = price;
         this.surface = surface;
-        this.pictureURL = pictureURL;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.price = price;
+        this.picture = picture;
+        this.description = description;
         this.ownerId = ownerId;
+        this.createdAt = dateFormat.format(createdAt);
+        this.updatedAt = dateFormat.format(updatedAt);
     }
 
     // Getters et setters
-    @JsonProperty("id") 
+    @JsonProperty("id")
     public Long getId() {
         return id;
     }
@@ -56,12 +56,12 @@ public class RentalDTO {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public int getSurface() {
+        return surface;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSurface(int surface) {
+        this.surface = surface;
     }
 
     public double getPrice() {
@@ -72,36 +72,20 @@ public class RentalDTO {
         this.price = price;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public String getPicture() {
+        return picture;
     }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
+    public String getDescription() {
+        return description;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public int getSurface() {
-        return surface;
-    }
-
-    public void setSurface(int surface) {
-        this.surface = surface;
-    }
-
-    public String getPictureURL() {
-        return pictureURL;
-    }
-
-    public void setPictureURL(String pictureURL) {
-        this.pictureURL = pictureURL;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Long getOwnerId() {
@@ -112,6 +96,22 @@ public class RentalDTO {
         this.ownerId = ownerId;
     }
 
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     // Implémentation de toString()
     @Override
     public String toString() {
@@ -120,11 +120,11 @@ public class RentalDTO {
                 ", name='" + name + '\'' +
                 ", surface=" + surface +
                 ", price=" + price +
-                ", pictureURL='" + pictureURL + '\'' +
+                ", picture='" + picture + '\'' +
                 ", description='" + description + '\'' +
+                ", ownerId=" + ownerId +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
-                ", ownerId=" + ownerId +
                 '}';
     }
 }

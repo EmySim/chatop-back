@@ -1,10 +1,13 @@
 package com.rental.service;
 
+import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -60,7 +63,7 @@ public class RentalService {
         }
 
         logger.info("Nombre de locations trouvées : " + rentals.size());
-        return rentals.stream().map(this::mapToDTO).toList();
+        return rentals.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     /**
@@ -76,7 +79,7 @@ public class RentalService {
             return new IllegalArgumentException("Location introuvable avec l'ID fourni.");
         });
 
-        return mapToDTO(rental);
+        return convertToDTO(rental);
     }
 
     /**
@@ -109,10 +112,11 @@ public class RentalService {
 
         // Transférer les données du DTO vers l'entité Rental
         Rental rental = new Rental();
+        rental.setId(createRentalDTO.getId());
         rental.setName(createRentalDTO.getName());
-        rental.setDescription(createRentalDTO.getDescription());
-        rental.setPrice(createRentalDTO.getPrice());
         rental.setSurface(createRentalDTO.getSurface());
+        rental.setPrice(createRentalDTO.getPrice());
+        rental.setDescription(createRentalDTO.getDescription());
         rental.setOwner(new User(ownerId));
         rental.setCreatedAt(new Date());
         rental.setUpdatedAt(new Date());
@@ -121,7 +125,7 @@ public class RentalService {
         // Sauvegarder l'image si elle est disponible
         if (picture != null && !picture.isEmpty()) {
             Optional<String> pictureURL = saveImage(picture);
-            pictureURL.ifPresent(rental::setPicture); // Associer l'URL au champ `picture`
+            pictureURL.ifPresent(rental::setPicture); 
         } else {
             logger.warning("Aucune image n'a été fournie. Utilisation de l'image par défaut.");
             rental.setPicture("default_picture_url"); // Définir une valeur par défaut pour `picture`
@@ -131,7 +135,7 @@ public class RentalService {
         logger.info("Location créée avec succès : " + savedRental.getId());
 
         // Retourner le DTO
-        return mapToDTO(savedRental);
+        return convertToDTO(savedRental);
     }
 
     /**
@@ -158,19 +162,12 @@ public class RentalService {
         rental.setSurface(updateRentalDTO.getSurface());
         rental.setUpdatedAt(new Date());
 
-        // Mettre à jour l'image si elle existe
-        if (picture != null && !picture.isEmpty()) {
-            Optional<String> pictureURL = saveImage(picture);
-            pictureURL.ifPresent(rental::setPicture); // Mise à jour de l'URL de l'image
-        } else {
-            logger.info("Aucune nouvelle image fournie, conservation de l'image existante.");
-        }
 
         // Enregistrer les modifications
         Rental updatedRental = rentalRepository.save(rental);
         logger.info("Mise à jour réussie pour la location avec ID : " + updatedRental.getId());
 
-        return mapToDTO(updatedRental);
+        return convertToDTO(updatedRental);
     }
 
     /**
@@ -179,18 +176,19 @@ public class RentalService {
      * @param rental Entité Rental à transformer.
      * @return DTO représentant la location.
      */
-    private RentalDTO mapToDTO(Rental rental) {
-        logger.info("Mapping de l'entité Rental vers le DTO pour l'ID : " + rental.getId());
-        return new RentalDTO(
-                rental.getId(),
-                rental.getName(),
-                rental.getDescription(),
-                rental.getPrice(),
-                rental.getSurface(),
-                rental.getPicture(),
-                rental.getCreatedAt(),
-                rental.getUpdatedAt(),
-                rental.getOwner().getId()
-        );
+    private RentalDTO convertToDTO(Rental rental) {
+        RentalDTO rentalDTO = new RentalDTO();
+        rentalDTO.setId(rental.getId());
+        rentalDTO.setName(rental.getName());
+        rentalDTO.setSurface(rental.getSurface());
+        rentalDTO.setPrice(rental.getPrice());
+        rentalDTO.setPicture(rental.getPicture());
+        rentalDTO.setDescription(rental.getDescription());
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+        rentalDTO.setCreatedAt(dateFormat.format(rental.getCreatedAt()));
+        rentalDTO.setUpdatedAt(dateFormat.format(rental.getUpdatedAt()));
+        rentalDTO.setUpdatedAt(dateFormat.format(rental.getUpdatedAt()));
+        return rentalDTO;
     }
 }

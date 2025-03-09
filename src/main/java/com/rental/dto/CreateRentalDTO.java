@@ -25,7 +25,7 @@ public class CreateRentalDTO {
     private double price;
 
     // Stocke le chemin ou l'URL de l'image associée à la location, pas le fichier brut
-    private String pictureURL;
+    private String picture;
 
     // La description de la location
     private String description;
@@ -56,19 +56,19 @@ public class CreateRentalDTO {
      * @param description La description détaillée
      * @param price Le prix de la location
      * @param surface La surface en m²
-     * @param pictureURL L'URL ou chemin de l'image associée
+     * @param picture L'URL ou chemin de l'image associée
      * @param ownerId ID du propriétaire (créateur)
      * @param createdAt Date de création de la location
      * @param updatedAt Date de dernière mise à jour de la location
      */
-    public CreateRentalDTO(Long id, String name, String description, double price, int surface, String pictureURL, Long ownerId, Date createdAt, Date updatedAt) {
+    public CreateRentalDTO(Long id, String name, String description, double price, int surface, String picture, Long ownerId, Date createdAt, Date updatedAt) {
         logger.info("Instanciation d'un nouvel objet CreateRentalDTO avec tous les champs.");
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.surface = surface;
-        this.pictureURL = pictureURL;
+        this.picture = picture;
         this.ownerId = ownerId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -189,19 +189,19 @@ public class CreateRentalDTO {
      *
      * @return String L'URL ou chemin
      */
-    public String getPictureURL() {
-        return pictureURL;
+    public String getPicture() {
+        return picture;
     }
 
     /**
      * Définit l'URL ou chemin de l'image.
      * Enregistre également des logs pour tracer le processus.
      *
-     * @param pictureURL L'URL ou chemin
+     * @param picture L'URL ou chemin
      */
-    public void setPictureURL(String pictureURL) {
+    public void setPicture(String picture) {
         logger.info("Début du stockage de l'URL de l'image.");
-        this.pictureURL = pictureURL;
+        this.picture = picture;
         logger.info("Fin du stockage de l'URL de l'image.");
     }
 
@@ -255,7 +255,7 @@ public class CreateRentalDTO {
                 ", name='" + name + '\'' +
                 ", surface=" + surface +
                 ", price=" + price +
-                ", pictureURL='" + pictureURL + '\'' +
+                ", picture='" + picture + '\'' +
                 ", description='" + description + '\'' +
                 ", ownerId=" + ownerId +
                 ", createdAt=" + createdAt +

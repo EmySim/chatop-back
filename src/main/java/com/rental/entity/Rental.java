@@ -89,11 +89,11 @@ public class Rental {
     /**
      * Met à jour l'URL de l'image associée à la location.
      *
-     * @param pictureURL URL de l'image
+     * @param picture URL de l'image
      */
-    public void setPicture(String pictureURL) {
-        logger.info("Stockage de l'URL de l'image : " + pictureURL);
-        this.picture = pictureURL;
+    public void setPicture(String picture) {
+        logger.info("Stockage de l'URL de l'image : " + picture);
+        this.picture = picture;
     }
 
     public User getOwner() { return owner; }

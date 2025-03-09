@@ -1,5 +1,24 @@
 package com.rental.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.RentalDTO;
 import com.rental.dto.UpdateRentalDTO;
@@ -9,15 +28,6 @@ import com.rental.service.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Contrôleur pour gérer les endpoints REST liés aux locations.
@@ -53,10 +63,17 @@ public class RentalController {
     @Operation(summary = "Récupérer toutes les locations", description = "Retourne la liste complète des locations disponibles.")
     @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès.")
     @GetMapping
-    public ResponseEntity<List<RentalDTO>> getAllRentals() {
-        logger.info("Récupération de toutes les locations.");
-        List<RentalDTO> rentals = rentalService.getAllRentals();
-        return ResponseEntity.ok(rentals);
+    public ResponseEntity<Map<String, Object>> getAllRentals() {
+    logger.info("Récupération de toutes les locations.");
+    
+    // Récupération des locations en tant que liste de DTO
+    List<RentalDTO> rentals = rentalService.getAllRentals();
+    
+    // Création de la réponse avec la clé "rentals"
+    Map<String, Object> response = new HashMap<>();
+    response.put("rentals", rentals);
+
+    return ResponseEntity.ok(response);
     }
 
     /**

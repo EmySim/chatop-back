@@ -87,6 +87,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Vérification de la validité du JWT
         if (!jwtService.validateToken(jwt, userEmail)) {
             logger.warning("🚫 Tentative d'authentification échouée : JWT non valide.");
+            logger.warning("🚫 Token invalide ou utilisateur non reconnu !");
+            logger.warning("📌 Token: " + jwt);
+            logger.warning("📌 Utilisateur extrait: " + userEmail);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Échec d'authentification.");
             return;
         }
