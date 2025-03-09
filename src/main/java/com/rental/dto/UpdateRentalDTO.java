@@ -4,34 +4,40 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+import java.util.logging.Logger;
+
 /**
- * DTO for updating an existing rental.
+ * DTO pour update d'une location existente.
  */
 public class UpdateRentalDTO {
 
-    @NotBlank(message = "Le nom est obligatoire.")
+    private static final Logger logger = Logger.getLogger(UpdateRentalDTO.class.getName());
+
+    // ID généré automatiquement lors de la création de la location
+    private Long id;
+
     private String name;
 
-    @NotBlank(message = "La description est obligatoire.")
-    private String description;
-
-    @NotNull(message = "Le prix est obligatoire.")
-    @Positive(message = "Le prix doit être positif.")
-    private double price;
-
-    @NotBlank(message = "La localisation est obligatoire.")
-    private String location;
-
-    @NotNull(message = "La surface est obligatoire.")
-    @Positive(message = "La surface doit être positive.")
     private int surface;
 
-    @NotBlank(message = "L'image est obligatoire.")
+    private double price;
+
     private String picture;
 
-    @NotNull(message = "L'ID du propriétaire est obligatoire.")
-    private Long owner_id;
+    private String description;
 
+    private Long ownerId;
+
+
+    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, String picture, Long ownerId) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.surface = surface;
+        this.picture = picture;
+        this.ownerId = ownerId;
+    }
     // Getters and Setters
     public String getName() {
         return name;
@@ -57,14 +63,6 @@ public class UpdateRentalDTO {
         this.price = price;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
     public int getSurface() {
         return surface;
     }
@@ -73,19 +71,21 @@ public class UpdateRentalDTO {
         this.surface = surface;
     }
 
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long owner_id) {
+        this.ownerId = owner_id;
+    }
+
     public String getPicture() {
         return picture;
     }
 
     public void setPicture(String picture) {
+        logger.info("Début du stockage de l'URL de l'image.");
         this.picture = picture;
-    }
-
-    public Long getOwner_id() {
-        return owner_id;
-    }
-
-    public void setOwner_id(Long owner_id) {
-        this.owner_id = owner_id;
+        logger.info("Fin du stockage de l'URL de l'image.");
     }
 }

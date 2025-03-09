@@ -1,5 +1,7 @@
 package com.rental.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -8,26 +10,36 @@ import java.util.Date;
 public class RentalDTO {
     private Long id;
     private String name;
+    private Integer surface;
+    private Double price;
+    private String picture;
     private String description;
-    private double price;
-    private String location;
-    private Date createdAt;
-    private Date updatedAt;
-    private int surface;
-    private String pictureURL;
     private Long ownerId;
+    private String createdAt;
+    private String updatedAt;
 
-    // Constructeur par défaut
+    // Constructeur sans argument
     public RentalDTO() {
     }
 
-    // Constructeur avec paramètres
-    public RentalDTO(Long id, String name) {
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    // Constructeur avec arguments
+    public RentalDTO(Long id, String name, String description, double price, int surface, String picture,
+            Date createdAt, Date updatedAt, Long ownerId) {
         this.id = id;
         this.name = name;
+        this.surface = surface;
+        this.price = price;
+        this.picture = picture;
+        this.description = description;
+        this.ownerId = ownerId;
+        this.createdAt = dateFormat.format(createdAt);
+        this.updatedAt = dateFormat.format(updatedAt);
     }
 
     // Getters et setters
+    @JsonProperty("id")
     public Long getId() {
         return id;
     }
@@ -44,12 +56,12 @@ public class RentalDTO {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public int getSurface() {
+        return surface;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSurface(int surface) {
+        this.surface = surface;
     }
 
     public double getPrice() {
@@ -60,51 +72,59 @@ public class RentalDTO {
         this.price = price;
     }
 
-    public String getLocation() {
-        return location;
+    public String getPicture() {
+        return picture;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public String getDescription() {
+        return description;
     }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public int getSurface() {
-        return surface;
-    }
-
-    public void setSurface(int surface) {
-        this.surface = surface;
-    }
-
-    public String getPictureURL() {
-        return pictureURL;
-    }
-
-    public void setPictureURL(String pictureURL) {
-        this.pictureURL = pictureURL;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Long getOwnerId() {
-        return ownerId;}
+        return ownerId;
+    }
 
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
     }
 
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // Implémentation de toString()
+    @Override
+    public String toString() {
+        return "RentalDTO{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", surface=" + surface +
+                ", price=" + price +
+                ", picture='" + picture + '\'' +
+                ", description='" + description + '\'' +
+                ", ownerId=" + ownerId +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

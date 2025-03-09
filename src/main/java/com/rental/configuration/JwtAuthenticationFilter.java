@@ -39,7 +39,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+
         logger.info("🔍 Début du filtrage JWT.");
+
+        // Exclure toutes les routes nécessaires pour Swagger
+        if (isSwaggerEndpoint(requestURI)) {
+            logger.info("🚀 Swagger détecté, on laisse passer sans JWT.");
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         final String authHeader = request.getHeader("Authorization");
 
@@ -78,6 +87,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Vérification de la validité du JWT
         if (!jwtService.validateToken(jwt, userEmail)) {
             logger.warning("🚫 Tentative d'authentification échouée : JWT non valide.");
+            logger.warning("🚫 Token invalide ou utilisateur non reconnu !");
+            logger.warning("📌 Token: " + jwt);
+            logger.warning("📌 Utilisateur extrait: " + userEmail);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Échec d'authentification.");
             return;
         }
@@ -90,6 +102,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
         logger.info("✅ Fin du filtrage JWT.");
+    }
+
+    /**
+     * Vérifie si l'URI correspond à un endpoint Swagger à exclure.
+     */
+    private boolean isSwaggerEndpoint(String requestURI) {
+        return requestURI.startsWith("/swagger-ui") ||
+                requestURI.startsWith("/v3/api-docs") ||
+                requestURI.startsWith("/swagger-resources") ||
+                requestURI.startsWith("/webjars/") ||
+                requestURI.startsWith("/configuration/ui") ||
+                requestURI.startsWith("/configuration/security");
     }
 
     /**

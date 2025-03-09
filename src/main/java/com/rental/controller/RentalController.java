@@ -1,31 +1,37 @@
 package com.rental.controller;
 
-import com.rental.dto.RentalDTO;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.rental.dto.CreateRentalDTO;
+import com.rental.dto.RentalDTO;
 import com.rental.dto.UpdateRentalDTO;
+import com.rental.service.AuthService;
 import com.rental.service.RentalService;
-import com.rental.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-
 /**
- * Contrôleur pour gérer les opérations liées aux locations.
+ * Contrôleur pour gérer les endpoints REST liés aux locations.
+ * Permet de récupérer, créer et mettre à jour des locations, ainsi que d'associer des images.
  */
 @RestController
 @RequestMapping("/api/rentals")
@@ -33,145 +39,132 @@ import java.util.logging.Logger;
 public class RentalController {
 
     private static final Logger logger = Logger.getLogger(RentalController.class.getName());
+
     private final RentalService rentalService;
-    private final UserService userService;
+    private final AuthService authService;
 
     /**
-     * Constructeur avec injection des services.
+     * Constructeur pour injecter les dépendances.
      *
-     * @param rentalService Service de gestion des locations.
-     * @param userService Service de gestion des utilisateurs.
+     * @param rentalService Instance du service de gestion des locations.
+     * @param authService Instance du service d'authentification.
      */
     @Autowired
-    public RentalController(RentalService rentalService, UserService userService) {
-        this.rentalService = Objects.requireNonNull(rentalService, "RentalService ne peut pas être null");
-        this.userService = Objects.requireNonNull(userService, "UserService ne peut pas être null");
+    public RentalController(RentalService rentalService, AuthService authService) {
+        this.rentalService = rentalService;
+        this.authService = authService;
     }
 
     /**
-     * Récupère toutes les locations.
+     * Endpoint pour récupérer la liste de toutes les locations.
      *
-     * @return Liste de {@link RentalDTO}
+     * @return Liste des locations sous forme de DTO.
      */
-    @Operation(
-            summary = "Récupère toutes les locations",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès", content = @Content(mediaType = "application/json"))
-            }
-    )
+    @Operation(summary = "Récupérer toutes les locations", description = "Retourne la liste complète des locations disponibles.")
+    @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès.")
     @GetMapping
-    public ResponseEntity<List<RentalDTO>> getAllRentals() {
-        logger.info("Début de getAllRentals : récupération de toutes les locations.");
-        List<RentalDTO> rentals = rentalService.getAllRentals();
-        logger.info("Fin de getAllRentals : locations récupérées avec succès.");
-        return ResponseEntity.ok(rentals);
+    public ResponseEntity<Map<String, Object>> getAllRentals() {
+    logger.info("Récupération de toutes les locations.");
+    
+    // Récupération des locations en tant que liste de DTO
+    List<RentalDTO> rentals = rentalService.getAllRentals();
+    
+    // Création de la réponse avec la clé "rentals"
+    Map<String, Object> response = new HashMap<>();
+    response.put("rentals", rentals);
+
+    return ResponseEntity.ok(response);
     }
 
     /**
-     * Récupère une location par son ID.
+     * Endpoint pour récupérer une location spécifique par son ID.
      *
      * @param id Identifiant de la location.
-     * @return La location trouvée ou une réponse 404 si non trouvée.
+     * @return DTO contenant les détails de la location.
      */
-    @Operation(
-            summary = "Récupère une location par ID",
-            parameters = @Parameter(name = "id", description = "ID de la location", required = true),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Location trouvée", content = @Content(mediaType = "application/json")),
-                    @ApiResponse(responseCode = "404", description = "Location non trouvée")
-            }
-    )
+    @Operation(summary = "Récupérer une location par ID", description = "Retourne les détails d'une location spécifique.")
+    @ApiResponse(responseCode = "200", description = "Location récupérée avec succès.")
+    @ApiResponse(responseCode = "404", description = "Location non trouvée.")
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
-        logger.info("Début de getRentalById : récupération de la location avec ID " + id);
-        try {
-            RentalDTO rental = rentalService.getRental(id);
-            logger.info("Fin de getRentalById : location trouvée pour ID " + id);
-            return ResponseEntity.ok(rental);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur lors de la récupération de la location avec ID " + id, e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        logger.info("Récupération des détails de la location avec ID : " + id);
+        RentalDTO rentalDTO = rentalService.getRental(id);
+        if (rentalDTO != null) {
+            return ResponseEntity.ok(rentalDTO);
+        } else {
+            logger.warning("La location avec ID " + id + " n'a pas été trouvée.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
     /**
-     * Crée une nouvelle location.
+     * Endpoint pour créer une nouvelle location.
      *
-     * @param createRentalDTO Données de la location à créer.
-     * @param picture (Optionnel) Image associée à la location.
-     * @return La location créée.
+     * @param createRentalDTO Données pour créer la location.
+     * @param picture Fichier image de la location (optionnel).
+     * @return DTO de la location créée.
      */
-    @Operation(
-            summary = "Crée une nouvelle location",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Location créée avec succès", content = @Content(mediaType = "application/json")),
-                    @ApiResponse(responseCode = "401", description = "Données de création invalides")
-            }
-    )
-    @PostMapping(consumes = {"multipart/form-data"})
+    @Operation(summary = "Créer une nouvelle location", description = "Permet de créer une location et d'associer une image.")
+    @ApiResponse(responseCode = "200", description = "Location créée avec succès.")
+    @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
+    @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<RentalDTO> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
-            @RequestPart(value = "picture", required = true) MultipartFile picture) {
-        try {
-            // Stockage de l'image et mise à jour du DTO
-            if (picture != null && !picture.isEmpty()) {
-                String pictureURL = rentalService.saveImage(picture)
-                        .orElseThrow(() -> new IllegalStateException("Impossible de sauvegarder l'image."));
-                createRentalDTO.setpictureURL(pictureURL);
-            }
+            @RequestParam(value = "image", required = false) MultipartFile picture) {
 
-            // Création de la location via RentalService
-            RentalDTO createdRental = rentalService.createRental(createRentalDTO, picture, createRentalDTO.getOwnerId());
+        logger.info("Données reçues pour la création d'une location : " + createRentalDTO);
+        logger.info("🔹 Requête reçue pour créer une location.");
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdRental);
-
-        } catch (IllegalStateException e) {
-            logger.log(Level.SEVERE, "Erreur lors de la création de la location : " + e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur inattendue lors de la création de la location : " + e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        // Vérifier si l'image est présente dans la requête
+        if (picture != null && !picture.isEmpty()) {
+            logger.info("📷 Image reçue : " + picture.getOriginalFilename() +
+                    " | Taille : " + picture.getSize() + " octets | Type : " + picture.getContentType());
+        } else {
+            logger.severe("🚨 ERREUR CRITIQUE : L'image est NULL ou vide !");
+            throw new RuntimeException("L'image est obligatoire !");
         }
+
+        // Récupérer l'ID de l'utilisateur authentifié
+        Long ownerId = authService.getAuthenticatedUserId();
+        logger.info("Utilisateur authentifié avec ID : " + ownerId);
+
+        // Appeler le service pour créer la location
+        RentalDTO rentalDTO = rentalService.createRental(createRentalDTO, picture, ownerId);
+        logger.info("Location créée avec succès : " + rentalDTO);
+
+        // Retourner la réponse
+        return ResponseEntity.ok(rentalDTO);
     }
 
-
     /**
-     * Met à jour une location existante.
+     * Endpoint pour mettre à jour une location existante.
      *
-     * @param id ID de la location à mettre à jour.
-     * @param updateRentalDTO Données mises à jour de la location.
-     * @param image (Optionnel) Nouvelle image associée à la location.
-     * @return La location mise à jour.
+     * @param id Identifiant de la location à mettre à jour.
+     * @param updateRentalDTO Données mises à jour pour la location.
+     * @param picture Nouvelle image de la location (optionnel).
+     * @return DTO de la location mise à jour.
      */
-    @Operation(
-            summary = "Met à jour une location existante",
-            parameters = @Parameter(name = "id", description = "ID de la location", required = true),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Location mise à jour avec succès", content = @Content(mediaType = "application/json")),
-                    @ApiResponse(responseCode = "500", description = "Erreur lors de la mise à jour de la location")
-            }
-    )
-    @PutMapping("/{id}")
+    @Operation(summary = "Mettre à jour une location", description = "Permet de modifier les détails d'une location existante.")
+    @ApiResponse(responseCode = "200", description = "Location mise à jour avec succès.")
+    @ApiResponse(responseCode = "404", description = "Location non trouvée.")
+    @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
+    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<RentalDTO> updateRental(
             @PathVariable Long id,
-            @RequestBody UpdateRentalDTO updateRentalDTO,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @ModelAttribute UpdateRentalDTO updateRentalDTO,
+            @RequestPart(value = "picture", required = false) MultipartFile picture) {
 
-        logger.info("Début de updateRental : mise à jour de la location avec ID " + id);
+        logger.info("Données reçues pour la mise à jour de la location avec ID : " + id);
 
-        if (image != null) {
-            logger.info("Nouvelle image reçue pour la mise à jour de la location : " + image.getOriginalFilename());
+        // Appeler le service pour mettre à jour la location
+        RentalDTO updatedRentalDTO = rentalService.updateRental(id, updateRentalDTO, picture);
+
+        if (updatedRentalDTO != null) {
+            logger.info("Location mise à jour avec succès : " + updatedRentalDTO);
+            return ResponseEntity.ok(updatedRentalDTO);
         } else {
-            logger.info("Aucune nouvelle image reçue pour la mise à jour de la location.");
-        }
-
-        try {
-            RentalDTO rental = rentalService.updateRental(id, updateRentalDTO, image);
-            logger.info("Fin de updateRental : location avec ID " + id + " mise à jour avec succès.");
-            return ResponseEntity.ok(rental);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Erreur lors de la mise à jour de la location avec ID " + id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            logger.warning("La location avec ID " + id + " n'a pas été trouvée pour mise à jour.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }

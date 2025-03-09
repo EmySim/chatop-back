@@ -3,6 +3,7 @@ package com.rental.dto;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.rental.entity.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -36,7 +37,7 @@ public class UserDTO {
     private String password;
 
     // Constructeur par défaut nécessaire pour la désérialisation des données depuis JSON
-    public UserDTO() {}
+    public UserDTO(Long id, String name, String email, Role role) {}
 
     /**
      * Constructeur avec tous les paramètres nécessaires pour initialiser l'objet.
