@@ -3,42 +3,68 @@ package com.rental.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
+import java.util.Date;
 import java.util.logging.Logger;
 
 /**
- * DTO pour update d'une location existente.
+ * DTO pour mettre à jour une location existante.
  */
 public class UpdateRentalDTO {
 
     private static final Logger logger = Logger.getLogger(UpdateRentalDTO.class.getName());
 
-    // ID généré automatiquement lors de la création de la location
+    // ID de la location
+    @NotNull(message = "L'ID est requis pour mettre à jour une location.")
     private Long id;
 
+    // Nom de la location
+    @NotBlank(message = "Le nom de la location est requis.")
     private String name;
 
+    // Surface de la location
+    @Positive(message = "La surface doit être positive.")
     private int surface;
 
+    // Prix de la location
+    @Positive(message = "Le prix doit être positif.")
     private double price;
 
-    private String picture;
-
+    // Description de la location
     private String description;
 
+    // ID du propriétaire
     private Long ownerId;
 
+    // Date de création de la location
+    private Date createdAt;
 
-    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, String picture, Long ownerId) {
+    // Date de dernière mise à jour de la location
+    private Date updatedAt;
+
+    public UpdateRentalDTO() {
+    }
+
+    // Constructeur simplifié pour l'update
+    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, Long ownerId, Date createdAt, Date updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.surface = surface;
-        this.picture = picture;
         this.ownerId = ownerId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
-    // Getters and Setters
+
+    // Getters et setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }
@@ -75,17 +101,23 @@ public class UpdateRentalDTO {
         return ownerId;
     }
 
-    public void setOwnerId(Long owner_id) {
-        this.ownerId = owner_id;
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
     }
 
-    public String getPicture() {
-        return picture;
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public void setPicture(String picture) {
-        logger.info("Début du stockage de l'URL de l'image.");
-        this.picture = picture;
-        logger.info("Fin du stockage de l'URL de l'image.");
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

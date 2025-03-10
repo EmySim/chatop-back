@@ -1,6 +1,5 @@
 package com.rental.service;
 
-import java.time.format.DateTimeFormatter;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -16,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.RentalDTO;
+import com.rental.dto.RentalResponse;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.entity.User;
@@ -37,12 +37,13 @@ public class RentalService {
     /**
      * Constructeur avec injection des dépendances.
      *
-     * @param rentalRepository Référentiel pour les entités Rental.
+     * @param rentalRepository    Référentiel pour les entités Rental.
      * @param imageStorageService Service pour stocker les images.
-     * @param authService Service pour gérer les authentifications.
+     * @param authService         Service pour gérer les authentifications.
      */
     @Autowired
-    public RentalService(RentalRepository rentalRepository, ImageStorageService imageStorageService, AuthService authService) {
+    public RentalService(RentalRepository rentalRepository, ImageStorageService imageStorageService,
+            AuthService authService) {
         this.rentalRepository = rentalRepository;
         this.imageStorageService = imageStorageService;
         this.authService = authService;
@@ -102,17 +103,15 @@ public class RentalService {
      * Crée une nouvelle location.
      *
      * @param createRentalDTO Données de création de la location.
-     * @param picture Image associée à la location.
-     * @param ownerId ID du propriétaire de la location.
+     * @param picture         Image associée à la location.
+     * @param ownerId         ID du propriétaire de la location.
      * @return DTO de la location créée.
      */
-    public RentalDTO createRental(CreateRentalDTO createRentalDTO,
-                                  MultipartFile picture, Long ownerId) {
+    public RentalDTO createRental(CreateRentalDTO createRentalDTO, MultipartFile picture, Long ownerId) {
         logger.info("Création d'une nouvelle location avec les données : " + createRentalDTO);
 
         // Transférer les données du DTO vers l'entité Rental
         Rental rental = new Rental();
-        rental.setId(createRentalDTO.getId());
         rental.setName(createRentalDTO.getName());
         rental.setSurface(createRentalDTO.getSurface());
         rental.setPrice(createRentalDTO.getPrice());
@@ -121,15 +120,14 @@ public class RentalService {
         rental.setCreatedAt(new Date());
         rental.setUpdatedAt(new Date());
 
-
-        // Sauvegarder l'image si elle est disponible
+        // Sauvegarde de l'image
         if (picture != null && !picture.isEmpty()) {
             Optional<String> pictureURL = saveImage(picture);
-            pictureURL.ifPresent(rental::setPicture); 
+            pictureURL.ifPresent(rental::setPicture);
         } else {
-            logger.warning("Aucune image n'a été fournie. Utilisation de l'image par défaut.");
-            rental.setPicture("default_picture_url"); // Définir une valeur par défaut pour `picture`
+            logger.warning("Aucune image n'a été fournie.");
         }
+
         // Enregistrer la location dans la base de données
         Rental savedRental = rentalRepository.save(rental);
         logger.info("Location créée avec succès : " + savedRental.getId());
@@ -141,9 +139,9 @@ public class RentalService {
     /**
      * Met à jour une location existante.
      *
-     * @param id L'identifiant de la location.
+     * @param id              L'identifiant de la location.
      * @param updateRentalDTO Les nouvelles données de la location.
-     * @param picture Nouvelle image éventuelle de la location.
+     * @param picture         Nouvelle image éventuelle de la location.
      * @return DTO avec les données mises à jour.
      */
     public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO, MultipartFile picture) {
@@ -162,11 +160,17 @@ public class RentalService {
         rental.setSurface(updateRentalDTO.getSurface());
         rental.setUpdatedAt(new Date());
 
+        // Sauvegarde de l'image
+        if (picture != null && !picture.isEmpty()) {
+            Optional<String> pictureURL = saveImage(picture);
+            pictureURL.ifPresent(rental::setPicture);
+        }
 
         // Enregistrer les modifications
         Rental updatedRental = rentalRepository.save(rental);
         logger.info("Mise à jour réussie pour la location avec ID : " + updatedRental.getId());
 
+        // Retourner le DTO
         return convertToDTO(updatedRental);
     }
 
@@ -187,7 +191,6 @@ public class RentalService {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
         rentalDTO.setCreatedAt(dateFormat.format(rental.getCreatedAt()));
-        rentalDTO.setUpdatedAt(dateFormat.format(rental.getUpdatedAt()));
         rentalDTO.setUpdatedAt(dateFormat.format(rental.getUpdatedAt()));
         return rentalDTO;
     }

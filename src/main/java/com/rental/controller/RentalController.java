@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.RentalDTO;
+import com.rental.dto.RentalResponse;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.AuthService;
 import com.rental.service.RentalService;
@@ -33,6 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Contrôleur pour gérer les endpoints REST liés aux locations.
  * Permet de récupérer, créer et mettre à jour des locations, ainsi que d'associer des images.
  */
+
 @RestController
 @RequestMapping("/api/rentals")
 @Tag(name = "Locations", description = "Endpoints pour gérer les locations")
@@ -64,19 +66,19 @@ public class RentalController {
     @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès.")
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllRentals() {
-    logger.info("Récupération de toutes les locations.");
-    
-    // Récupération des locations en tant que liste de DTO
-    List<RentalDTO> rentals = rentalService.getAllRentals();
-    
-    // Création de la réponse avec la clé "rentals"
-    Map<String, Object> response = new HashMap<>();
-    response.put("rentals", rentals);
+        logger.info("Récupération de toutes les locations.");
 
-    return ResponseEntity.ok(response);
+         // Récupération des locations en tant que liste de DTO
+        List<RentalDTO> rentals = rentalService.getAllRentals();
+
+        // Création de la réponse avec la clé "rentals"
+        Map<String, Object> response = new HashMap<>();
+        response.put("rentals", rentals);
+
+        return ResponseEntity.ok(response);
     }
 
-    /**
+     /**
      * Endpoint pour récupérer une location spécifique par son ID.
      *
      * @param id Identifiant de la location.
@@ -96,7 +98,7 @@ public class RentalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-
+    
     /**
      * Endpoint pour créer une nouvelle location.
      *
@@ -108,7 +110,7 @@ public class RentalController {
     @ApiResponse(responseCode = "200", description = "Location créée avec succès.")
     @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
     @PostMapping(consumes = { "multipart/form-data" })
-    public ResponseEntity<RentalDTO> createRental(
+    public ResponseEntity<RentalResponse> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
             @RequestParam(value = "image", required = false) MultipartFile picture) {
 
@@ -120,8 +122,7 @@ public class RentalController {
             logger.info("📷 Image reçue : " + picture.getOriginalFilename() +
                     " | Taille : " + picture.getSize() + " octets | Type : " + picture.getContentType());
         } else {
-            logger.severe("🚨 ERREUR CRITIQUE : L'image est NULL ou vide !");
-            throw new RuntimeException("L'image est obligatoire !");
+            logger.warning("Aucune image n'a été fournie.");
         }
 
         // Récupérer l'ID de l'utilisateur authentifié
@@ -132,8 +133,11 @@ public class RentalController {
         RentalDTO rentalDTO = rentalService.createRental(createRentalDTO, picture, ownerId);
         logger.info("Location créée avec succès : " + rentalDTO);
 
+        // Créer la réponse
+        RentalResponse rentalResponse = new RentalResponse("Location créée avec succès", rentalDTO);
+
         // Retourner la réponse
-        return ResponseEntity.ok(rentalDTO);
+        return new ResponseEntity<>(rentalResponse, HttpStatus.CREATED);
     }
 
     /**
@@ -144,12 +148,11 @@ public class RentalController {
      * @param picture Nouvelle image de la location (optionnel).
      * @return DTO de la location mise à jour.
      */
-    @Operation(summary = "Mettre à jour une location", description = "Permet de modifier les détails d'une location existante.")
+    @Operation(summary = "Mettre à jour une location", description = "Permet de mettre à jour les informations d'une location.")
     @ApiResponse(responseCode = "200", description = "Location mise à jour avec succès.")
-    @ApiResponse(responseCode = "404", description = "Location non trouvée.")
-    @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
+    @ApiResponse(responseCode = "401", description = "Non autorisée.")
     @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
-    public ResponseEntity<RentalDTO> updateRental(
+    public ResponseEntity<RentalResponse> updateRental(
             @PathVariable Long id,
             @ModelAttribute UpdateRentalDTO updateRentalDTO,
             @RequestPart(value = "picture", required = false) MultipartFile picture) {
@@ -161,7 +164,8 @@ public class RentalController {
 
         if (updatedRentalDTO != null) {
             logger.info("Location mise à jour avec succès : " + updatedRentalDTO);
-            return ResponseEntity.ok(updatedRentalDTO);
+            RentalResponse rentalResponse = new RentalResponse("Location mise à jour avec succès", updatedRentalDTO);
+            return ResponseEntity.ok(rentalResponse);
         } else {
             logger.warning("La location avec ID " + id + " n'a pas été trouvée pour mise à jour.");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
