@@ -6,6 +6,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
@@ -23,6 +26,7 @@ import com.rental.service.JwtService;
 import com.rental.service.UserService;
 
 @Service
+@RestController
 public class AuthService {
 
     private static final Logger logger = Logger.getLogger(AuthService.class.getName());
@@ -132,5 +136,18 @@ public class AuthService {
         } else {
             throw new IllegalStateException("Utilisateur non authentifié");
         }
+    }
+
+    /**
+     * Endpoint pour récupérer l'ID de l'utilisateur actuellement connecté.
+     *
+     * @param id L'ID de l'utilisateur authentifié.
+     * @return ID de l'utilisateur authentifié.
+     */
+    @GetMapping("/user/{id}")
+    public Long getAuthenticatedUserId(@PathVariable Long id) {
+        logger.info("Récupération de l'ID de l'utilisateur connecté : " + id);
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé")).getId();
     }
 }

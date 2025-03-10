@@ -32,40 +32,46 @@ public class UserController {
     }
 
     /**
-     * Récupère un utilisateur par ID.
+     * Endpoint pour récupérer les détails d'un utilisateur par ID.
+     *
+     * @param id L'ID de l'utilisateur passé dans l'URL.
+     * @return Les détails de l'utilisateur en tant que UserDTO.
      */
-    @GetMapping("/{id}")
     @Operation(summary = "Récupérer un utilisateur par ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Utilisateur récupéré avec succès"),
-            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
+            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé"),
     })
+    @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        if (id == null || id <= 0) {
-            logger.warning("Requête avec un ID utilisateur invalide : " + id);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);  // Invalid ID -> Bad Request
+        logger.info("Requête reçue pour récupérer un utilisateur avec l'ID : " + id);
+
+        // Vérifier si l'ID est "null" ou vide -> On récupère l'utilisateur connecté
+        if (id == null) {
+            try {
+                UserDTO authenticatedUser = userService.getAuthenticatedUser();
+                id = authenticatedUser.getId();
+                logger.info("ID récupéré : " + id);
+            } catch (Exception e) {
+                logger.severe("Impossible de récupérer l'utilisateur connecté : " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            logger.warning("Utilisateur non authentifié");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        if (id == null) {
+            logger.warning("ID utilisateur invalide (vide) : " + id);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
-        logger.info("Requête pour récupérer un utilisateur avec l'ID : " + id);
+        logger.info("ID utilisateur validé : " + id);
 
+        // Récupération de l'utilisateur
         try {
             UserDTO userDTO = userService.findUserById(id);
-            if (userDTO == null) {
-                logger.warning("Utilisateur non trouvé : " + id);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Unauthorized if user is not found
-            }
-            return ResponseEntity.ok(userDTO);  // Return user if found -> 200 OK
+            return ResponseEntity.ok(userDTO);
         } catch (Exception e) {
-            logger.warning("Erreur lors de la récupération de l'utilisateur avec l'ID : " + id + " | Exception : " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Unauthorized in case of error (authentication issue)
+            logger.severe("Erreur interne lors de la récupération de l'utilisateur ID : " + id + " | Exception : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
-
 }

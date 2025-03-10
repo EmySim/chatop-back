@@ -8,6 +8,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -85,7 +88,6 @@ public class UserService {
         logger.info("Utilisateur trouvé : " + user.getEmail());
 
         return convertToDTO(user);
-
     }
 
     /**
@@ -109,6 +111,20 @@ public class UserService {
 
         // Transformation de l'entité User en DTO
         return convertToDTO(user);
+    }
+
+    /**
+     * Récupère l'utilisateur actuellement authentifié.
+     * @return UserDTO représentant l'utilisateur authentifié.
+     */
+    public UserDTO getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UsernameNotFoundException("Utilisateur non authentifié");
+        }
+
+        String email = authentication.getName();
+        return getUserByEmail(email);
     }
 
     /**
@@ -145,24 +161,5 @@ public class UserService {
     public UserDTO getCurrentUser(String email) {
         logger.info("Récupération de l'utilisateur connecté : " + email);
         return getUserByEmail(email);
-    }
-
-    /**
-     * Met à jour un utilisateur.
-     * @param id L'ID de l'utilisateur à mettre à jour.
-     * @param userDTO Les nouvelles informations de l'utilisateur.
-     * @return UserDTO représentant l'utilisateur mis à jour.
-     */
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + id));
-
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        user.setRole(Role.valueOf(userDTO.getRole()));
-        user.setPassword(encodePassword(userDTO.getPassword()));
-
-        User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
     }
 }

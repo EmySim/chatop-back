@@ -10,13 +10,19 @@ import java.util.Date;
 public class RentalDTO {
     private Long id;
     private String name;
-    private Integer surface;
-    private Double price;
-    private String picture;
+    private int surface;
+    private int price;
     private String description;
-    private Long ownerId;
+    private String picture;
+    
+    @JsonProperty("created_at")
     private String createdAt;
+    
+    @JsonProperty("updated_at")
     private String updatedAt;
+    
+    @JsonProperty("owner_id")
+    private Long ownerId;
 
     // Constructeur sans argument
     public RentalDTO() {
@@ -25,7 +31,7 @@ public class RentalDTO {
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     // Constructeur avec arguments
-    public RentalDTO(Long id, String name, String description, double price, int surface, String picture,
+    public RentalDTO(Long id, String name, String description, int price, int surface, String picture,
             Date createdAt, Date updatedAt, Long ownerId) {
         this.id = id;
         this.name = name;
@@ -64,11 +70,11 @@ public class RentalDTO {
         this.surface = surface;
     }
 
-    public double getPrice() {
+    public int getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(int price) {
         this.price = price;
     }
 
@@ -88,6 +94,7 @@ public class RentalDTO {
         this.description = description;
     }
 
+    @JsonProperty("owner_id")
     public Long getOwnerId() {
         return ownerId;
     }
@@ -96,6 +103,7 @@ public class RentalDTO {
         this.ownerId = ownerId;
     }
 
+    @JsonProperty("created_at")
     public String getCreatedAt() {
         return createdAt;
     }
@@ -104,6 +112,7 @@ public class RentalDTO {
         this.createdAt = createdAt;
     }
 
+    @JsonProperty("updated_at")
     public String getUpdatedAt() {
         return updatedAt;
     }

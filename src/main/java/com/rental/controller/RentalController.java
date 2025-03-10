@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +24,7 @@ import com.rental.dto.RentalResponse;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.AuthService;
 import com.rental.service.RentalService;
+
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -145,7 +145,6 @@ public class RentalController {
      *
      * @param id Identifiant de la location à mettre à jour.
      * @param updateRentalDTO Données mises à jour pour la location.
-     * @param picture Nouvelle image de la location (optionnel).
      * @return DTO de la location mise à jour.
      */
     @Operation(summary = "Mettre à jour une location", description = "Permet de mettre à jour les informations d'une location.")
@@ -154,13 +153,12 @@ public class RentalController {
     @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<RentalResponse> updateRental(
             @PathVariable Long id,
-            @ModelAttribute UpdateRentalDTO updateRentalDTO,
-            @RequestPart(value = "picture", required = false) MultipartFile picture) {
+            @ModelAttribute UpdateRentalDTO updateRentalDTO) {
 
         logger.info("Données reçues pour la mise à jour de la location avec ID : " + id);
 
         // Appeler le service pour mettre à jour la location
-        RentalDTO updatedRentalDTO = rentalService.updateRental(id, updateRentalDTO, picture);
+        RentalDTO updatedRentalDTO = rentalService.updateRental(id, updateRentalDTO);
 
         if (updatedRentalDTO != null) {
             logger.info("Location mise à jour avec succès : " + updatedRentalDTO);

@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.RentalDTO;
-import com.rental.dto.RentalResponse;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.entity.Rental;
 import com.rental.entity.User;
@@ -141,10 +140,9 @@ public class RentalService {
      *
      * @param id              L'identifiant de la location.
      * @param updateRentalDTO Les nouvelles données de la location.
-     * @param picture         Nouvelle image éventuelle de la location.
      * @return DTO avec les données mises à jour.
      */
-    public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO, MultipartFile picture) {
+    public RentalDTO updateRental(Long id, UpdateRentalDTO updateRentalDTO) {
         logger.info("Mise à jour de la location avec l'ID : " + id);
 
         // Rechercher la location existante
@@ -159,12 +157,6 @@ public class RentalService {
         rental.setPrice(updateRentalDTO.getPrice());
         rental.setSurface(updateRentalDTO.getSurface());
         rental.setUpdatedAt(new Date());
-
-        // Sauvegarde de l'image
-        if (picture != null && !picture.isEmpty()) {
-            Optional<String> pictureURL = saveImage(picture);
-            pictureURL.ifPresent(rental::setPicture);
-        }
 
         // Enregistrer les modifications
         Rental updatedRental = rentalRepository.save(rental);
@@ -185,7 +177,7 @@ public class RentalService {
         rentalDTO.setId(rental.getId());
         rentalDTO.setName(rental.getName());
         rentalDTO.setSurface(rental.getSurface());
-        rentalDTO.setPrice(rental.getPrice());
+        rentalDTO.setPrice((int) rental.getPrice());
         rentalDTO.setPicture(rental.getPicture());
         rentalDTO.setDescription(rental.getDescription());
 
