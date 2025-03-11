@@ -8,10 +8,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.logging.Logger;
+import java.util.Optional;
+
 
 /**
  * Service pour gérer les opérations liées aux utilisateurs.
@@ -25,8 +32,6 @@ public class UserService {
 
     /**
      * Constructeur pour injecter le UserRepository et le PasswordEncoder.
-     * @param userRepository Le repository des utilisateurs.
-     * @param passwordEncoder L'encodeur de mot de passe pour la sécurité.
      */
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
@@ -35,37 +40,24 @@ public class UserService {
     }
 
     /**
-     * Méthode utilisée pour créer un utilisateur dans la base de données.
-     * @param email L'email de l'utilisateur.
-     * @param name Le nom de l'utilisateur.
-     * @param password Le mot de passe de l'utilisateur.
-     * @param role Le rôle de l'utilisateur.
-     * @return L'utilisateur créé.
+     * Crée un utilisateur avec un mot de passe crypté et le sauvegarde en base de données.
      */
     public User createUser(String email, String name, String password, Role role) {
-        logger.info("Création de l'utilisateur : " + email);
-
-        // Crée un utilisateur avec un mot de passe crypté
+        logger.info("Création de l'utilisateur avec l'email : " + email);
         User user = new User(email, name, encodePassword(password), role);
-
-        // Sauvegarde l'utilisateur en base de données
         return userRepository.save(user);
     }
 
     /**
-     * Récupère un utilisateur complet (entité) via son email.
-     * @param email L'email de l'utilisateur.
-     * @return L'objet User (entité).
+     * Récupère un utilisateur (entité) via son email.
      */
     public User getEntityUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable : " + email));
     }
 
     /**
-     * Recherche d'un utilisateur par son email.
-     * @param email L'email de l'utilisateur à rechercher.
-     * @return UserDTO représentant l'utilisateur trouvé.
+     * Recherche un utilisateur par email et retourne un DTO.
      */
     @Operation(summary = "Recherche d'un utilisateur par email", description = "Permet de rechercher un utilisateur par son email.")
     @ApiResponses(value = {
@@ -74,95 +66,61 @@ public class UserService {
     })
     public UserDTO getUserByEmail(String email) {
         logger.info("Recherche d'un utilisateur avec l'email : " + email);
-
-        // Récupération de l'utilisateur depuis le repository.
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.warning("Aucun utilisateur trouvé avec l'email : " + email);
-                    return new IllegalArgumentException("Utilisateur non trouvé pour l'email : " + email);
+                    return new UsernameNotFoundException("Utilisateur non trouvé pour l'email : " + email);
                 });
-
-        logger.info("Utilisateur trouvé : " + user.getEmail());
-
         return convertToDTO(user);
-
     }
 
     /**
-     * Recherche d'un utilisateur par son ID.
-     * @param id L'ID de l'utilisateur à rechercher.
-     * @return UserDTO représentant l'utilisateur trouvé.
+     * Recherche un utilisateur par son ID et retourne un DTO.
+     *  @param id L'identifiant de la location.
+     *      * @return DTO représentant la location si trouvée.
      */
     @Operation(summary = "Recherche d'un utilisateur par ID", description = "Permet de rechercher un utilisateur par son ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Utilisateur trouvé avec succès"),
             @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
     })
-    public UserDTO findUserById(Long id) {
-        logger.info("Recherche d'un utilisateur avec l'ID : " + id);
+    public UserDTO getUserById(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec l'id : " + id);
+        }
+        // Convertir l'entité `User` en DTO et la retourner
+        return new UserDTO(user.get());
+    }
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.warning("Utilisateur non trouvé avec l'ID : " + id);
-                    return new IllegalStateException("Utilisateur non trouvé avec cet ID : " + id);
-                });
 
-        // Transformation de l'entité User en DTO
-        return convertToDTO(user);
+    /**
+     * Récupère l'utilisateur actuellement authentifié et retourne un DTO.
+     */
+    public Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("Aucun utilisateur authentifié trouvé.");
+        }
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email));
+
+        return user.getId();
     }
 
     /**
-     * Convertit un utilisateur en DTO.
-     * @param user L'entité utilisateur.
-     * @return UserDTO représentant l'utilisateur.
+     * Convertit une entité User en DTO.
      */
     private UserDTO convertToDTO(User user) {
-        UserDTO userDTO = new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getRole());
-        userDTO.setId(user.getId());
-        userDTO.setName(user.getName());
-        userDTO.setEmail(user.getEmail());
-        userDTO.setRole(user.getRole().name());
-        userDTO.setCreatedAt(user.getCreatedAt());
-        userDTO.setLastUpdated(user.getLastUpdated());
-
-        return userDTO;
+        return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getCreatedAt(), user.getLastUpdated(), user.getRole());
     }
 
     /**
-     * Encode le mot de passe de l'utilisateur.
-     * @param password Le mot de passe en clair.
-     * @return Le mot de passe encodé.
+     * Encode le mot de passe de manière sécurisée.
      */
-    public String encodePassword(String password) {
+    private String encodePassword(String password) {
         return passwordEncoder.encode(password);
-    }
-
-    /**
-     * Récupère les informations de l'utilisateur actuellement authentifié.
-     * @param email L'email de l'utilisateur.
-     * @return UserDTO représentant l'utilisateur.
-     */
-    public UserDTO getCurrentUser(String email) {
-        logger.info("Récupération de l'utilisateur connecté : " + email);
-        return getUserByEmail(email);
-    }
-
-    /**
-     * Met à jour un utilisateur.
-     * @param id L'ID de l'utilisateur à mettre à jour.
-     * @param userDTO Les nouvelles informations de l'utilisateur.
-     * @return UserDTO représentant l'utilisateur mis à jour.
-     */
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + id));
-
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        user.setRole(Role.valueOf(userDTO.getRole()));
-        user.setPassword(encodePassword(userDTO.getPassword()));
-
-        User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
     }
 }

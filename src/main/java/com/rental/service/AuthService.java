@@ -112,6 +112,7 @@ public class AuthService {
         if (principal instanceof UserDetails) {
             return userRepository.findByEmail(((UserDetails) principal).getUsername())
                     .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé")).getId();
+
         } else {
             throw new IllegalStateException("Utilisateur non authentifié");
         }
@@ -132,5 +133,20 @@ public class AuthService {
         } else {
             throw new IllegalStateException("Utilisateur non authentifié");
         }
+    }
+
+    /**
+     * Vérifie si un utilisateur est autorisé à accéder à une ressource.
+     *
+     * @param ownerId L'ID du propriétaire de la ressource.
+     * @param resourceId L'ID de la ressource.
+     * @return true si l'utilisateur est autorisé, false sinon.
+     */
+    public boolean isAuthorized(Long ownerId, Long resourceId) {
+        // Logique de vérification de l'autorisation
+        // Par exemple, vérifier si l'utilisateur est le propriétaire de la ressource
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + ownerId));
+        return user.getId().equals(ownerId);
     }
 }

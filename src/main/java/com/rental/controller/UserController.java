@@ -4,13 +4,12 @@ import java.util.logging.Logger;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.rental.repository.UserRepository;
 import com.rental.dto.UserDTO;
 import com.rental.service.UserService;
 
@@ -18,7 +17,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Contrôleur gérant les opérations liées aux utilisateurs.
+ */
 @Tag(name = "User", description = "Gestion des utilisateurs")
 @RestController
 @RequestMapping("/api/user")
@@ -26,46 +29,50 @@ public class UserController {
 
     private static final Logger logger = Logger.getLogger(UserController.class.getName());
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    private final UserRepository userRepository;
 
     /**
-     * Récupère un utilisateur par ID.
+     * Constructeur pour injecter le service utilisateur.
+     *
+     * @param userService Service utilisé pour les opérations sur les utilisateurs.
      */
-    @GetMapping("/{id}")
+    public UserController(UserService userService, UserRepository userRepository) {
+        this.userService = userService;
+        this.userRepository = userRepository;
+    }
+
     @Operation(summary = "Récupérer un utilisateur par ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Utilisateur récupéré avec succès"),
-            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé")
+            @ApiResponse(responseCode = "401", description = "Utilisateur non autorisé"),
+            @ApiResponse(responseCode = "403", description = "Accès interdit à cet utilisateur"),
+            @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable ("id") Long id) {
+        logger.info("Requête reçue pour récupérer l'utilisateur avec l'identifiant : " + id);
+
+        // Vérification si l'ID est null
         if (id == null || id <= 0) {
-            logger.warning("Requête avec un ID utilisateur invalide : " + id);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);  // Invalid ID -> Bad Request
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'identifiant utilisateur doit être un entier valide et non nul.");
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            logger.warning("Utilisateur non authentifié");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+
+
+        // Récupérer l'ID de l'utilisateur actuellement authentifié
+        Long authenticatedUserId = userService.getAuthenticatedUserId();
+        logger.info("Utilisateur authentifié avec l'ID : " + authenticatedUserId);
+
+        // Vérifier si l'utilisateur connecté peut accéder à ces informations
+        if (!authenticatedUserId.equals(id)) {
+            logger.warning("Accès interdit. L'utilisateur connecté tente d'accéder à un ID qu'il ne possède pas.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès interdit à cet utilisateur");
         }
 
-        logger.info("Requête pour récupérer un utilisateur avec l'ID : " + id);
+        // Récupérer le DTO de l'utilisateur
+        UserDTO userDTO = userService.getUserById(id);
+        logger.info("Utilisateur récupéré avec succès : " + userDTO);
 
-        try {
-            UserDTO userDTO = userService.findUserById(id);
-            if (userDTO == null) {
-                logger.warning("Utilisateur non trouvé : " + id);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Unauthorized if user is not found
-            }
-            return ResponseEntity.ok(userDTO);  // Return user if found -> 200 OK
-        } catch (Exception e) {
-            logger.warning("Erreur lors de la récupération de l'utilisateur avec l'ID : " + id + " | Exception : " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);  // Unauthorized in case of error (authentication issue)
-        }
+        return ResponseEntity.ok(userDTO);
     }
-
-
 }
