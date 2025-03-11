@@ -11,28 +11,14 @@ public class UpdateRentalDTO {
     // Logger pour enregistrer les opérations liées à CreateRentalDTO
     private static final Logger logger = Logger.getLogger(CreateRentalDTO.class.getName());
 
-    // ID de la location (optionnel)
     private Long id;
-
-    // Nom de la location
     private String name;
-
-    // Surface de la location (en m²)
     private int surface;
-
-    // Prix de la location
     private double price;
-
-    // La description de la location
     private String description;
-
-    // ID du propriétaire ou utilisateur créateur de la location
+    private String picture;
     private Long ownerId;
-
-    // Date de création de la location
     private Date createdAt;
-
-    // Date de dernière mise à jour de la location
     private Date updatedAt;
 
     // ====== Constructeurs ======
@@ -47,23 +33,25 @@ public class UpdateRentalDTO {
     /**
      * Constructeur avec tous les champs.
      *
-     * @param id L'identifiant unique de la location
-     * @param name Le nom de la location
+     * @param id          L'identifiant unique de la location
+     * @param name        Le nom de la location
      * @param description La description détaillée
-     * @param price Le prix de la location
-     * @param surface La surface en m²
-     * @param picture L'URL ou chemin de l'image associée
-     * @param ownerId ID du propriétaire (créateur)
-     * @param createdAt Date de création de la location
-     * @param updatedAt Date de dernière mise à jour de la location
+     * @param price       Le prix de la location
+     * @param surface     La surface en m²
+     * @param picture     L'URL ou chemin de l'image associée
+     * @param ownerId     ID du propriétaire (créateur)
+     * @param createdAt   Date de création de la location
+     * @param updatedAt   Date de dernière mise à jour de la location
      */
-    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, String picture, Long ownerId, Date createdAt, Date updatedAt) {
+    public UpdateRentalDTO(Long id, String name, String description, double price, int surface, String picture,
+            Long ownerId, Date createdAt, Date updatedAt) {
         logger.info("Instanciation d'une MAJ objet UpdateRentalDTO avec tous les champs.");
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.surface = surface;
+        this.picture = picture;
         this.ownerId = ownerId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -178,7 +166,6 @@ public class UpdateRentalDTO {
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
     }
-
 
     /**
      * Récupère la date de dernière mise à jour de la location.

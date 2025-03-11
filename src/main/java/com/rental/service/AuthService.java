@@ -6,9 +6,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.rental.dto.AuthRegisterDTO;
 import com.rental.dto.AuthResponseDTO;
@@ -26,7 +23,6 @@ import com.rental.service.JwtService;
 import com.rental.service.UserService;
 
 @Service
-@RestController
 public class AuthService {
 
     private static final Logger logger = Logger.getLogger(AuthService.class.getName());
@@ -116,6 +112,7 @@ public class AuthService {
         if (principal instanceof UserDetails) {
             return userRepository.findByEmail(((UserDetails) principal).getUsername())
                     .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé")).getId();
+
         } else {
             throw new IllegalStateException("Utilisateur non authentifié");
         }
@@ -139,15 +136,17 @@ public class AuthService {
     }
 
     /**
-     * Endpoint pour récupérer l'ID de l'utilisateur actuellement connecté.
+     * Vérifie si un utilisateur est autorisé à accéder à une ressource.
      *
-     * @param id L'ID de l'utilisateur authentifié.
-     * @return ID de l'utilisateur authentifié.
+     * @param ownerId L'ID du propriétaire de la ressource.
+     * @param resourceId L'ID de la ressource.
+     * @return true si l'utilisateur est autorisé, false sinon.
      */
-    @GetMapping("/user/{id}")
-    public Long getAuthenticatedUserId(@PathVariable Long id) {
-        logger.info("Récupération de l'ID de l'utilisateur connecté : " + id);
-        return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé")).getId();
+    public boolean isAuthorized(Long ownerId, Long resourceId) {
+        // Logique de vérification de l'autorisation
+        // Par exemple, vérifier si l'utilisateur est le propriétaire de la ressource
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'ID : " + ownerId));
+        return user.getId().equals(ownerId);
     }
 }

@@ -1,8 +1,9 @@
 package com.rental.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+import java.time.LocalDateTime;
 
 /**
  * DTO pour représenter une location (Rental).
@@ -14,13 +15,15 @@ public class RentalDTO {
     private int price;
     private String description;
     private String picture;
-    
+
     @JsonProperty("created_at")
-    private String createdAt;
-    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+
     @JsonProperty("updated_at")
-    private String updatedAt;
-    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
+
     @JsonProperty("owner_id")
     private Long ownerId;
 
@@ -28,11 +31,9 @@ public class RentalDTO {
     public RentalDTO() {
     }
 
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
     // Constructeur avec arguments
     public RentalDTO(Long id, String name, String description, int price, int surface, String picture,
-            Date createdAt, Date updatedAt, Long ownerId) {
+                     LocalDateTime createdAt, LocalDateTime updatedAt, Long ownerId) {
         this.id = id;
         this.name = name;
         this.surface = surface;
@@ -40,12 +41,11 @@ public class RentalDTO {
         this.picture = picture;
         this.description = description;
         this.ownerId = ownerId;
-        this.createdAt = dateFormat.format(createdAt);
-        this.updatedAt = dateFormat.format(updatedAt);
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // Getters et setters
-    @JsonProperty("id")
     public Long getId() {
         return id;
     }
@@ -94,7 +94,6 @@ public class RentalDTO {
         this.description = description;
     }
 
-    @JsonProperty("owner_id")
     public Long getOwnerId() {
         return ownerId;
     }
@@ -103,21 +102,19 @@ public class RentalDTO {
         this.ownerId = ownerId;
     }
 
-    @JsonProperty("created_at")
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    @JsonProperty("updated_at")
-    public String getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
