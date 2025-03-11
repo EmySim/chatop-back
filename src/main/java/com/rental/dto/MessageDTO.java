@@ -1,28 +1,36 @@
 package com.rental.dto;
 
-import java.util.Base64;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageDTO {
 
-    private String message; // Correspond à "message" dans le JSON
-    private Long userId;    // Correspond à "user_id" dans le JSON
-    private Long rentalId;  // Correspond à "rental_id" dans le JSON
+    @JsonProperty("id")
+    private Long id;
+
+    @JsonProperty("rental_id")
+    private Long rentalId;
+
+    @JsonProperty("user_id")
+    private Long userId;
+
+    @JsonProperty("message")
+    private String message;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("updated_at")
+    private LocalDateTime updatedAt;
 
     // Getters et Setters
-    public String getMessage() {
-        return message;
+    public Long getId() {
+        return id;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Long getRentalId() {
@@ -33,13 +41,35 @@ public class MessageDTO {
         this.rentalId = rentalId;
     }
 
-    // Add base64Url encoding for the message body
-    public String getEncodedMessage() {
-        return Base64.getUrlEncoder().encodeToString(message.getBytes());
+    public Long getUserId() {
+        return userId;
     }
 
-    // Add base64Url decoding for the message body
-    public void setEncodedMessage(String encodedMessage) {
-        this.message = new String(Base64.getUrlDecoder().decode(encodedMessage));
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

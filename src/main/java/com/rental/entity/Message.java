@@ -1,7 +1,15 @@
 package com.rental.entity;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "messages") // Mappe la table "messages" MySQL
@@ -11,19 +19,21 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation
     private Long id;
 
-    @Column(name = "rental_id", nullable = false) // Mappe "rental_id" dans le JSON / BDD
-    private Long rentalId;
+    @ManyToOne
+    @JoinColumn(name = "rental_id", nullable = false)
+    private Rental rental;
 
-    @Column(name = "user_id") // Mappe "user_id" dans le JSON / BDD
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = true)
+    private User user;
 
-    @Column(name = "message", nullable = false, length = 2000) // Mappe "message" dans le JSON / BDD
+    @Column(name = "message", nullable = false, length = 2000)
     private String message;
 
-    @Column(name = "created_at", updatable = false) // Date de création
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at") // Date de mise à jour
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     // Getters et Setters
@@ -35,20 +45,20 @@ public class Message {
         this.id = id;
     }
 
-    public Long getRentalId() {
-        return rentalId;
+    public Rental getRental() {
+        return rental;
     }
 
-    public void setRentalId(Long rentalId) {
-        this.rentalId = rentalId;
+    public void setRental(Rental rental) {
+        this.rental = rental;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getMessage() {

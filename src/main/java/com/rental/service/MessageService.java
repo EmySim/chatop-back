@@ -1,14 +1,18 @@
 package com.rental.service;
 
-import com.rental.dto.MessageDTO;
-import com.rental.entity.Message;
-import com.rental.repository.MessageRepository;
+import java.time.LocalDateTime;
+import java.util.logging.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.logging.Logger;
+import com.rental.dto.MessageDTO;
+import com.rental.entity.Message;
+import com.rental.entity.Rental;
+import com.rental.entity.User;
+import com.rental.repository.MessageRepository;
+import com.rental.repository.RentalRepository;
+import com.rental.repository.UserRepository;
 
 /**
  * Service for handling message-related operations.
@@ -18,10 +22,15 @@ public class MessageService {
 
     private static final Logger logger = Logger.getLogger(MessageService.class.getName());
     private final MessageRepository messageRepository;
+    private final RentalRepository rentalRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public MessageService(MessageRepository messageRepository) {
+    public MessageService(MessageRepository messageRepository, RentalRepository rentalRepository,
+            UserRepository userRepository) {
         this.messageRepository = messageRepository;
+        this.rentalRepository = rentalRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -30,23 +39,27 @@ public class MessageService {
      * @param messageDTO The DTO containing message details.
      */
     public void sendMessage(MessageDTO messageDTO) {
-        // Decode the message body with base64Url before processing
-        String decodedMessage = new String(Base64.getUrlDecoder().decode(messageDTO.getMessage()));
-        messageDTO.setMessage(decodedMessage);
+        if (messageDTO.getRentalId() == null) {
+            throw new IllegalArgumentException("Rental ID must not be null");
+        }
+        if (messageDTO.getUserId() == null) {
+            throw new IllegalArgumentException("User ID must not be null");
+        }
+
+        Rental rental = rentalRepository.findById(messageDTO.getRentalId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid rental ID"));
+        User user = userRepository.findById(messageDTO.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID"));
 
         Message message = new Message();
-        message.setMessage(messageDTO.getMessage()); // Mappe "message" du JSON
-        message.setUserId(messageDTO.getUserId());   // Mappe "user_id" du JSON
-        message.setRentalId(messageDTO.getRentalId()); // Mappe "rental_id" du JSON
-        message.setCreatedAt(LocalDateTime.now());  // Initialise à l'heure actuelle
-        message.setUpdatedAt(LocalDateTime.now());  // Initialise à l'heure actuelle
+        message.setMessage(messageDTO.getMessage());
+        message.setRental(rental);
+        message.setUser(user);
+        message.setCreatedAt(LocalDateTime.now());
+        message.setUpdatedAt(LocalDateTime.now());
 
-        messageRepository.save(message); // Sauvegarde dans la base de données
-        logger.info("Message registered successfully for user ID: " + message.getUserId() +
-                ", rental ID: " + message.getRentalId());
-
-        // Encode the message body with base64Url before sending
-        String encodedMessage = Base64.getUrlEncoder().encodeToString("Message sent successfully".getBytes());
-        logger.info("Message sent successfully: " + encodedMessage);
+        // Enregistrer le message en base
+        messageRepository.save(message);
+        logger.info("Message saved successfully: " + message.getMessage());
     }
 }
