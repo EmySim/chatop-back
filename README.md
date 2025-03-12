@@ -1,8 +1,5 @@
 # Chatop-back
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/EmySim/chatop-back/build.yml)
-![Java Version](https://img.shields.io/badge/Java-17-blue)
-![License](https://img.shields.io/github/license/EmySim/chatop-back)
 ![Maven Central](https://img.shields.io/maven-central/v/com.example/chatop-back)
 
 ## Overview
@@ -17,7 +14,7 @@ Before you begin, ensure you have the following installed on your machine:
 
 - **Java 17** ☕ ![Java Version](https://img.shields.io/badge/Java-17-blue)
 - **Maven** (preferably version 3.6 or higher) 📦
-- **MySQL** (running and accessible) 🐬
+- **MySQL** (running and accessible) 🐬 ![Maven Central](https://img.shields.io/maven-central/v/com.example/chatop-back)
 
 ---
 
