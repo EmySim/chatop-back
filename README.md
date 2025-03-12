@@ -1,7 +1,5 @@
 # Chatop-back
 
-![Maven Central](https://img.shields.io/maven-central/v/com.example/chatop-back)
-
 ## Overview
 
 Chatop-back is the backend for **Chatop**, a rental platform. This application is built using **Spring Boot** and provides RESTful APIs for managing rentals and user authentication.
@@ -12,9 +10,9 @@ Chatop-back is the backend for **Chatop**, a rental platform. This application i
 
 Before you begin, ensure you have the following installed on your machine:
 
-- **Java 17** ☕ ![Java Version](https://img.shields.io/badge/Java-17-blue)
+-  ![Java Version](https://img.shields.io/badge/Java-17-blue) ☕
 - **Maven** (preferably version 3.6 or higher) 📦
-- **MySQL** (running and accessible) 🐬 ![Maven Central](https://img.shields.io/maven-central/v/com.example/chatop-back)
+- **MySQL** (running and accessible) 🐬 
 
 ---
 
