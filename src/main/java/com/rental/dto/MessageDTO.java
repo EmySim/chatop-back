@@ -1,7 +1,6 @@
 package com.rental.dto;
 
 import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageDTO {
@@ -24,7 +23,8 @@ public class MessageDTO {
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
 
-    // Getters et Setters
+    // ====== Getters & Setters ======
+
     public Long getId() {
         return id;
     }

@@ -3,7 +3,6 @@ package com.rental.entity;
 import jakarta.persistence.*;
 import java.util.Date;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 /**
  * Entité représentant une location.
@@ -11,8 +10,6 @@ import java.util.logging.Logger;
 @Entity
 @Table(name = "rentals")
 public class Rental {
-
-    private static final Logger logger = Logger.getLogger(Rental.class.getName());
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +28,7 @@ public class Rental {
     private int surface; // Surface de la location en m²
 
     @Column(name = "picture", nullable = false)
-    private String picture; // Colonne pour stocker l'URL de l'image associée à la location
+    private String picture; // URL de l'image associée à la location
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false) // Clé étrangère pour l'utilisateur propriétaire
@@ -50,7 +47,6 @@ public class Rental {
     protected void onCreate() {
         this.createdAt = new Date();
         this.updatedAt = new Date();
-        logger.info("Création de l'entité Rental : " + this);
     }
 
     /**
@@ -59,7 +55,6 @@ public class Rental {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = new Date();
-        logger.info("Mise à jour de l'entité Rental : " + this);
     }
 
     // ---- GETTERS ET SETTERS ---- //
@@ -92,7 +87,6 @@ public class Rental {
      * @param picture URL de l'image
      */
     public void setPicture(String picture) {
-        logger.info("Stockage de l'URL de l'image : " + picture);
         this.picture = picture;
     }
 

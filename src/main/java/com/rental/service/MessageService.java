@@ -1,7 +1,6 @@
 package com.rental.service;
 
 import java.time.LocalDateTime;
-import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,6 @@ import com.rental.repository.UserRepository;
 @Service
 public class MessageService {
 
-    private static final Logger logger = Logger.getLogger(MessageService.class.getName());
     private final MessageRepository messageRepository;
     private final RentalRepository rentalRepository;
     private final UserRepository userRepository;
@@ -39,18 +37,23 @@ public class MessageService {
      * @param messageDTO The DTO containing message details.
      */
     public void sendMessage(MessageDTO messageDTO) {
+        // Validate rental ID
         if (messageDTO.getRentalId() == null) {
             throw new IllegalArgumentException("Rental ID must not be null");
         }
+        // Validate user ID
         if (messageDTO.getUserId() == null) {
             throw new IllegalArgumentException("User ID must not be null");
         }
 
+        // Retrieve rental entity
         Rental rental = rentalRepository.findById(messageDTO.getRentalId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid rental ID"));
+        // Retrieve user entity
         User user = userRepository.findById(messageDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid user ID"));
 
+        // Create and populate message entity
         Message message = new Message();
         message.setMessage(messageDTO.getMessage());
         message.setRental(rental);
@@ -58,8 +61,7 @@ public class MessageService {
         message.setCreatedAt(LocalDateTime.now());
         message.setUpdatedAt(LocalDateTime.now());
 
-        // Enregistrer le message en base
+        // Save message to the repository
         messageRepository.save(message);
-        logger.info("Message saved successfully: " + message.getMessage());
     }
 }

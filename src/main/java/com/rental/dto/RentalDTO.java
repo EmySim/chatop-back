@@ -45,7 +45,8 @@ public class RentalDTO {
         this.updatedAt = updatedAt;
     }
 
-    // Getters et setters
+    // ====== Getters & Setters ======
+    
     public Long getId() {
         return id;
     }
@@ -118,7 +119,7 @@ public class RentalDTO {
         this.updatedAt = updatedAt;
     }
 
-    // Implémentation de toString()
+    // Implémentation de toString() pour une représentation textuelle de l'objet
     @Override
     public String toString() {
         return "RentalDTO{" +

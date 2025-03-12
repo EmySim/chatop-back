@@ -33,7 +33,7 @@ public class UserDTO {
     private LocalDateTime lastUpdated;
 
     @Schema(description = "Rôle de l'utilisateur", example = "ADMIN")
-    private Role role; // Change en Role au lieu de String pour cohérence avec l'entité
+    private Role role;
 
     @Schema(description = "Mot de passe de l'utilisateur (non exposé)")
     private String password;
@@ -43,24 +43,26 @@ public class UserDTO {
     }
 
     /**
-     * Constructeur avec rôle en `Role` (converti en `String`)
+     * Constructeur avec rôle en `Role`
      */
     public UserDTO(Long id, String name, String email, Role role) {
         this.id = id;
         this.name = name;
         this.email = email;
-        this.role = role;  // Rôle directement en Role
+        this.role = role;
     }
 
-    // Constructeur prenant un objet User comme paramètre
+    /**
+     * Constructeur prenant un objet User comme paramètre
+     */
     public UserDTO(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.email = user.getEmail();
         this.role = user.getRole();
-        // Convertir le rôle en String, si nécessaire
+        this.createdAt = user.getCreatedAt();
+        this.lastUpdated = user.getLastUpdated();
     }
-
 
     /**
      * Constructeur avec tous les paramètres nécessaires pour initialiser l'objet.
@@ -101,11 +103,11 @@ public class UserDTO {
     }
 
     public Role getRole() {
-        return role; // Retourne le rôle en tant qu'objet Role
+        return role;
     }
 
     public void setRole(Role role) {
-        this.role = role; // Définit le rôle en tant qu'objet Role
+        this.role = role;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -128,8 +130,8 @@ public class UserDTO {
         return password;
     }
 
-    public void setPassword(String password) { 
-        this.password = password; 
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override
@@ -140,7 +142,7 @@ public class UserDTO {
                 ", email='" + email + '\'' +
                 ", createdAt=" + createdAt +
                 ", lastUpdated=" + lastUpdated +
-                ", role=" + role +  // Affiche le rôle comme un objet Role
+                ", role=" + role +
                 '}';
     }
 }

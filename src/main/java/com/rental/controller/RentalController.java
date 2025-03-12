@@ -47,13 +47,16 @@ public class RentalController {
         this.authService = authService;
     }
 
+    /**
+     * Endpoint pour récupérer toutes les locations.
+     *
+     * @return Liste des locations sous forme de DTO.
+     */
     @Operation(summary = "Récupérer toutes les locations")
     @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès.")
     @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllRentals() {
-        logger.info("Récupération de toutes les locations.");
-
         // Récupération des locations en tant que liste de DTO
         List<RentalDTO> rentals = rentalService.getAllRentals();
 
@@ -65,16 +68,16 @@ public class RentalController {
     }
 
     /**
-     * Endpoint pour récupérer la liste de toutes les locations.
+     * Endpoint pour récupérer une location par ID.
      *
-     * @return Liste des locations sous forme de DTO.
+     * @param id Identifiant de la location à récupérer.
+     * @return DTO de la location récupérée.
      */
     @Operation(summary = "Récupérer une location par ID")
     @ApiResponse(responseCode = "200", description = "Location récupérée avec succès.")
     @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
-        logger.info("Récupération des détails de la location avec ID : " + id);
         RentalDTO rentalDTO = rentalService.getRental(id);
         if (rentalDTO == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -97,25 +100,16 @@ public class RentalController {
             @ModelAttribute CreateRentalDTO createRentalDTO,
             @RequestParam(value = "picture", required = false) MultipartFile picture) {
 
-        logger.info("Données reçues pour la création d'une location : " + createRentalDTO);
-        logger.info("🔹 Requête reçue pour créer une location.");
-
         // Vérifier si l'image est présente dans la requête
-        if (picture != null && !picture.isEmpty()) {
-            logger.info("📷 Image reçue : " + picture.getOriginalFilename() +
-                    " | Taille : " + picture.getSize() + " octets | Type : " + picture.getContentType());
-        } else {
-            logger.severe("🚨 L'image est manquante ou vide !");
+        if (picture == null || picture.isEmpty()) {
             throw new RuntimeException("L'image est obligatoire !");
         }
 
         // Récupérer l'ID de l'utilisateur authentifié
         Long ownerId = authService.getAuthenticatedUserId();
-        logger.info("Utilisateur authentifié avec ID : " + ownerId);
 
         // Appeler le service pour créer la location
         RentalDTO rentalDTO = rentalService.createRental(createRentalDTO, picture, ownerId);
-        logger.info("Location créée avec succès : " + rentalDTO);
 
         // Retourner la réponse encapsulée dans SnackbarNotif
         return ResponseEntity.ok(new SnackbarNotif(rentalDTO, "Location créée avec succès!"));
@@ -138,17 +132,14 @@ public class RentalController {
             @ModelAttribute UpdateRentalDTO updateRentalDTO,
             @RequestPart(value = "picture", required = false) MultipartFile picture) {
 
-        logger.info("Données reçues pour la mise à jour de la location avec ID : " + id);
-
         // Récupérer l'ID de l'utilisateur authentifié
         Long ownerId = authService.getAuthenticatedUserId();
 
+        // Appeler le service pour mettre à jour la location
         RentalDTO updatedRental = rentalService.updateRental(id, updateRentalDTO, ownerId);
         if (updatedRental == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
-        logger.info("Location mise à jour avec succès : " + updatedRental);
 
         // Retourner la réponse encapsulée dans SnackbarNotif
         return ResponseEntity.ok(new SnackbarNotif(updatedRental, "Location mise à jour avec succès!"));

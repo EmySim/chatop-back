@@ -24,15 +24,18 @@ public class AuthRegisterDTO {
     @NotBlank(message = "Le nom est obligatoire.")
     private String name;
 
-    // Constructeurs, Getters & Setters
-    public AuthRegisterDTO() {}
+    // Constructeur par défaut
+    public AuthRegisterDTO() {
+    }
 
+    // Constructeur avec paramètres
     public AuthRegisterDTO(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;
     }
 
+// ====== Getters & Setters ======
     public String getEmail() {
         return email;
     }

@@ -1,7 +1,6 @@
 package com.rental.security;
 
 import java.util.Collections;
-import java.util.logging.Logger;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +17,6 @@ import com.rental.repository.UserRepository;
 @Service
 public class UserDetailsLoader implements UserDetailsService {
 
-    private static final Logger logger = Logger.getLogger(UserDetailsLoader.class.getName());
     private final UserRepository userRepository;
 
     /**
@@ -32,20 +30,17 @@ public class UserDetailsLoader implements UserDetailsService {
 
     /**
      * Charge les détails de l'utilisateur par email (utilisé pour Spring Security).
+     *
+     * @param email Email de l'utilisateur à charger.
+     * @return UserDetails de l'utilisateur.
+     * @throws UsernameNotFoundException si l'utilisateur n'est pas trouvé.
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        logger.info("Démarrage du chargement de l'utilisateur avec l'email : " + email);
-
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    logger.warning("Utilisateur non trouvé avec l'email : " + email);
-                    return new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email);
-                });
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email));
 
-                logger.info("Utilisateur trouvé avec l'email : " + email + ", ID : " + user.getId() + ", rôle : ROLE_" + user.getRole().name());
-        
-                return new org.springframework.security.core.userdetails.User(
+        return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
@@ -54,17 +49,14 @@ public class UserDetailsLoader implements UserDetailsService {
 
     /**
      * Charge les détails de l'utilisateur par ID (utilisé pour Spring Security).
+     *
+     * @param id ID de l'utilisateur à charger.
+     * @return UserDetails de l'utilisateur.
+     * @throws UsernameNotFoundException si l'utilisateur n'est pas trouvé.
      */
     public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
-        logger.info("Démarrage du chargement de l'utilisateur avec l'ID : " + id);
-
         User user = userRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.warning("Utilisateur non trouvé avec l'ID : " + id);
-                    return new UsernameNotFoundException("Utilisateur non trouvé avec l'ID : " + id);
-                });
-
-        logger.info("Utilisateur trouvé avec l'ID : " + user.getId() + ", email : " + user.getEmail() + ", rôle : ROLE_" + user.getRole().name());
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'ID : " + id));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),

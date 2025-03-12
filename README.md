@@ -1,5 +1,10 @@
 # Chatop-back
 
+![Build Status](https://img.shields.io/github/actions/workflow/status/EmySim/chatop-back/build.yml)
+![Java Version](https://img.shields.io/badge/Java-17-blue)
+![License](https://img.shields.io/github/license/EmySim/chatop-back)
+![Maven Central](https://img.shields.io/maven-central/v/com.example/chatop-back)
+
 ## Overview
 
 Chatop-back is the backend for **Chatop**, a rental platform. This application is built using **Spring Boot** and provides RESTful APIs for managing rentals and user authentication.
@@ -10,9 +15,9 @@ Chatop-back is the backend for **Chatop**, a rental platform. This application i
 
 Before you begin, ensure you have the following installed on your machine:
 
-- **Java 17**
-- **Maven** (preferably version 3.6 or higher)
-- **MySQL** (running and accessible)
+- **Java 17** ☕
+- **Maven** (preferably version 3.6 or higher) 📦
+- **MySQL** (running and accessible) 🐬
 
 ---
 
@@ -20,14 +25,14 @@ Before you begin, ensure you have the following installed on your machine:
 
 Follow the steps below to set up and run the application:
 
-### 1. **Clone the repository**
+### 1. **Clone the repository** 🛠️
 
 ```bash
 git clone https://github.com/EmySim/chatop-back.git
 cd chatop-back
 ```
 
-### 2. **Set environment variables**
+### 2. **Set environment variables** 🌐
 
 You will need to retrieve the environment variables to configure the application (e.g., `DATABASE_URL`, `DATABASE_USERNAME`, etc.).
 
@@ -35,7 +40,7 @@ Visit the following Gist for instructions on how to set these variables:
 
 [https://gist.github.com/EmySim/](https://gist.github.com/EmySim/4950aa154de3e771f0979bc9480b32fb)
 
-### 3. **Configure MySQL connection**
+### 3. **Configure MySQL connection** 🗄️
 
 Ensure that your MySQL server is running and accessible. Update the following connection details in your `application.properties` (or use `.env` for externalized configuration):
 
@@ -45,7 +50,7 @@ spring.datasource.username=${DATABASE_USERNAME}
 spring.datasource.password=${DATABASE_PASSWORD}
 ```
 
-### 4. **Build the project**
+### 4. **Build the project** 🏗️
 
 Use Maven to clean and build the project:
 
@@ -53,7 +58,7 @@ Use Maven to clean and build the project:
 mvn clean install
 ```
 
-### 5. **Run the application**
+### 5. **Run the application** 🚀
 
 You can start the application using Maven's Spring Boot plugin:
 
@@ -63,7 +68,7 @@ mvn spring-boot:run
 
 ---
 
-## Running Tests
+## Running Tests 🧪
 
 All unit and integration tests are included in the project. To execute them, use this command:
 
@@ -73,7 +78,7 @@ mvn test
 
 ---
 
-## API Documentation
+## API Documentation 📄
 
 Once the application is running, the API documentation is served at:
 
@@ -83,7 +88,76 @@ This provides an interactive UI to explore and test the API endpoints.
 
 ---
 
-## Additional Information
+## Environment Variables 🌍
+
+The following environment variables are required for the application:
+
+- `DATABASE_URL`: URL of the MySQL database.
+- `DATABASE_USERNAME`: Username for the MySQL database.
+- `DATABASE_PASSWORD`: Password for the MySQL database.
+- `JWT_SECRET`: Secret key for signing JWT tokens.
+- `JWT_EXPIRATION`: Expiration time for JWT tokens.
+- `AWS_ACCESS_KEY_ID`: AWS access key for S3.
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key for S3.
+- `AWS_REGION`: AWS region for S3.
+- `AWS_BUCKET_NAME`: AWS S3 bucket name.
+
+---
+
+## AWS S3 Configuration 🗂️
+
+To configure AWS S3 for image storage, ensure you have the following environment variables set:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `AWS_BUCKET_NAME`
+
+These variables are used to authenticate and interact with your S3 bucket.
+
+---
+
+## Running with Docker 🐳
+
+To run the application using Docker, follow these steps:
+
+1. **Build the Docker image:**
+
+   ```bash
+   docker build -t chatop-back .
+   ```
+
+2. **Run the Docker container:**
+
+   ```bash
+   docker run -p 3001:3001 --env-file .env chatop-back
+   ```
+
+Ensure that your `.env` file contains all the necessary environment variables.
+
+---
+
+## Troubleshooting 🛠️
+
+### Common Issues
+
+1. **Database Connection Error:**
+   - Ensure that your MySQL server is running and accessible.
+   - Verify the database connection details in your `application.properties` or `.env` file.
+
+2. **AWS S3 Configuration Error:**
+   - Ensure that your AWS credentials and region are correctly set in the environment variables.
+   - Verify that the S3 bucket name is correct and the bucket exists.
+
+3. **JWT Authentication Error:**
+   - Ensure that the `JWT_SECRET` environment variable is set correctly.
+   - Verify the expiration time for JWT tokens.
+
+If you encounter any other issues, please refer to the logs for more details or open an issue in the repository.
+
+---
+
+## Additional Information ℹ️
 
 ### Logging
 The application uses Java's built-in logging framework. Logs are configured via the `application.properties` file and are automatically saved during runtime.
@@ -102,7 +176,7 @@ You can import preconfigured schema and tables if needed. (Provide a schema file
 
 ---
 
-## Contributing
+## Contributing 🤝
 
 We welcome contributions! To contribute, please follow these steps:
 
@@ -137,12 +211,12 @@ We welcome contributions! To contribute, please follow these steps:
 
 ---
 
-### License
+### License 📜
 
 This project is distributed under the MIT license. See the LICENSE file for details.
 
 ---
 
-## Community & Support
+## Community & Support 💬
 
 If you have questions, suggestions, or encounter issues, please feel free to open an issue in the repository or reach out via discussions on [Chatop-back GitHub repository](https://github.com/EmySim/chatop-back).

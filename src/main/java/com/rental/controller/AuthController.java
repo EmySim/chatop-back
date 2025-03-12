@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.logging.Logger;
 
 /**
  * Contrôleur pour la gestion de l'authentification et des utilisateurs.
@@ -28,7 +27,6 @@ import java.util.logging.Logger;
 @Tag(name = "Authentification", description = "Endpoints pour l'inscription, la connexion et la récupération de l'utilisateur authentifié")
 public class AuthController {
 
-    private static final Logger logger = Logger.getLogger(AuthController.class.getName());
     private final AuthService authService;
     private final UserService userService;
 
@@ -39,6 +37,9 @@ public class AuthController {
 
     /**
      * Inscription d'un nouvel utilisateur.
+     * 
+     * @param registerDTO les informations d'inscription de l'utilisateur
+     * @return la réponse d'authentification
      */
     @Operation(summary = "Enregistrer un nouvel utilisateur")
     @ApiResponses(value = {
@@ -47,14 +48,15 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody AuthRegisterDTO registerDTO) {
-        logger.info("Tentative d'inscription pour : " + registerDTO.getEmail());
         AuthResponseDTO response = authService.register(registerDTO);
-        logger.info("Inscription réussie pour : " + registerDTO.getEmail());
         return ResponseEntity.ok(response);
     }
 
     /**
      * Connexion d'un utilisateur.
+     * 
+     * @param loginDTO les informations de connexion de l'utilisateur
+     * @return la réponse d'authentification
      */
     @Operation(summary = "Connexion d'un utilisateur")
     @ApiResponses(value = {
@@ -63,21 +65,18 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthLoginDTO loginDTO) {
-        logger.info("Tentative de connexion pour : " + loginDTO.getEmail());
-
         try {
             AuthResponseDTO response = authService.login(loginDTO);
-            logger.info("Connexion réussie pour : " + loginDTO.getEmail());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.warning(
-                    "Échec de l'authentification pour : " + loginDTO.getEmail() + " - Erreur : " + e.getMessage());
             return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));
         }
     }
 
     /**
      * Récupère les informations de l'utilisateur actuellement authentifié.
+     * 
+     * @return les informations de l'utilisateur
      */
     @Operation(summary = "Obtenir l'utilisateur connecté")
     @ApiResponses(value = {
@@ -88,7 +87,6 @@ public class AuthController {
     public ResponseEntity<UserDTO> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = ((UserDetails) authentication.getPrincipal()).getUsername();
-        logger.info("Récupération de l'utilisateur connecté : " + email);
         UserDTO userDTO = userService.getUserByEmail(email);
         return ResponseEntity.ok(userDTO);
     }
