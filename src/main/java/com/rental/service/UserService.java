@@ -43,34 +43,46 @@ public class UserService {
      */
     public Long getAuthenticatedUserId() {
         logger.info("[DEBUG] Appel à getAuthenticatedUserId pour récupérer l'utilisateur connecté.");
-
-        // Récupération de l'authentication
+    
+        // Récupérer l'objet Authentication du contexte de sécurité
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // Vérifier si l'utilisateur est authentifié
         if (auth == null || !auth.isAuthenticated()) {
             logger.warning("[ERREUR] Aucun utilisateur authentifié trouvé dans le contexte.");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
         }
-
-        try {
-            // Récupération de l'email ou principal, selon la configuration de Spring Security
-            String email = (String) auth.getPrincipal(); // Adapter selon la classe UserDetails/configuration
-            logger.info("[DEBUG] Utilisateur authentifié avec l'email : " + email);
-
-            // Recherche par email dans la base des utilisateurs
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé pour l'email : " + email));
-
-            logger.info("[SUCCESS] Utilisateur authentifié trouvé avec l'ID : " + user.getId());
-            return user.getId();
-        } catch (Exception e) {
-            logger.severe("[ERREUR] Erreur lors de la récupération de l'utilisateur authentifié : " + e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Erreur pendant l'authentification.");
+    
+        // Récupérer le 'principal' de l'authentication
+        Object principal = auth.getPrincipal();
+    
+        // Si le principal est une instance de l'objet User de Spring Security
+        if (principal instanceof org.springframework.security.core.userdetails.User) {
+            org.springframework.security.core.userdetails.User userDetails = (org.springframework.security.core.userdetails.User) principal;
+    
+            try {
+                // Récupération de l'email ou principal, selon la configuration de Spring Security
+                String email = userDetails.getUsername(); // Utiliser getUsername() pour obtenir l'email
+                logger.info("[DEBUG] Utilisateur authentifié avec l'email : " + email);
+    
+                // Recherche par email dans la base des utilisateurs
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé pour l'email : " + email));
+    
+                logger.info("[SUCCESS] Utilisateur authentifié trouvé avec l'ID : " + user.getId());
+                return user.getId();
+            } catch (Exception e) {
+                logger.severe("[ERREUR] Erreur lors de la récupération de l'utilisateur authentifié : " + e.getMessage());
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Erreur pendant l'authentification.");
+            }
+        } else {
+            logger.warning("[ERREUR] Le principal n'est pas une instance de UserDetails.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
         }
     }
 
-
     /**
-     * Crée un utilisateur avec un mot de passe crypté et le sauvegarde en base de données.
+     * Crée un utilisateur avec un mot de passe crypté et le sauvegarde en base de
+     * données.
      */
     public User createUser(String email, String name, String password, Role role) {
         logger.info("[DEBUG] Création d'un utilisateur avec email : " + email);
@@ -94,7 +106,6 @@ public class UserService {
         return savedUser;
     }
 
-
     /**
      * Recherche un utilisateur par email et retourne l'entité `User`.
      */
@@ -102,7 +113,8 @@ public class UserService {
         logger.info("[DEBUG] Recherche d'utilisateur avec l'email : " + email);
 
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec cet email."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Utilisateur non trouvé avec cet email."));
     }
 
     /**
