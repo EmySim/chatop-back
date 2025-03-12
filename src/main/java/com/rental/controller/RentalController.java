@@ -49,6 +49,7 @@ public class RentalController {
 
     @Operation(summary = "Récupérer toutes les locations")
     @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès.")
+    @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllRentals() {
         logger.info("Récupération de toutes les locations.");
@@ -71,6 +72,7 @@ public class RentalController {
     @Operation(summary = "Récupérer une location par ID")
     @ApiResponse(responseCode = "200", description = "Location récupérée avec succès.")
     @ApiResponse(responseCode = "404", description = "Location non trouvée.")
+    @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
         logger.info("Récupération des détails de la location avec ID : " + id);
@@ -91,6 +93,7 @@ public class RentalController {
     @Operation(summary = "Créer une nouvelle location", description = "Permet de créer une location et d'associer une image.")
     @ApiResponse(responseCode = "200", description = "Location créée avec succès.")
     @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
+    @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<SnackbarNotif> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
