@@ -1,7 +1,5 @@
 package com.rental.service;
 
-import java.util.logging.Logger;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,13 +17,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import com.rental.dto.AuthLoginDTO;
-import com.rental.service.JwtService;
-import com.rental.service.UserService;
 
 @Service
 public class AuthService {
 
-    private static final Logger logger = Logger.getLogger(AuthService.class.getName());
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -46,11 +41,8 @@ public class AuthService {
             @ApiResponse(responseCode = "400", description = "Erreur lors de l'inscription (email déjà utilisé ou mot de passe invalide)")
     })
     public AuthResponseDTO register(AuthRegisterDTO registerDTO) {
-        logger.info("Tentative d'inscription pour l'utilisateur : " + registerDTO.getEmail());
-
         // Vérifie si l'email existe déjà dans la base de données
         if (userRepository.existsByEmail(registerDTO.getEmail())) {
-            logger.warning("L'email " + registerDTO.getEmail() + " est déjà utilisé.");
             throw new IllegalArgumentException("L'email est déjà utilisé.");
         }
 
@@ -59,8 +51,6 @@ public class AuthService {
 
         // Génère un token JWT pour l'utilisateur
         String jwtToken = jwtService.generateToken(user.getEmail());
-
-        logger.info("Utilisateur inscrit avec succès : " + registerDTO.getEmail());
 
         // Retourne la réponse avec le JWT généré
         return new AuthResponseDTO(jwtToken);
@@ -73,22 +63,17 @@ public class AuthService {
             @ApiResponse(responseCode = "401", description = "Échec de l'authentification")
     })
     public AuthResponseDTO login(AuthLoginDTO loginDTO) {
-        logger.info("Tentative de connexion pour l'utilisateur : " + loginDTO.getEmail());
-
         // Récupère l'utilisateur par email
         User user = userRepository.findByEmail(loginDTO.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'email : " + loginDTO.getEmail()));
 
         // Vérifie le mot de passe
         if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
-            logger.warning("Échec de l'authentification pour l'utilisateur : " + loginDTO.getEmail());
             throw new IllegalArgumentException("Mot de passe incorrect.");
         }
 
         // Génère un token JWT pour l'utilisateur
         String jwtToken = jwtService.generateToken(user.getEmail());
-
-        logger.info("Connexion réussie pour l'utilisateur : " + loginDTO.getEmail());
 
         // Retourne la réponse avec le JWT généré
         return new AuthResponseDTO(jwtToken);
@@ -96,7 +81,6 @@ public class AuthService {
 
     // Méthode pour récupérer les informations de l'utilisateur actuellement authentifié
     public UserDTO getCurrentUser(String email) {
-        logger.info("Récupération de l'utilisateur connecté : " + email);
         return userService.getUserByEmail(email);
     }
 
@@ -112,7 +96,6 @@ public class AuthService {
         if (principal instanceof UserDetails) {
             return userRepository.findByEmail(((UserDetails) principal).getUsername())
                     .orElseThrow(() -> new IllegalStateException("Utilisateur non trouvé")).getId();
-
         } else {
             throw new IllegalStateException("Utilisateur non authentifié");
         }

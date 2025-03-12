@@ -17,13 +17,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private static final Logger logger = Logger.getLogger(JwtAuthenticationFilter.class.getName());
 
     private final JwtService jwtService;
     private final UserDetailsLoader userDetailsLoader;
@@ -37,48 +33,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-
-        logger.info("🔍 Début du filtrage JWT.");
 
         // Exclure toutes les routes nécessaires pour Swagger
         if (isSwaggerEndpoint(requestURI)) {
-            logger.info("🚀 Swagger détecté, on laisse passer sans JWT.");
             filterChain.doFilter(request, response);
             return;
         }
 
         final String authHeader = request.getHeader("Authorization");
 
+        // Vérifier la présence de l'en-tête Authorization et son format
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warning("⚠️ Aucun token Bearer trouvé.");
             filterChain.doFilter(request, response);
             return;
         }
 
         // Extraire le JWT de l'en-tête
         final String jwt = authHeader.substring(7).trim();
-        logger.info("🔑 Token JWT extrait.");
 
         // Vérification de l'encodage du JWT en Base64URL avant toute opération
         if (!isBase64UrlEncoded(jwt)) {
-            logger.warning("❌ Token JWT invalide : encodage incorrect.");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Encodage JWT invalide.");
             return;
         }
 
         final String userEmail;
         try {
+            // Extraire le nom d'utilisateur du JWT
             userEmail = jwtService.extractUsername(jwt);
-            logger.info("👤 Utilisateur extrait du JWT : " + userEmail);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "❌ Erreur lors de l'extraction du username du JWT", e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token JWT invalide.");
             return;
         }
 
+        // Vérifier si l'utilisateur est déjà authentifié
         if (userEmail == null || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
@@ -86,22 +76,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Vérification de la validité du JWT
         if (!jwtService.validateToken(jwt, userEmail)) {
-            logger.warning("🚫 Tentative d'authentification échouée : JWT non valide.");
-            logger.warning("🚫 Token invalide ou utilisateur non reconnu !");
-            logger.warning("📌 Token: " + jwt);
-            logger.warning("📌 Utilisateur extrait: " + userEmail);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Échec d'authentification.");
             return;
         }
 
+        // Charger les détails de l'utilisateur et définir l'authentification dans le contexte de sécurité
         UserDetails userDetails = userDetailsLoader.loadUserByUsername(userEmail);
-        UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+                userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        logger.info("✅ Authentification réussie.");
 
         filterChain.doFilter(request, response);
-        logger.info("✅ Fin du filtrage JWT.");
     }
 
     /**

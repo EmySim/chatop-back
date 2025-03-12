@@ -23,10 +23,12 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Check if the user repository is empty
         if (userRepository.count() == 0) {
+            // Save default admin user
             userRepository.save(new User("admin@email.com", "Admin Name", passwordEncoder.encode("adminpass"), Role.ADMIN));
+            // Save default regular user
             userRepository.save(new User("user@email.com", "User Name", passwordEncoder.encode("userpass"), Role.USER));
-            System.out.println("✅ Utilisateurs injectés !");
         }
     }
 }

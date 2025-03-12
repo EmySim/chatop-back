@@ -10,26 +10,27 @@ import jakarta.validation.constraints.Size;
  */
 public class AuthLoginDTO {
 
-
     @Schema(description = "Identifiant (adresse email) de l'utilisateur", example = "user@example.com")
     @Email(message = "L'identifiant doit être une adresse email valide.")
     @NotBlank(message = "L'identifiant est obligatoire.")
     private String email;
-
 
     @Schema(description = "Mot de passe de l'utilisateur", example = "P@ssw0rd")
     @NotBlank(message = "Le mot de passe est obligatoire.")
     @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères.")
     private String password;
 
-    // Constructeurs, Getters & Setters
-    public AuthLoginDTO() {}
+    // Constructeur par défaut
+    public AuthLoginDTO() {
+    }
 
+    // Constructeur avec paramètres
     public AuthLoginDTO(String email, String password) {
         this.email = email;
         this.password = password;
     }
 
+   // ====== Getters & Setters ======
     public String getEmail() {
         return email;
     }

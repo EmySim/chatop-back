@@ -10,7 +10,6 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.rental.repository")
@@ -27,8 +26,6 @@ public class ChatopBackApplication {
     // ==========================================================
     // Configuration des variables d'environnement (recommandé)
     // ==========================================================
-    // Les annotations @Value injectent automatiquement les propriétés
-    // définies dans l'environnement ou le fichier configuration (application.properties).
     @Value("${DATABASE_URL}")
     private String databaseUrl;
 
@@ -66,8 +63,7 @@ public class ChatopBackApplication {
     @Bean
     public CommandLineRunner diagnosticRunner() {
         return args -> {
-            System.out.println("=== Verification des variables de configuration ===");
-
+            // Vérification des variables de configuration essentielles
             try {
                 printEnvVariable("DATABASE_URL", databaseUrl);
                 printEnvVariable("DATABASE_USERNAME", databaseUsername);
@@ -78,8 +74,6 @@ public class ChatopBackApplication {
                 printEnvVariable("AWS_SECRET_ACCESS_KEY", obfuscate(awsSecretAccessKey));
                 printEnvVariable("AWS_REGION", awsRegion);
                 printEnvVariable("AWS_BUCKET_NAME", awsBucketName);
-
-                System.out.println("TOUTES LES VARIABLES SONT PRESENTES ET VALIDEES !");
             } catch (Exception e) {
                 // Affiche une erreur descriptive si une variable manque ou est mal configurée
                 System.err.println("Erreur de configuration : " + e.getMessage());
@@ -127,5 +121,4 @@ public class ChatopBackApplication {
         }
         return "*".repeat(value.length());
     }
-
 }

@@ -8,13 +8,10 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.util.logging.Logger;
-
 @Configuration
 public class S3Config {
 
-    private static final Logger logger = Logger.getLogger(S3Config.class.getName());
-
+    // Injection des valeurs des propriétés définies dans le fichier de configuration
     @Value("${aws.s3.access-key}")
     private String accessKeyId;
 
@@ -27,26 +24,33 @@ public class S3Config {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
+    /**
+     * Crée et configure un client S3 avec les credentials et la région spécifiés.
+     * Si les credentials ne sont pas définis, utilise le profil par défaut.
+     *
+     * @return S3Client configuré
+     */
     @Bean
     public S3Client s3Client() {
         if (accessKeyId == null || accessKeyId.isBlank() || secretAccessKey == null || secretAccessKey.isBlank()) {
-            logger.warning("⚠️  Les credentials AWS ne sont pas définis ! Utilisation du profil par défaut.");
+            // Utilisation du profil par défaut si les credentials ne sont pas définis
             return S3Client.builder()
                     .region(Region.of(region))
-                    .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
                     .build();
         }
 
-        logger.info("✅ Configuration AWS S3 réussie. Région : " + region);
-        logger.info("✅ AWS Access Key ID: ");
-        logger.info("✅ AWS Secret Access Key: ");
-
+        // Configuration du client S3 avec les credentials spécifiés
         return S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
                 .build();
     }
 
+    /**
+     * Retourne le nom du bucket S3 configuré.
+     *
+     * @return Nom du bucket S3
+     */
     @Bean
     public String bucketName() {
         return bucketName;

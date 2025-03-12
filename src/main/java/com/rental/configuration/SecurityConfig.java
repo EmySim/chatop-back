@@ -1,7 +1,5 @@
 package com.rental.configuration;
 
-import java.util.logging.Logger;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,12 +17,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.rental.security.UserDetailsLoader;
 import com.rental.service.JwtService;
 
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    private static final Logger logger = Logger.getLogger(SecurityConfig.class.getName());
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsLoader userDetailsLoader;
@@ -40,8 +35,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("🔒 Initialisation de la configuration de sécurité...");
-
+        // Désactivation de la protection CSRF car nous utilisons des tokens JWT
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Liste des routes accessibles sans authentification
@@ -49,7 +43,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/register",
                                 "/public/**",
-                                "/swagger-ui.html", // Ancienne URL (au cas où)
+                                "/swagger-ui.html", 
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
@@ -60,33 +54,34 @@ public class SecurityConfig {
                         // Tout le reste doit être authentifié
                         .anyRequest().authenticated()
                 )
+                // Configuration du fournisseur d'authentification
                 .authenticationProvider(authenticationProvider())
+                // Ajout du filtre JWT avant le filtre d'authentification par nom d'utilisateur et mot de passe
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // Gestion de session sans état
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        logger.info("Configuration de la sécurité chargée avec succès.");
         return http.build();
     }
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
-        logger.info("🔑 Utilisation de BCryptPasswordEncoder.");
+        // Utilisation de BCryptPasswordEncoder pour encoder les mots de passe
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
+        // Configuration du fournisseur d'authentification avec le service de chargement des détails de l'utilisateur et l'encodeur de mot de passe
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsLoader);
         authProvider.setPasswordEncoder(passwordEncoder());
-        logger.info("✅ AuthenticationProvider configuré.");
         return authProvider;
     }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        logger.info("🔑 Initialisation de l'AuthenticationManager.");
+        // Initialisation de l'AuthenticationManager
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

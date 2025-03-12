@@ -2,7 +2,6 @@ package com.rental.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.logging.Logger;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -15,14 +14,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * Entité représentant un utilisateur dans le système.
- * Gère les informations de base comme l'ID, le nom, l'e-mail, le rôle et les timestamps.
+ * Gère les informations de base comme l'ID, le nom, l'e-mail, le rôle et les
+ * timestamps.
  */
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
-
-    private static final Logger logger = Logger.getLogger(User.class.getName());
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,10 +69,10 @@ public class User {
     /**
      * Constructeur pour créer un utilisateur avec un rôle spécifique.
      *
-     * @param email Email de l'utilisateur.
-     * @param name Nom de l'utilisateur.
+     * @param email    Email de l'utilisateur.
+     * @param name     Nom de l'utilisateur.
      * @param password Mot de passe.
-     * @param role Rôle de l'utilisateur.
+     * @param role     Rôle de l'utilisateur.
      */
     public User(String email, String name, String password, Role role) {
         this.email = email;
@@ -94,8 +92,8 @@ public class User {
     /**
      * Constructeur pour créer un utilisateur avec un rôle défini par défaut (USER).
      *
-     * @param email Email de l'utilisateur.
-     * @param name Nom de l'utilisateur.
+     * @param email    Email de l'utilisateur.
+     * @param name     Nom de l'utilisateur.
      * @param password Mot de passe.
      */
     public User(String email, String name, String password) {

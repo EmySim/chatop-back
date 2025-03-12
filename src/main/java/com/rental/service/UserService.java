@@ -1,7 +1,6 @@
 package com.rental.service;
 
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,7 +22,6 @@ import com.rental.repository.UserRepository;
 @Service
 public class UserService {
 
-    private static final Logger logger = Logger.getLogger(UserService.class.getName());
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -42,40 +40,36 @@ public class UserService {
      * @return ID de l'utilisateur authentifié si trouvé, lève une exception sinon.
      */
     public Long getAuthenticatedUserId() {
-        logger.info("[DEBUG] Appel à getAuthenticatedUserId pour récupérer l'utilisateur connecté.");
-    
         // Récupérer l'objet Authentication du contexte de sécurité
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         // Vérifier si l'utilisateur est authentifié
         if (auth == null || !auth.isAuthenticated()) {
-            logger.warning("[ERREUR] Aucun utilisateur authentifié trouvé dans le contexte.");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
         }
-    
+
         // Récupérer le 'principal' de l'authentication
         Object principal = auth.getPrincipal();
-    
+
         // Si le principal est une instance de l'objet User de Spring Security
         if (principal instanceof org.springframework.security.core.userdetails.User) {
             org.springframework.security.core.userdetails.User userDetails = (org.springframework.security.core.userdetails.User) principal;
-    
+
             try {
-                // Récupération de l'email ou principal, selon la configuration de Spring Security
+                // Récupération de l'email ou principal, selon la configuration de Spring
+                // Security
                 String email = userDetails.getUsername(); // Utiliser getUsername() pour obtenir l'email
-                logger.info("[DEBUG] Utilisateur authentifié avec l'email : " + email);
-    
+
                 // Recherche par email dans la base des utilisateurs
                 User user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé pour l'email : " + email));
-    
-                logger.info("[SUCCESS] Utilisateur authentifié trouvé avec l'ID : " + user.getId());
+                        .orElseThrow(
+                                () -> new UsernameNotFoundException("Utilisateur non trouvé pour l'email : " + email));
+
                 return user.getId();
             } catch (Exception e) {
-                logger.severe("[ERREUR] Erreur lors de la récupération de l'utilisateur authentifié : " + e.getMessage());
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Erreur pendant l'authentification.");
             }
         } else {
-            logger.warning("[ERREUR] Le principal n'est pas une instance de UserDetails.");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
         }
     }
@@ -85,11 +79,8 @@ public class UserService {
      * données.
      */
     public User createUser(String email, String name, String password, Role role) {
-        logger.info("[DEBUG] Création d'un utilisateur avec email : " + email);
-
         // Vérifier si l'email existe déjà
         if (userRepository.existsByEmail(email)) {
-            logger.warning("[ERREUR] L'utilisateur existe déjà avec cet email : " + email);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Un utilisateur avec cet email existe déjà.");
         }
 
@@ -100,18 +91,13 @@ public class UserService {
         User newUser = new User(email, name, encryptedPassword, role);
 
         // Sauvegarder dans la base de données
-        User savedUser = userRepository.save(newUser);
-        logger.info("[SUCCESS] Nouvel utilisateur créé : " + savedUser);
-
-        return savedUser;
+        return userRepository.save(newUser);
     }
 
     /**
      * Recherche un utilisateur par email et retourne l'entité `User`.
      */
     public User getEntityUserByEmail(String email) {
-        logger.info("[DEBUG] Recherche d'utilisateur avec l'email : " + email);
-
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Utilisateur non trouvé avec cet email."));
@@ -121,40 +107,25 @@ public class UserService {
      * Recherche un utilisateur par email et retourne un DTO.
      */
     public UserDTO getUserByEmail(String email) {
-        logger.info("[DEBUG] Recherche d'utilisateur (DTO) avec l'email : " + email);
-
         User user = getEntityUserByEmail(email);
-        logger.info("[DEBUG] createdAt: " + user.getCreatedAt() + ", lastUpdated: " + user.getLastUpdated());
-        UserDTO userDTO = convertToDTO(user);
-        logger.info("[SUCCESS] Utilisateur trouvé et converti en DTO : " + userDTO);
-
-        return userDTO;
+        return convertToDTO(user);
     }
 
     /**
      * Récupère un utilisateur par ID et retourne un DTO.
      */
     public UserDTO getUserById(Long id) {
-        logger.info("[DEBUG] Appel à getUserById avec l'ID : " + id);
-
         if (id == null || id <= 0) {
-            logger.warning("[ERREUR] ID invalide détecté dans le service : " + id);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'identifiant est invalide.");
         }
 
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
-            logger.warning("[ERREUR] Aucun utilisateur trouvé pour l'ID : " + id);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé pour cet ID.");
         }
 
         User user = optionalUser.get();
-        logger.info("[SUCCESS] Utilisateur trouvé dans la base avec l'ID : " + user.getId());
-
-        UserDTO userDTO = convertToDTO(user);
-        logger.info("[SUCCESS] Conversion de l'utilisateur en DTO réussie : " + userDTO);
-
-        return userDTO;
+        return convertToDTO(user);
     }
 
     /**

@@ -11,30 +11,27 @@ import io.jsonwebtoken.security.Keys;
 import java.util.function.Function;
 import java.util.Base64;
 import java.util.Date;
-import java.util.logging.Logger;
 
 @Service
 public class JwtService {
 
-    private static final Logger logger = Logger.getLogger(JwtService.class.getName());
     private final Key signingKey;
     private final long jwtExpirationTime;
 
+    // Constructeur pour initialiser la clé de signature et le temps d'expiration du JWT
     public JwtService(
             @Value("${JWT_SECRET}") String secretKeyBase64,
             @Value("${JWT_EXPIRATION}") long jwtExpirationTime) {
 
         if (secretKeyBase64 == null || secretKeyBase64.isEmpty()) {
-            logger.severe("❌ La clé secrète JWT est manquante !");
             throw new IllegalArgumentException("La clé secrète JWT doit être définie.");
         }
         this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyBase64));
         this.jwtExpirationTime = jwtExpirationTime;
-        logger.info("✅ Clé secrète JWT chargée avec expiration de " + jwtExpirationTime + " ms.");
     }
 
+    // Génère un token JWT pour un sujet donné
     public String generateToken(String subject) {
-        logger.info("🛠️ Génération du token JWT pour : " + subject);
         return Jwts.builder()
                 .setSubject(subject)
                 .setIssuedAt(new Date())
@@ -43,29 +40,29 @@ public class JwtService {
                 .compact();
     }
 
+    // Extrait le nom d'utilisateur du token JWT
     public String extractUsername(String token) {
-        logger.info("🔍 Extraction du username du token.");
         return getClaim(token, Claims::getSubject);
     }
 
+    // Valide le token JWT en vérifiant le nom d'utilisateur et l'expiration
     public boolean validateToken(String token, String userDetails) {
         String username = extractUsername(token);
-        boolean isValid = (username != null && username.equals(userDetails) && !isTokenExpired(token));
-        logger.info("✅ Validation du token : " + (isValid ? "VALIDE" : "INVALIDE"));
-        return isValid;
+        return (username != null && username.equals(userDetails) && !isTokenExpired(token));
     }
 
+    // Vérifie si le token JWT est expiré
     private boolean isTokenExpired(String token) {
         Date expiration = getClaim(token, Claims::getExpiration);
         return expiration != null && expiration.before(new Date());
     }
 
+    // Récupère une claim spécifique du token JWT
     private <T> T getClaim(String token, Function<Claims, T> resolver) {
         try {
             Claims claims = Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token).getBody();
             return resolver.apply(claims);
         } catch (Exception e) {
-            logger.severe("❌ Erreur lors de l'extraction des claims du token : " + e.getMessage());
             return null;  // Ou lever une exception custom
         }
     }

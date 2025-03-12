@@ -1,7 +1,5 @@
 package com.rental.controller;
 
-import java.util.logging.Logger;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +22,6 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/messages")
 public class MessageController {
 
-    private static final Logger logger = Logger.getLogger(MessageController.class.getName());
     private final MessageService messageService;
 
     public MessageController(MessageService messageService) {
@@ -33,6 +30,9 @@ public class MessageController {
 
     /**
      * Endpoint for sending a new message.
+     * 
+     * @param messageDTO the message data transfer object containing the message details
+     * @return a ResponseEntity containing a SnackbarNotif with the result of the operation
      */
     @Operation(summary = "Send a new message")
     @ApiResponses(value = {
@@ -42,28 +42,22 @@ public class MessageController {
     })
     @PostMapping
     public ResponseEntity<SnackbarNotif> sendMessage(@Valid @RequestBody MessageDTO messageDTO) {
-        logger.info("Attempting to send message with content: " + messageDTO.getMessage());
-
-        // Validation des données
+        // Validate the message data
         if (messageDTO.getRentalId() == null) {
-            logger.warning("Rental ID is null");
             return ResponseEntity.badRequest().body(new SnackbarNotif(null, "Rental ID must not be null"));
         }
         if (messageDTO.getUserId() == null) {
-            logger.warning("User ID is null");
             return ResponseEntity.badRequest().body(new SnackbarNotif(null, "User ID must not be null"));
         }
 
-        // Envoi du message via le service
+        // Send the message via the service
         try {
             messageService.sendMessage(messageDTO);
         } catch (Exception e) {
-            logger.severe("Failed to send message: " + e.getMessage());
             return ResponseEntity.status(500).body(new SnackbarNotif(null, "An error occurred while sending the message"));
         }
 
-        // Envoi réussi, renvoie du SnackbarNotif avec le DTO et le message
-        logger.info("Message sent successfully.");
+        // Return success response with the message details
         return ResponseEntity.ok(new SnackbarNotif(messageDTO, "Message sent successfully"));
     }
 }
