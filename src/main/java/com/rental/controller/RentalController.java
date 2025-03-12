@@ -71,7 +71,6 @@ public class RentalController {
      */
     @Operation(summary = "Récupérer une location par ID")
     @ApiResponse(responseCode = "200", description = "Location récupérée avec succès.")
-    @ApiResponse(responseCode = "404", description = "Location non trouvée.")
     @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
@@ -87,12 +86,11 @@ public class RentalController {
      * Endpoint pour créer une nouvelle location.
      *
      * @param createRentalDTO Données pour créer la location.
-     * @param picture Fichier image de la location (optionnel).
+     * @param picture         Fichier image de la location (optionnel).
      * @return DTO de la location créée encapsulé dans SnackbarNotif.
      */
     @Operation(summary = "Créer une nouvelle location", description = "Permet de créer une location et d'associer une image.")
     @ApiResponse(responseCode = "200", description = "Location créée avec succès.")
-    @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
     @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<SnackbarNotif> createRental(
@@ -126,15 +124,14 @@ public class RentalController {
     /**
      * Endpoint pour mettre à jour une location existante.
      *
-     * @param id Identifiant de la location à mettre à jour.
+     * @param id              Identifiant de la location à mettre à jour.
      * @param updateRentalDTO Données mises à jour pour la location.
-     * @param picture Nouvelle image de la location (optionnel).
+     * @param picture         Nouvelle image de la location (optionnel).
      * @return DTO de la location mise à jour encapsulé dans SnackbarNotif.
      */
     @Operation(summary = "Mettre à jour une location")
     @ApiResponse(responseCode = "200", description = "Location mise à jour avec succès.")
     @ApiResponse(responseCode = "401", description = "Non autorisé.")
-    @ApiResponse(responseCode = "404", description = "Location non trouvée.")
     @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<SnackbarNotif> updateRental(
             @PathVariable Long id,
@@ -150,7 +147,6 @@ public class RentalController {
         if (updatedRental == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
 
         logger.info("Location mise à jour avec succès : " + updatedRental);
 
