@@ -16,6 +16,7 @@ import com.rental.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.logging.Logger;
 
@@ -24,6 +25,7 @@ import java.util.logging.Logger;
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentification", description = "Endpoints pour l'inscription, la connexion et la récupération de l'utilisateur authentifié")
 public class AuthController {
 
     private static final Logger logger = Logger.getLogger(AuthController.class.getName());
@@ -68,7 +70,8 @@ public class AuthController {
             logger.info("Connexion réussie pour : " + loginDTO.getEmail());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.warning("Échec de l'authentification pour : " + loginDTO.getEmail() + " - Erreur : " + e.getMessage());
+            logger.warning(
+                    "Échec de l'authentification pour : " + loginDTO.getEmail() + " - Erreur : " + e.getMessage());
             return ResponseEntity.status(401).body(new AuthResponseDTO("Échec de l'authentification"));
         }
     }
