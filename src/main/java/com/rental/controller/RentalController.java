@@ -1,22 +1,32 @@
 package com.rental.controller;
 
-import com.rental.dto.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.rental.dto.CreateRentalDTO;
+import com.rental.dto.RentalDTO;
+import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.AuthService;
 import com.rental.service.RentalService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Contrôleur REST pour gérer les locations (Rentals).
@@ -83,7 +93,7 @@ public class RentalController {
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<RentalDTO> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
-            @RequestParam(value = "image", required = false) MultipartFile picture) {
+            @RequestParam(value = "picture", required = false) MultipartFile picture) {
 
         logger.info("Données reçues pour la création d'une location : " + createRentalDTO);
         logger.info("🔹 Requête reçue pour créer une location.");

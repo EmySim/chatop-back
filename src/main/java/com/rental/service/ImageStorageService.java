@@ -45,7 +45,7 @@ public class ImageStorageService {
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(fileName)
-                    .contentType(contentType) // Ajouter le Content-Type ici
+                    .contentType(contentType)
                     .build();
 
             PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));

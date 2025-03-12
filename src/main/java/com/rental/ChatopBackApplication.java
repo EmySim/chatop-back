@@ -9,9 +9,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.rental.repository")
+@EnableJpaAuditing
 public class ChatopBackApplication {
 
     /**

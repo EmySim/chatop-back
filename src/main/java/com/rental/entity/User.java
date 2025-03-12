@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.rental.dto.UserDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * Entité représentant un utilisateur dans le système.
@@ -18,6 +19,7 @@ import org.springframework.data.annotation.LastModifiedDate;
  */
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     private static final Logger logger = Logger.getLogger(User.class.getName());
@@ -42,19 +44,21 @@ public class User {
     private String password;
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime lastUpdated;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Rental> rentals;
+
+    // ====== Constructeurs ======
 
     /**
      * Constructeur par défaut obligatoire pour Hibernate.
@@ -80,6 +84,14 @@ public class User {
     }
 
     /**
+     * Constructeur prenant uniquement l'ID de l'utilisateur.
+     * Utile pour les associations utilisant une clé étrangère.
+     */
+    public User(Long id) {
+        this.id = id;
+    }
+
+    /**
      * Constructeur pour créer un utilisateur avec un rôle défini par défaut (USER).
      *
      * @param email Email de l'utilisateur.
@@ -93,38 +105,7 @@ public class User {
         this.role = Role.USER;
     }
 
-    /**
-     * Nouveau constructeur : Permet de créer un utilisateur avec uniquement un ID.
-     *
-     * Utile pour établir des relations (ex : associer un propriétaire à une location)
-     * sans devoir récupérer toutes les données de l'utilisateur.
-     *
-     * @param id Identifiant unique de l'utilisateur.
-     */
-    public User(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Méthode exécutée lors de la création d'un utilisateur (persist).
-     */
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.lastUpdated = LocalDateTime.now();
-        logger.info("Création d'un nouvel utilisateur : " + this);
-    }
-
-    /**
-     * Méthode exécutée lors de la mise à jour d'un utilisateur (update).
-     */
-    @PreUpdate
-    protected void onUpdate() {
-        this.lastUpdated = LocalDateTime.now();
-        logger.info("Mise à jour de l'utilisateur : " + this);
-    }
-
-    // ======= Getters et setters =======
+    // ====== Getters et Setters ======
 
     public Long getId() {
         return id;
@@ -162,8 +143,16 @@ public class User {
         return createdAt;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public LocalDateTime getLastUpdated() {
         return lastUpdated;
+    }
+
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     public Role getRole() {
@@ -174,21 +163,15 @@ public class User {
         this.role = role;
     }
 
-    /**
-     * Méthode statique pour convertir une entité User en DTO.
-     *
-     * @param user Objet User à convertir.
-     * @return Objet UserDTO représentant l'utilisateur.
-     * @throws IllegalArgumentException si l'objet User est null.
-     */
-    public static UserDTO toUserDTO(User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("L'utilisateur ne peut pas être null pour la conversion en UserDTO.");
-        }
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getRole());
+    public List<Rental> getRentals() {
+        return rentals;
     }
 
-    // ======= Représentation textuelle =======
+    public void setRentals(List<Rental> rentals) {
+        this.rentals = rentals;
+    }
+
+    // ====== Représentation textuelle ======
 
     @Override
     public String toString() {
@@ -196,9 +179,9 @@ public class User {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", role=" + role +
                 ", createdAt=" + createdAt +
                 ", lastUpdated=" + lastUpdated +
+                ", role=" + role +
                 '}';
     }
 }

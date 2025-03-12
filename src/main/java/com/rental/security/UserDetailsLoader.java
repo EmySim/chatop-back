@@ -1,5 +1,9 @@
 package com.rental.security;
 
+import java.util.Collections;
+import java.util.logging.Logger;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -7,11 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.rental.entity.User;
 import com.rental.repository.UserRepository;
-
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import java.util.Collections;
-import java.util.logging.Logger;
 
 /**
  * Service de chargement des utilisateurs depuis la base de données.
@@ -44,9 +43,9 @@ public class UserDetailsLoader implements UserDetailsService {
                     return new UsernameNotFoundException("Utilisateur non trouvé avec l'email : " + email);
                 });
 
-        logger.info("Utilisateur trouvé avec l'email : " + email + ", rôle : ROLE_" + user.getRole().name());
-
-        return new org.springframework.security.core.userdetails.User(
+                logger.info("Utilisateur trouvé avec l'email : " + email + ", ID : " + user.getId() + ", rôle : ROLE_" + user.getRole().name());
+        
+                return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))

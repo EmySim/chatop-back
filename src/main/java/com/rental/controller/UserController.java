@@ -8,16 +8,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
-import com.rental.repository.UserRepository;
 import com.rental.dto.UserDTO;
+import com.rental.repository.UserRepository;
 import com.rental.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Contrôleur gérant les opérations liées aux utilisateurs.
@@ -49,30 +49,42 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Utilisateur non trouvé")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable ("id") Long id) {
-        logger.info("Requête reçue pour récupérer l'utilisateur avec l'identifiant : " + id);
+    public ResponseEntity<?> getUserByID(@PathVariable("id") Long id) {
+        logger.info("[DEBUG] Appel au contrôleur avec l'ID reçu : " + id);
 
-        // Vérification si l'ID est null
+        // Valider l'ID
         if (id == null || id <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'identifiant utilisateur doit être un entier valide et non nul.");
+            logger.warning("[ERREUR] ID invalide détecté dans la requête : " + id);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'ID utilisateur doit être un entier valide et strictement positif.");
         }
 
+        // Récupérer l'ID de l'utilisateur authentifié
+        Long authenticatedUserId;
+        try {
+            authenticatedUserId = userService.getAuthenticatedUserId();
+            logger.info("[DEBUG] Utilisateur authentifié avec l'ID : " + authenticatedUserId);
+        } catch (Exception e) {
+            logger.severe("[ERREUR] Récupération de l'utilisateur authentifié échouée.");
+            throw e;
+        }
 
-
-        // Récupérer l'ID de l'utilisateur actuellement authentifié
-        Long authenticatedUserId = userService.getAuthenticatedUserId();
-        logger.info("Utilisateur authentifié avec l'ID : " + authenticatedUserId);
-
-        // Vérifier si l'utilisateur connecté peut accéder à ces informations
+        // Vérifier si l'utilisateur connecté peut accéder à cet ID
         if (!authenticatedUserId.equals(id)) {
-            logger.warning("Accès interdit. L'utilisateur connecté tente d'accéder à un ID qu'il ne possède pas.");
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès interdit à cet utilisateur");
+            logger.warning("[SECURITE] Accès non autorisé : Utilisateur authentifié " + authenticatedUserId + " tente d'accéder à l'ID " + id);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès interdit à cet utilisateur.");
         }
 
-        // Récupérer le DTO de l'utilisateur
-        UserDTO userDTO = userService.getUserById(id);
-        logger.info("Utilisateur récupéré avec succès : " + userDTO);
+        // Récupérer les informations de l'utilisateur (DTO)
+        UserDTO userDTO;
+        try {
+            userDTO = userService.getUserById(id);
+            logger.info("[SUCCESS] Utilisateur récupéré avec succès : " + userDTO);
+        } catch (Exception e) {
+            logger.severe("[ERREUR] Erreur lors de la récupération de l'utilisateur par ID : " + id);
+            throw e;
+        }
 
+        // Retourner la réponse avec succès
         return ResponseEntity.ok(userDTO);
     }
 }
