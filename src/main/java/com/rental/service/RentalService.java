@@ -1,21 +1,24 @@
 package com.rental.service;
 
-import com.rental.dto.*;
-import com.rental.entity.Rental;
-import com.rental.entity.User;
-import com.rental.repository.RentalRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.NoSuchElementException; // Import de l'exception standard
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.rental.dto.CreateRentalDTO;
+import com.rental.dto.RentalDTO; // Import de l'exception standard
+import com.rental.dto.UpdateRentalDTO;
+import com.rental.entity.Rental;
+import com.rental.entity.User;
+import com.rental.repository.RentalRepository;
 
 /**
  * Service métier pour la gestion des locations.
@@ -65,6 +68,7 @@ public class RentalService {
         }
 
         return convertToDTO(rentalRepository.save(rental));
+        
     }
 
     public RentalDTO updateRental(Long id, UpdateRentalDTO rentalUpdates, Long ownerId) {
