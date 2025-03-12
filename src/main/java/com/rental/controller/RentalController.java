@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.rental.dto.CreateRentalDTO;
 import com.rental.dto.RentalDTO;
+import com.rental.dto.SnackbarNotif;
 import com.rental.dto.UpdateRentalDTO;
 import com.rental.service.AuthService;
 import com.rental.service.RentalService;
@@ -50,16 +51,16 @@ public class RentalController {
     @ApiResponse(responseCode = "200", description = "Liste des locations récupérée avec succès.")
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllRentals() {
-    logger.info("Récupération de toutes les locations.");
-    
-    // Récupération des locations en tant que liste de DTO
-    List<RentalDTO> rentals = rentalService.getAllRentals();
-    
-    // Création de la réponse avec la clé "rentals"
-    Map<String, Object> response = new HashMap<>();
-    response.put("rentals", rentals);
+        logger.info("Récupération de toutes les locations.");
 
-    return ResponseEntity.ok(response);
+        // Récupération des locations en tant que liste de DTO
+        List<RentalDTO> rentals = rentalService.getAllRentals();
+
+        // Création de la réponse avec la clé "rentals"
+        Map<String, Object> response = new HashMap<>();
+        response.put("rentals", rentals);
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -85,13 +86,13 @@ public class RentalController {
      *
      * @param createRentalDTO Données pour créer la location.
      * @param picture Fichier image de la location (optionnel).
-     * @return DTO de la location créée.
+     * @return DTO de la location créée encapsulé dans SnackbarNotif.
      */
     @Operation(summary = "Créer une nouvelle location", description = "Permet de créer une location et d'associer une image.")
     @ApiResponse(responseCode = "200", description = "Location créée avec succès.")
     @ApiResponse(responseCode = "400", description = "Mauvaises données fournies.")
     @PostMapping(consumes = { "multipart/form-data" })
-    public ResponseEntity<RentalDTO> createRental(
+    public ResponseEntity<SnackbarNotif> createRental(
             @ModelAttribute CreateRentalDTO createRentalDTO,
             @RequestParam(value = "picture", required = false) MultipartFile picture) {
 
@@ -103,7 +104,7 @@ public class RentalController {
             logger.info("📷 Image reçue : " + picture.getOriginalFilename() +
                     " | Taille : " + picture.getSize() + " octets | Type : " + picture.getContentType());
         } else {
-            logger.severe("🚨 ERREUR CRITIQUE : L'image est NULL ou vide !");
+            logger.severe("🚨 L'image est manquante ou vide !");
             throw new RuntimeException("L'image est obligatoire !");
         }
 
@@ -115,36 +116,42 @@ public class RentalController {
         RentalDTO rentalDTO = rentalService.createRental(createRentalDTO, picture, ownerId);
         logger.info("Location créée avec succès : " + rentalDTO);
 
-        // Retourner la réponse
-        return ResponseEntity.ok(rentalDTO);
+        // Retourner la réponse encapsulée dans SnackbarNotif
+        return ResponseEntity.ok(new SnackbarNotif(rentalDTO, "Location créée avec succès!"));
     }
 
-/**
+    /**
      * Endpoint pour mettre à jour une location existante.
      *
      * @param id Identifiant de la location à mettre à jour.
      * @param updateRentalDTO Données mises à jour pour la location.
      * @param picture Nouvelle image de la location (optionnel).
-     * @return DTO de la location mise à jour.
+     * @return DTO de la location mise à jour encapsulé dans SnackbarNotif.
      */
     @Operation(summary = "Mettre à jour une location")
     @ApiResponse(responseCode = "200", description = "Location mise à jour avec succès.")
     @ApiResponse(responseCode = "401", description = "Non autorisé.")
     @ApiResponse(responseCode = "404", description = "Location non trouvée.")
     @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
-    public ResponseEntity<RentalDTO> updateRental(
+    public ResponseEntity<SnackbarNotif> updateRental(
             @PathVariable Long id,
             @ModelAttribute UpdateRentalDTO updateRentalDTO,
             @RequestPart(value = "picture", required = false) MultipartFile picture) {
 
         logger.info("Données reçues pour la mise à jour de la location avec ID : " + id);
+
+        // Récupérer l'ID de l'utilisateur authentifié
         Long ownerId = authService.getAuthenticatedUserId();
-        
+
         RentalDTO updatedRental = rentalService.updateRental(id, updateRentalDTO, ownerId);
         if (updatedRental == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        return ResponseEntity.ok(updatedRental);
+
+        logger.info("Location mise à jour avec succès : " + updatedRental);
+
+        // Retourner la réponse encapsulée dans SnackbarNotif
+        return ResponseEntity.ok(new SnackbarNotif(updatedRental, "Location mise à jour avec succès!"));
     }
 }
