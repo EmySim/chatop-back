@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rental.dto.MessageDTO;
+import com.rental.dto.SnackbarNotif;
 import com.rental.service.MessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,17 +41,17 @@ public class MessageController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping
-    public ResponseEntity<String> sendMessage(@Valid @RequestBody MessageDTO messageDTO) {
+    public ResponseEntity<SnackbarNotif> sendMessage(@Valid @RequestBody MessageDTO messageDTO) {
         logger.info("Attempting to send message with content: " + messageDTO.getMessage());
 
-        // Vérification des données dans le DTO
+        // Validation des données
         if (messageDTO.getRentalId() == null) {
             logger.warning("Rental ID is null");
-            return ResponseEntity.badRequest().body("Rental ID must not be null");
+            return ResponseEntity.badRequest().body(new SnackbarNotif(null, "Rental ID must not be null"));
         }
         if (messageDTO.getUserId() == null) {
             logger.warning("User ID is null");
-            return ResponseEntity.badRequest().body("User ID must not be null");
+            return ResponseEntity.badRequest().body(new SnackbarNotif(null, "User ID must not be null"));
         }
 
         // Envoi du message via le service
@@ -58,11 +59,11 @@ public class MessageController {
             messageService.sendMessage(messageDTO);
         } catch (Exception e) {
             logger.severe("Failed to send message: " + e.getMessage());
-            return ResponseEntity.status(500).body("An error occurred while sending the message");
+            return ResponseEntity.status(500).body(new SnackbarNotif(null, "An error occurred while sending the message"));
         }
 
-        // Si tout se passe bien
+        // Envoi réussi, renvoie du SnackbarNotif avec le DTO et le message
         logger.info("Message sent successfully.");
-        return ResponseEntity.ok("Message sent successfully");
+        return ResponseEntity.ok(new SnackbarNotif(messageDTO, "Message sent successfully"));
     }
 }
